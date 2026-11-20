@@ -1,5 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { addUsage, emptyUsage, modelExtras, normalizeForEcho, type Params, type Usage } from "./claude";
+import { addUsage, emptyUsage, modelExtras, normalizeForEcho, THINKING_BINDING_BETA, type Params, type Usage } from "./claude";
 import type { Config } from "./config";
 import type { KVLike } from "./kv";
 import type { Language } from "./prompt";
@@ -524,7 +524,7 @@ export function guideParams(config: Config, messages: Anthropic.Beta.BetaMessage
     stream: true,
     // The fallback only: the build's history never outlives the build, so no thinking block
     // can go stale.
-    ...(extras.fallbacks ? { betas: extras.betas!.filter((b) => b !== "thinking-binding-controls-2026-08-01"), fallbacks: extras.fallbacks } : {}),
+    ...(extras.fallbacks ? { betas: extras.betas!.filter((b) => b !== THINKING_BINDING_BETA), fallbacks: extras.fallbacks } : {}),
   };
 }
 
