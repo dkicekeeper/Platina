@@ -107,6 +107,73 @@ public final class LibrarySync {
         }
     }
 
+    /// Asks PSN whether a game changed and brings the change: one request when nothing did, two
+    /// when trophies were earned (a session asks this every couple of minutes). A patch that
+    /// added trophies fetches them all. Returns the trophies earned since the last look.
+    public func checkGame(_ gameId: String) async throws -> [TrophyRecord] {
+        guard let game = try store.game(gameId) else { return [] }
+        let title = game.title
+        do {
+            let progress = try await client.progress(for: title)
+            if progress.trophySetVersion != game.trophySetVersion || game.trophies.isEmpty {
+                let before = Set(game.trophies.filter(\.isEarned).map(\.trophyId))
+                let updated = TrophyTitle(
+                    npCommunicationId: title.npCommunicationId, npServiceName: title.npServiceName,
+                    trophySetVersion: progress.trophySetVersion, trophyTitleName: title.trophyTitleName,
+                    trophyTitleIconUrl: title.trophyTitleIconUrl, trophyTitlePlatform: title.trophyTitlePlatform,
+                    hasTrophyGroups: title.hasTrophyGroups, definedTrophies: title.definedTrophies,
+                    earnedTrophies: progress.earnedTrophies, progress: progress.progress,
+                    lastUpdatedDateTime: progress.lastUpdatedDateTime
+                )
+                try await fetchTrophies(of: updated, groups: title.hasTrophyGroups)
+                return (try store.game(gameId)?.trophies ?? []).filter { $0.isEarned && !before.contains($0.trophyId) }
+            }
+            guard progress.lastUpdatedDateTime != game.lastUpdated || progress.earnedTrophies != game.earned else {
+                return []
+            }
+            let earnings = try await client.earnings(for: title)
+            return try store.save(progress: progress, earnings: earnings, for: gameId)
+        } catch {
+            fail(error)
+            throw error
+        }
+    }
+
+    /// The time played, now: at the start and the end of a session.
+    public func refreshPlayTime() async {
+        do {
+            try await syncPlayTime()
+        } catch {
+            fail(error)
+        }
+    }
+
+    @ObservationIgnored private var presenceCheckedAt: Date?
+    @ObservationIgnored private var presenceGameId: String?
+
+    /// The stored game running on the console now, if any. PSN is asked at most every three
+    /// minutes; the answer is kept in between.
+    public func runningGame(force: Bool = false) async -> String? {
+        if !force, let checked = presenceCheckedAt, now().timeIntervalSince(checked) < 180 {
+            return presenceGameId
+        }
+        presenceCheckedAt = now()
+        guard let presence = try? await client.presence(), let running = presence.runningGame else {
+            presenceGameId = nil
+            return nil
+        }
+        var links = (try? store.titleLinks()) ?? [:]
+        if links[running.npTitleId] == nil {
+            if let answer = try? await client.trophyLinks(forTitleIds: [running.npTitleId]) {
+                try? store.save(links: answer, asked: [running.npTitleId], at: now())
+                links = (try? store.titleLinks()) ?? links
+            }
+        }
+        let gameId = links[running.npTitleId]?.first { (try? store.game($0)) != nil }
+        presenceGameId = gameId
+        return gameId
+    }
+
     private func fetchTrophies(of title: TrophyTitle, groups fetchesGroups: Bool) async throws {
         async let trophiesRequest = client.trophies(for: title)
         var groups: [TrophyGroup]?

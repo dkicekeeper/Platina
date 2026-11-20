@@ -8,6 +8,7 @@ import PackageDescription
 //   library's filters.
 // - PlatinaStore: the SwiftData store and the sync that fills it (Apple platforms only; on
 //   Linux its files compile to nothing).
+// - PlatinaShared: what the app and its widget extension share.
 // PSNKit and PlatinaCore depend on Foundation alone, so their tests also run on Linux
 // (`swift test` in this folder).
 let package = Package(
@@ -17,11 +18,15 @@ let package = Package(
         .library(name: "PSNKit", targets: ["PSNKit"]),
         .library(name: "PlatinaCore", targets: ["PlatinaCore"]),
         .library(name: "PlatinaStore", targets: ["PlatinaStore"]),
+        .library(name: "PlatinaShared", targets: ["PlatinaShared"]),
     ],
     targets: [
         .target(name: "PSNKit"),
         .target(name: "PlatinaCore", dependencies: ["PSNKit"]),
         .target(name: "PlatinaStore", dependencies: ["PSNKit", "PlatinaCore"]),
+        // Shared by the app and its widget extension: the Live Activity's attributes, the widgets'
+        // snapshot. Foundation only (ActivityKit parts behind canImport).
+        .target(name: "PlatinaShared"),
         .testTarget(
             name: "PSNKitTests",
             dependencies: ["PSNKit"],

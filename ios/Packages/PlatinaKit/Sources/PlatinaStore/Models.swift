@@ -306,4 +306,83 @@ public final class GamePlanRecord {
 
     public var status: GamePlanStatus { GamePlanStatus(rawValue: statusRaw) ?? .none }
 }
+
+/// A play session: a step on the way to a game's platinum (docs/PLAN.md §3.5).
+@Model
+public final class PlaySessionRecord {
+    public var sessionId: String = ""
+    public var gameId: String = ""
+    /// The game's name then: the history reads even if the game leaves PSN's list.
+    public var gameName: String = ""
+    public var startedAt: Date = Date.distantPast
+    public var endedAt: Date?
+    /// While paused: when the pause began.
+    public var pausedAt: Date?
+    /// The pauses before the current one, in seconds.
+    public var pausedSeconds: Double = 0
+    /// The trophies the session aims at.
+    public var goalTrophyIds: [Int] = []
+    /// Goals ticked by hand (an earned goal is done anyway).
+    public var checkedGoalTrophyIds: [Int] = []
+    /// Trophies earned while it ran.
+    public var earnedTrophyIds: [Int] = []
+    public var startProgress: Int = 0
+    public var endProgress: Int?
+    /// PSN's time played in the game at the start and at the end: the session's real time.
+    public var startPlaySeconds: Double?
+    public var endPlaySeconds: Double?
+    /// "Where I stopped".
+    public var note: String = ""
+    /// Plati's summary and what to do next (stage 3).
+    public var summary: String?
+    public var nextSteps: String?
+
+    public init(sessionId: String, gameId: String, gameName: String, startedAt: Date, startProgress: Int, startPlaySeconds: Double?) {
+        self.sessionId = sessionId
+        self.gameId = gameId
+        self.gameName = gameName
+        self.startedAt = startedAt
+        self.startProgress = startProgress
+        self.startPlaySeconds = startPlaySeconds
+    }
+
+    public var isRunning: Bool { endedAt == nil }
+    public var isPaused: Bool { pausedAt != nil }
+
+    /// Time played by the session's clock, pauses left out.
+    public func elapsed(at date: Date) -> TimeInterval {
+        let end = endedAt ?? pausedAt ?? date
+        return max(0, end.timeIntervalSince(startedAt) - pausedSeconds)
+    }
+
+    /// The moment a clock that skips the pauses would have started: what `Text(timerInterval:)`
+    /// and `RelativeTime(.clock)` count from.
+    public var clockStart: Date { startedAt.addingTimeInterval(pausedSeconds) }
+
+    /// PSN's own count of the time, once the session is over and PSN has both ends.
+    public var psnSeconds: Double? {
+        guard let start = startPlaySeconds, let end = endPlaySeconds, end >= start else { return nil }
+        return end - start
+    }
+
+    public func isGoalDone(_ trophyId: Int) -> Bool {
+        earnedTrophyIds.contains(trophyId) || checkedGoalTrophyIds.contains(trophyId)
+    }
+}
+
+/// The person's note on a game or one of its trophies (`trophyId` -1 for the game).
+@Model
+public final class NoteRecord {
+    public var gameId: String = ""
+    public var trophyId: Int = -1
+    public var text: String = ""
+    public var updatedAt: Date = Date.distantPast
+
+    public init(gameId: String, trophyId: Int?, text: String, updatedAt: Date) {
+        self.gameId = gameId
+        self.trophyId = trophyId ?? -1
+        self.text = text
+        self.updatedAt = updatedAt
+    }
+}
 #endif

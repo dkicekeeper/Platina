@@ -12,7 +12,7 @@ public final class LibraryStore {
     public static let cacheModels: [any PersistentModel.Type] = [
         GameRecord.self, TrophyRecord.self, TrophyGroupRecord.self, ProfileRecord.self, TitleLinkRecord.self,
     ]
-    public static let userModels: [any PersistentModel.Type] = [GamePlanRecord.self]
+    public static let userModels: [any PersistentModel.Type] = [GamePlanRecord.self, PlaySessionRecord.self, NoteRecord.self]
 
     public let container: ModelContainer
     public var context: ModelContext { container.mainContext }
@@ -236,6 +236,187 @@ public final class LibraryStore {
             }
         } else {
             context.insert(GamePlanRecord(gameId: gameId, status: status, updatedAt: date))
+        }
+        try context.save()
+    }
+
+    /// A game's progress and the person's side of its trophies, fetched without the trophies'
+    /// names: what a session's check brings. Returns the trophies earned since the last look.
+    @discardableResult
+    public func save(progress: TitleProgress, earnings: [TrophyEarning], for gameId: String) throws -> [TrophyRecord] {
+        guard let game = try game(gameId) else { return [] }
+        let byId = Dictionary(game.trophies.map { ($0.trophyId, $0) }, uniquingKeysWith: { first, _ in first })
+        var newlyEarned: [TrophyRecord] = []
+        for earning in earnings {
+            guard let record = byId[earning.trophyId] else { continue }
+            if earning.earned, !record.isEarned {
+                newlyEarned.append(record)
+            }
+            record.isEarned = earning.earned
+            record.earnedAt = earning.earnedDateTime
+            record.earnedRate = earning.earnedRate ?? record.earnedRate
+            record.rarityRaw = earning.trophyRare?.rawValue ?? record.rarityRaw
+            if record.progressTarget != nil {
+                record.progressCurrent = earning.progressCurrent ?? record.progressCurrent
+                record.progressUpdatedAt = earning.progressedDateTime ?? record.progressUpdatedAt
+            }
+        }
+        game.progress = progress.progress
+        game.earnedBronze = progress.earnedTrophies.bronze
+        game.earnedSilver = progress.earnedTrophies.silver
+        game.earnedGold = progress.earnedTrophies.gold
+        game.earnedPlatinum = progress.earnedTrophies.platinum
+        game.lastUpdated = progress.lastUpdatedDateTime
+        // The trophies match PSN again: the next sync has nothing to fetch for this game.
+        game.detailsLastUpdated = progress.lastUpdatedDateTime
+        try context.save()
+        return newlyEarned.sorted { ($0.earnedAt ?? .distantPast) < ($1.earnedAt ?? .distantPast) }
+    }
+
+    // MARK: Sessions
+
+    public func runningSession() throws -> PlaySessionRecord? {
+        var descriptor = FetchDescriptor<PlaySessionRecord>(
+            predicate: #Predicate { $0.endedAt == nil },
+            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    public func session(_ sessionId: String) throws -> PlaySessionRecord? {
+        var descriptor = FetchDescriptor<PlaySessionRecord>(predicate: #Predicate { $0.sessionId == sessionId })
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    /// The finished sessions of a game (of every game for nil), the latest first.
+    public func sessions(gameId: String? = nil, limit: Int? = nil) throws -> [PlaySessionRecord] {
+        var descriptor: FetchDescriptor<PlaySessionRecord>
+        if let gameId {
+            descriptor = FetchDescriptor(
+                predicate: #Predicate { $0.gameId == gameId && $0.endedAt != nil },
+                sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+            )
+        } else {
+            descriptor = FetchDescriptor(
+                predicate: #Predicate { $0.endedAt != nil },
+                sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+            )
+        }
+        if let limit { descriptor.fetchLimit = limit }
+        return try context.fetch(descriptor)
+    }
+
+    /// Starts a session in a game; a session still running in another game ends first.
+    public func startSession(gameId: String, at date: Date) throws -> PlaySessionRecord {
+        if let running = try runningSession() {
+            finish(running, at: date)
+        }
+        let game = try game(gameId)
+        let session = PlaySessionRecord(
+            sessionId: UUID().uuidString,
+            gameId: gameId,
+            gameName: game?.name ?? "",
+            startedAt: date,
+            startProgress: game?.progress ?? 0,
+            startPlaySeconds: game?.playSeconds
+        )
+        // The goals the last session of this game did not reach carry over.
+        if let previous = try sessions(gameId: gameId, limit: 1).first {
+            session.goalTrophyIds = previous.goalTrophyIds.filter { id in
+                !(game?.trophies.first { $0.trophyId == id }?.isEarned ?? true) && !previous.isGoalDone(id)
+            }
+        }
+        context.insert(session)
+        try context.save()
+        return session
+    }
+
+    public func endSession(_ session: PlaySessionRecord, at date: Date) throws {
+        finish(session, at: date)
+        try context.save()
+    }
+
+    private func finish(_ session: PlaySessionRecord, at date: Date) {
+        if let pausedAt = session.pausedAt {
+            session.pausedSeconds += max(0, date.timeIntervalSince(pausedAt))
+            session.pausedAt = nil
+        }
+        session.endedAt = date
+        let game = try? self.game(session.gameId)
+        session.endProgress = game?.progress
+        session.endPlaySeconds = game?.playSeconds
+    }
+
+    public func pause(_ session: PlaySessionRecord, at date: Date) throws {
+        guard session.pausedAt == nil, session.isRunning else { return }
+        session.pausedAt = date
+        try context.save()
+    }
+
+    public func resume(_ session: PlaySessionRecord, at date: Date) throws {
+        guard let pausedAt = session.pausedAt else { return }
+        session.pausedSeconds += max(0, date.timeIntervalSince(pausedAt))
+        session.pausedAt = nil
+        try context.save()
+    }
+
+    public func setGoals(_ trophyIds: [Int], for session: PlaySessionRecord) throws {
+        var seen = Set<Int>()
+        session.goalTrophyIds = trophyIds.filter { seen.insert($0).inserted }
+        session.checkedGoalTrophyIds.removeAll { !session.goalTrophyIds.contains($0) }
+        try context.save()
+    }
+
+    public func toggleGoal(_ trophyId: Int, in session: PlaySessionRecord) throws {
+        if let index = session.checkedGoalTrophyIds.firstIndex(of: trophyId) {
+            session.checkedGoalTrophyIds.remove(at: index)
+        } else {
+            session.checkedGoalTrophyIds.append(trophyId)
+        }
+        try context.save()
+    }
+
+    public func recordEarned(_ trophyIds: [Int], in session: PlaySessionRecord) throws {
+        for id in trophyIds where !session.earnedTrophyIds.contains(id) {
+            session.earnedTrophyIds.append(id)
+        }
+        try context.save()
+    }
+
+    public func setNote(_ text: String, for session: PlaySessionRecord) throws {
+        session.note = text
+        try context.save()
+    }
+
+    public func setSummary(_ summary: String, nextSteps: String?, for session: PlaySessionRecord) throws {
+        session.summary = summary
+        session.nextSteps = nextSteps
+        try context.save()
+    }
+
+    // MARK: Notes
+
+    public func note(gameId: String, trophyId: Int?) throws -> NoteRecord? {
+        let trophy = trophyId ?? -1
+        var descriptor = FetchDescriptor<NoteRecord>(predicate: #Predicate { $0.gameId == gameId && $0.trophyId == trophy })
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    /// Writes a note; an empty text removes it.
+    public func setNote(_ text: String, gameId: String, trophyId: Int?, at date: Date = Date()) throws {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let existing = try note(gameId: gameId, trophyId: trophyId) {
+            if trimmed.isEmpty {
+                context.delete(existing)
+            } else {
+                existing.text = trimmed
+                existing.updatedAt = date
+            }
+        } else if !trimmed.isEmpty {
+            context.insert(NoteRecord(gameId: gameId, trophyId: trophyId, text: trimmed, updatedAt: date))
         }
         try context.save()
     }

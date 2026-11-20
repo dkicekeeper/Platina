@@ -115,6 +115,26 @@ public actor PSNClient {
         return Self.merge(definitions: try await definitions, earnings: try await earnings)
     }
 
+    /// The person's progress in one game, without its trophies: whether anything changed.
+    public func progress(for title: TrophyTitle) async throws -> TitleProgress {
+        try await get(
+            "trophy/v1/users/me/npCommunicationIds/\(title.npCommunicationId)/trophyGroups",
+            query: [URLQueryItem(name: "npServiceName", value: title.npServiceName)]
+        )
+    }
+
+    /// The person's side of every trophy of a game (earned, when, progress), without names and
+    /// icons: what a session needs once the trophies are stored.
+    public func earnings(for title: TrophyTitle) async throws -> [TrophyEarning] {
+        try await allPages(TrophyEarningsPage.self, limit: 500) { limit, offset in
+            ("trophy/v1/users/me/npCommunicationIds/\(title.npCommunicationId)/trophyGroups/all/trophies", [
+                URLQueryItem(name: "npServiceName", value: title.npServiceName),
+                URLQueryItem(name: "limit", value: String(limit)),
+                URLQueryItem(name: "offset", value: String(offset)),
+            ])
+        }
+    }
+
     /// The games played on PS4 and PS5 with the time in each, most recent first.
     public func playedGames() async throws -> [PlayedGame] {
         try await allPages(PlayedGamesPage.self, limit: 200) { limit, offset in

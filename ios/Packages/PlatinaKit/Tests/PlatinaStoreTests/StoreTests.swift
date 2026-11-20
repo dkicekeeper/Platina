@@ -11,6 +11,8 @@ final class FakePSN: HTTPTransport, @unchecked Sendable {
     private let lock = NSLock()
     private var paths: [String] = []
     var refreshFails = false
+    /// The dice trophy (12) is earned from now on.
+    var diceEarned = false
 
     var requestedPaths: [String] { lock.withLock { paths } }
 
@@ -23,9 +25,9 @@ final class FakePSN: HTTPTransport, @unchecked Sendable {
         let path = url.path
         let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         let offset = query.first { $0.name == "offset" }?.value
-        let (failsRefresh, isExpired) = lock.withLock { () -> (Bool, Bool) in
+        let (failsRefresh, isExpired, dice) = lock.withLock { () -> (Bool, Bool, Bool) in
             paths.append(path)
-            return (refreshFails, refreshFails && request.value(forHTTPHeaderField: "Authorization")?.hasPrefix("Bearer") == true)
+            return (refreshFails, refreshFails && request.value(forHTTPHeaderField: "Authorization")?.hasPrefix("Bearer") == true, diceEarned)
         }
 
         let status: Int
@@ -45,10 +47,12 @@ final class FakePSN: HTTPTransport, @unchecked Sendable {
             (status, body) = (200, try fixture("profile"))
         case path.hasSuffix("/users/me/trophyTitles"):
             (status, body) = (200, try fixture(offset == "0" ? "trophyTitles-page1" : "trophyTitles-page2"))
+        case path.contains("/users/me/npCommunicationIds/") && path.hasSuffix("/trophyGroups"):
+            (status, body) = (200, try fixture(dice ? "titleProgress" : "titleProgress-before"))
         case path.hasSuffix("/trophyGroups"):
             (status, body) = (200, try fixture("trophyGroups"))
         case path.contains("/users/me/npCommunicationIds/"):
-            (status, body) = (200, try fixture("earnedTrophies"))
+            (status, body) = (200, try fixture(dice ? "earnedTrophies-after" : "earnedTrophies"))
         case path.contains("/npCommunicationIds/"):
             (status, body) = (200, try fixture("titleTrophies"))
         case path.hasSuffix("/titles/trophyTitles"):
@@ -73,6 +77,12 @@ private let validTokens = PSNTokens(
     refreshToken: "r1",
     refreshTokenExpiresAt: Date().addingTimeInterval(86_400)
 )
+
+/// A clock the tests move by hand.
+final class TestClock: @unchecked Sendable {
+    var now = Date(timeIntervalSince1970: 2_000_000_000)
+    func advance(_ seconds: TimeInterval) { now = now.addingTimeInterval(seconds) }
+}
 
 @MainActor
 private func makeSync(budget: Int = 60) throws -> (LibrarySync, LibraryStore, FakePSN) {
@@ -204,6 +214,95 @@ struct StoreTests {
         psn.resetLog()
         await sync.refreshGame("NPWR20188_00")
         #expect(psn.requestedPaths.isEmpty)
+    }
+
+    @Test("A session: goals, a trophy found by the check, the end in the journal")
+    func sessionFlow() async throws {
+        let (sync, store, psn) = try makeSync()
+        await sync.sync()
+        let clock = TestClock()
+        let tracker = SessionTracker(store: store, sync: sync, now: { clock.now })
+        var changes = 0
+        var celebrated: [Int] = []
+        tracker.onChange = { _ in changes += 1 }
+        tracker.onEarned = { trophies, _ in celebrated = trophies.map(\.trophyId) }
+
+        await tracker.start(gameId: "NPWR28536_00")
+        let session = try #require(tracker.current)
+        #expect(session.startProgress == 64)
+        #expect(session.startPlaySeconds == 137_525)
+        tracker.setGoals([12, 0])
+        #expect(tracker.goalTrophies().map(\.trophyId) == [12, 0])
+
+        #expect(await tracker.check().isEmpty)
+
+        psn.diceEarned = true
+        clock.advance(600)
+        let earned = await tracker.check()
+        #expect(earned.map(\.trophyId) == [12])
+        #expect(celebrated == [12])
+        #expect(session.earnedTrophyIds == [12])
+        #expect(session.isGoalDone(12))
+        #expect(!session.isGoalDone(0))
+        #expect(try store.game("NPWR28536_00")?.progress == 66)
+
+        clock.advance(600)
+        await tracker.end()
+        #expect(tracker.current == nil)
+        #expect(session.endedAt != nil)
+        #expect(session.endProgress == 66)
+        #expect(session.elapsed(at: clock.now) == 1200)
+        #expect(try store.sessions(gameId: "NPWR28536_00").count == 1)
+        #expect(try store.runningSession() == nil)
+        #expect(changes >= 4)
+    }
+
+    @Test("Unreached goals carry over to the next session of the game")
+    func goalsCarryOver() async throws {
+        let (sync, store, _) = try makeSync()
+        await sync.sync()
+        let tracker = SessionTracker(store: store, sync: sync)
+        await tracker.start(gameId: "NPWR28536_00")
+        tracker.setGoals([12, 0])
+        tracker.toggleGoal(0)
+        await tracker.end()
+
+        await tracker.start(gameId: "NPWR28536_00")
+        #expect(tracker.current?.goalTrophyIds == [12])
+    }
+
+    @Test("Pauses do not count, and a new game's session ends the old one")
+    func pauses() async throws {
+        let (sync, store, _) = try makeSync()
+        await sync.sync()
+        let clock = TestClock()
+        let tracker = SessionTracker(store: store, sync: sync, now: { clock.now })
+        await tracker.start(gameId: "NPWR28536_00")
+        let first = try #require(tracker.current)
+        clock.advance(300)
+        tracker.pause()
+        clock.advance(1000)
+        #expect(first.elapsed(at: clock.now) == 300)
+        tracker.resume()
+        clock.advance(60)
+        #expect(first.elapsed(at: clock.now) == 360)
+        #expect(first.clockStart == first.startedAt.addingTimeInterval(1000))
+
+        await tracker.start(gameId: "NPWR20188_00")
+        #expect(first.endedAt != nil)
+        #expect(tracker.current?.gameId == "NPWR20188_00")
+    }
+
+    @Test("Notes on a game and a trophy; an empty note goes away")
+    func notes() async throws {
+        let (sync, store, _) = try makeSync()
+        await sync.sync()
+        try store.setNote("Кости — до финала!", gameId: "NPWR28536_00", trophyId: 12)
+        try store.setNote("Иду на платину летом", gameId: "NPWR28536_00", trophyId: nil)
+        #expect(try store.note(gameId: "NPWR28536_00", trophyId: 12)?.text == "Кости — до финала!")
+        #expect(try store.note(gameId: "NPWR28536_00", trophyId: nil)?.text == "Иду на платину летом")
+        try store.setNote("  ", gameId: "NPWR28536_00", trophyId: 12)
+        #expect(try store.note(gameId: "NPWR28536_00", trophyId: 12) == nil)
     }
 }
 #endif

@@ -1,0 +1,36 @@
+{
+  "trophySetVersion": "01.20",
+  "hiddenFlag": false,
+  "progress": 64,
+  "earnedTrophies": {
+    "bronze": 22,
+    "silver": 12,
+    "gold": 2,
+    "platinum": 0
+  },
+  "trophyGroups": [
+    {
+      "trophyGroupId": "default",
+      "progress": 70,
+      "earnedTrophies": {
+        "bronze": 14,
+        "silver": 11,
+        "gold": 2,
+        "platinum": 0
+      },
+      "lastUpdatedDateTime": "2026-11-18T21:14:03Z"
+    },
+    {
+      "trophyGroupId": "003",
+      "progress": 40,
+      "earnedTrophies": {
+        "bronze": 8,
+        "silver": 1,
+        "gold": 0,
+        "platinum": 0
+      },
+      "lastUpdatedDateTime": "2026-11-18T21:14:03Z"
+    }
+  ],
+  "lastUpdatedDateTime": "2026-11-18T21:14:03Z"
+}

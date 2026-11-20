@@ -167,17 +167,31 @@ struct TrophyDefinitionsPage: Decodable, PSNPage {
 }
 
 /// The person's side of a trophy: earned or not, when, how far along, how rare.
-struct TrophyEarning: Decodable, Sendable {
-    let trophyId: Int
-    let earned: Bool
-    let earnedDateTime: Date?
-    let trophyRare: TrophyRarity?
+public struct TrophyEarning: Decodable, Sendable, Hashable {
+    public let trophyId: Int
+    public let earned: Bool
+    public let earnedDateTime: Date?
+    public let trophyRare: TrophyRarity?
     /// A percentage as text: `"12.3"`.
-    let trophyEarnedRate: String?
+    public let trophyEarnedRate: String?
     /// PS5 progress trophies: how far along (`"37"` of a target of `"50"`).
-    let progress: String?
-    let progressRate: Int?
-    let progressedDateTime: Date?
+    public let progress: String?
+    public let progressRate: Int?
+    public let progressedDateTime: Date?
+
+    public init(trophyId: Int, earned: Bool, earnedDateTime: Date? = nil, trophyRare: TrophyRarity? = nil, trophyEarnedRate: String? = nil, progress: String? = nil, progressRate: Int? = nil, progressedDateTime: Date? = nil) {
+        self.trophyId = trophyId
+        self.earned = earned
+        self.earnedDateTime = earnedDateTime
+        self.trophyRare = trophyRare
+        self.trophyEarnedRate = trophyEarnedRate
+        self.progress = progress
+        self.progressRate = progressRate
+        self.progressedDateTime = progressedDateTime
+    }
+
+    public var earnedRate: Double? { trophyEarnedRate.flatMap { Double($0) } }
+    public var progressCurrent: Int? { progress.flatMap { Int($0) } }
 }
 
 struct TrophyEarningsPage: Decodable, PSNPage {
@@ -264,6 +278,33 @@ public struct TrophyProgress: Sendable, Hashable {
 
     public var fraction: Double {
         target > 0 ? min(1, Double(current) / Double(target)) : 0
+    }
+}
+
+// MARK: - A game's progress
+
+/// The person's progress in one trophy list, without its trophies: one cheap request that says
+/// whether anything changed (a session asks it every couple of minutes).
+public struct TitleProgress: Decodable, Sendable, Hashable {
+    public struct Group: Decodable, Sendable, Hashable {
+        public let trophyGroupId: String
+        public let progress: Int
+        public let earnedTrophies: TrophyCounts
+        public let lastUpdatedDateTime: Date?
+    }
+
+    public let trophySetVersion: String
+    public let progress: Int
+    public let earnedTrophies: TrophyCounts
+    public let lastUpdatedDateTime: Date
+    public let trophyGroups: [Group]?
+
+    public init(trophySetVersion: String, progress: Int, earnedTrophies: TrophyCounts, lastUpdatedDateTime: Date, trophyGroups: [Group]? = nil) {
+        self.trophySetVersion = trophySetVersion
+        self.progress = progress
+        self.earnedTrophies = earnedTrophies
+        self.lastUpdatedDateTime = lastUpdatedDateTime
+        self.trophyGroups = trophyGroups
     }
 }
 

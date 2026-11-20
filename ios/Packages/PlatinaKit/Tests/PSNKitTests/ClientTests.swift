@@ -147,4 +147,25 @@ struct ClientTests {
         _ = try await client.trophyLinks(forTitleIds: ids)
         #expect(transport.requests.map { $0.queryItems["npTitleIds"]?.split(separator: ",").count } == [5, 2])
     }
+
+    @Test("A game's progress and the person's side of its trophies")
+    func progressAndEarnings() async throws {
+        let transport = MockTransport { request in
+            let path = request.url?.path ?? ""
+            #expect(request.queryItems["npServiceName"] == "trophy2")
+            return try Fixture.reply(path.hasSuffix("/trophyGroups") ? "titleProgress" : "earnedTrophies")
+        }
+        let client = PSNClient(store: InMemoryTokenStore(validTokens), transport: transport, language: "ru-RU", now: { fixedNow })
+        let page = try JSONDecoder.psn.decode(TrophyTitlesPage.self, from: Fixture.data("trophyTitles-page1"))
+        let progress = try await client.progress(for: page.trophyTitles[0])
+        #expect(progress.progress == 66)
+        #expect(progress.earnedTrophies.silver == 13)
+        #expect(progress.lastUpdatedDateTime == PSNDate.parse("2026-11-20T19:02:11Z"))
+        #expect(progress.trophyGroups?.count == 2)
+
+        let earnings = try await client.earnings(for: page.trophyTitles[0])
+        #expect(earnings.count == 3)
+        #expect(earnings.first { $0.trophyId == 12 }?.progressCurrent == 3)
+        #expect(earnings.first { $0.trophyId == 0 }?.earnedRate == 1.8)
+    }
 }
