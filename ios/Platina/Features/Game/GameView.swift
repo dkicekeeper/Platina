@@ -44,6 +44,7 @@ struct GameView: View {
     @Environment(AppModel.self) private var app
     @Query private var games: [GameRecord]
     @Query private var plans: [GamePlanRecord]
+    @Query private var sessions: [PlaySessionRecord]
     @State private var filter: TrophyFilter = .notEarned
     @State private var sort: TrophySort = .type
     @State private var revealedHidden: Set<Int> = []
@@ -55,6 +56,11 @@ struct GameView: View {
         let id = gameId
         _games = Query(filter: #Predicate<GameRecord> { $0.id == id })
         _plans = Query(filter: #Predicate<GamePlanRecord> { $0.gameId == id })
+        _sessions = Query(
+            filter: #Predicate<PlaySessionRecord> { $0.gameId == id && $0.endedAt != nil },
+            sort: \PlaySessionRecord.startedAt,
+            order: .reverse
+        )
     }
 
     private var status: GamePlanStatus { plans.first?.status ?? .none }
@@ -64,15 +70,33 @@ struct GameView: View {
             if let game = games.first {
                 ScrollView {
                     VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                        GameHeader(game: game, status: status) { newStatus in
-                            try? app.store.setPlan(newStatus, for: gameId)
-                        }
+                        GameHeader(
+                            game: game,
+                            status: status,
+                            isSessionRunning: app.sessions.current?.gameId == gameId,
+                            onPlan: { newStatus in _ = try? app.store.setPlan(newStatus, for: gameId) },
+                            onSession: {
+                                if app.sessions.current?.gameId == gameId {
+                                    app.isShowingSession = true
+                                } else {
+                                    Task { await app.startSession(gameId: gameId) }
+                                }
+                            }
+                        )
                         SegmentedPicker(
                             title: String(localized: "game.filter.title"),
                             selection: $filter,
                             options: TrophyFilter.allCases.map { (label: $0.title, value: $0) }
                         )
                         trophies(of: game)
+                        if !sessions.isEmpty {
+                            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                                SectionHeader(String(localized: "game.sessions.header"), systemImage: "list.bullet.rectangle")
+                                CardList(Array(sessions.prefix(10)), layout: .section, onOpen: { app.endedSession = $0 }) { (session: PlaySessionRecord) in
+                                    SessionRow(session: session)
+                                }
+                            }
+                        }
                     }
                     .screenPadding()
                     .padding(.bottom, AppSpacing.xxl)
@@ -200,7 +224,9 @@ struct TrophySection: Identifiable {
 private struct GameHeader: View {
     let game: GameRecord
     let status: GamePlanStatus
+    let isSessionRunning: Bool
     let onPlan: (GamePlanStatus) -> Void
+    let onSession: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
@@ -228,6 +254,13 @@ private struct GameHeader: View {
             if let seconds = game.playSeconds, seconds > 0 {
                 StatsStrip(items: playItems(seconds: seconds))
             }
+
+            DSButton(
+                isSessionRunning ? String(localized: "game.session.open") : String(localized: "game.session.start"),
+                systemImage: isSessionRunning ? "record.circle" : "play.fill",
+                fullWidth: true,
+                action: onSession
+            )
 
             UniversalFilterButton(
                 title: status.title,

@@ -9,7 +9,9 @@ import PlatinaStore
 /// One trophy (docs/PLAN.md §3.4): the icon (a holographic foil for the platinum), how rare it
 /// is, when it was earned, its progress. Tips and notes come with Plati (stage 3).
 struct TrophyView: View {
+    @Environment(AppModel.self) private var app
     @Query private var trophies: [TrophyRecord]
+    @State private var note = ""
 
     init(trophyKey: String) {
         let key = trophyKey
@@ -44,6 +46,20 @@ struct TrophyView: View {
 
                         if let progress = trophy.progress, !trophy.isEarned {
                             TrophyProgressCard(progress: progress, color: trophy.type.color)
+                        }
+
+                        FormSection(header: String(localized: "trophy.note.header")) {
+                            FormTextField(
+                                text: $note,
+                                placeholder: String(localized: "trophy.note.placeholder"),
+                                style: .rowMultiline(min: 2, max: 6)
+                            )
+                        }
+                        .onAppear {
+                            note = (try? app.store.note(gameId: trophy.gameId, trophyId: trophy.trophyId))?.text ?? ""
+                        }
+                        .onChange(of: note) { _, text in
+                            try? app.store.setNote(text, gameId: trophy.gameId, trophyId: trophy.trophyId)
                         }
 
                         if let earnedAt = trophy.earnedAt {
