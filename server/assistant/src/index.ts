@@ -60,7 +60,13 @@ export default {
 
     if (guidePath) {
       if (request.method !== "GET") return fail(405, "method");
-      return cachedGuide(env, decodeURIComponent(guidePath[1]!), url.searchParams.get("language"));
+      let gameId: string;
+      try {
+        gameId = decodeURIComponent(guidePath[1]!);
+      } catch {
+        return fail(400, "invalid", { reason: "game_id" });
+      }
+      return cachedGuide(env, gameId, url.searchParams.get("language"));
     }
     if (request.method !== "POST") return fail(405, "method");
     const length = Number(request.headers.get("content-length") ?? "0");

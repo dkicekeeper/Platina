@@ -455,8 +455,12 @@ export async function loadStratege(game: GuideGame, options: BuildOptions, usage
   if (!options.refresh) {
     const cached = await options.kv.get(strategeKey(game.npCommunicationId)).catch(() => null);
     if (cached) {
-      const parsed = JSON.parse(cached) as { game?: StrategeGame };
-      return { stratege: parsed.game, fetches: 0, calls: 0 };
+      try {
+        const parsed = JSON.parse(cached) as { game?: StrategeGame };
+        return { stratege: parsed.game, fetches: 0, calls: 0 };
+      } catch {
+        // Unreadable: read the page again.
+      }
     }
   }
   let calls = 0;

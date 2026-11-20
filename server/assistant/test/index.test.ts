@@ -168,6 +168,7 @@ describe("cached guides", () => {
     expect((await get("/v1/guide/NPWR28536_00?language=en")).status).toBe(404);
     expect(await (await get("/v1/guide/NPWR99999_00?language=ru")).json()).toEqual({ error: "not_found" });
     expect(await (await get("/v1/guide/..%2Fetc?language=ru")).json()).toEqual({ error: "invalid", reason: "game_id" });
+    expect(await (await get("/v1/guide/%E0%A4%A?language=ru")).json()).toEqual({ error: "invalid", reason: "game_id" });
     expect(await (await get("/v1/guide/NPWR28536_00")).json()).toEqual({ error: "invalid", reason: "language" });
   });
 

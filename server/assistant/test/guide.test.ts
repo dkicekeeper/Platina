@@ -266,6 +266,12 @@ describe("buildGuide", () => {
     const refreshed = options(scripted(message([save(strategeOnlyDraft())], "tool_use")).call, { kv, refresh: true });
     await buildGuide(game, "en", refreshed.options);
     expect(refreshed.asked).toEqual([`${COTL_URL}?nax=1`]);
+
+    // An unreadable kept page is read again.
+    await kv.put("stratege:NPWR28536_00", "{broken");
+    const broken = options(scripted(message([save(strategeOnlyDraft())], "tool_use")).call, { kv });
+    await buildGuide(game, "en", broken.options);
+    expect(broken.asked).toEqual([`${COTL_URL}?nax=1`]);
   });
 
   it("goes on without Stratege when it has no page", async () => {

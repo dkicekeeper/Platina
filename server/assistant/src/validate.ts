@@ -85,6 +85,8 @@ function hasCacheControl(block: Json): boolean {
 function checkUserBlock(block: Json): void {
   if (block.type === "text") {
     if (typeof block.text !== "string" || block.text.length > LIMITS.userTextChars) throw new ValidationError("user_text");
+    // Citations belong to Claude's own text; on a user turn the API refuses them.
+    if (Array.isArray(block.citations) && block.citations.length > 0) throw new ValidationError("citations");
     return;
   }
   // tool_result
