@@ -36,6 +36,10 @@ targets:
       - path: Platina
         excludes:
           - Info.plist
+          - Platina.entitlements
+    configFiles:
+      Debug: Config/Platina.xcconfig
+      Release: Config/Platina.xcconfig
     dependencies:
       - package: DesignKit
         product: DesignKit
@@ -47,12 +51,15 @@ targets:
         product: PlatinaStore
       - package: PlatinaKit
         product: PlatinaShared
+      - package: PlatinaKit
+        product: PlatinaAssistant
       - target: PlatinaWidgets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dakacom.Platina
         PRODUCT_NAME: Platina
         INFOPLIST_FILE: Platina/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Platina/Platina.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES
@@ -65,6 +72,7 @@ targets:
       - path: PlatinaWidgets
         excludes:
           - Info.plist
+          - PlatinaWidgets.entitlements
     dependencies:
       - package: DesignKit
         product: DesignKit
@@ -77,5 +85,6 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_FILE: PlatinaWidgets/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PlatinaWidgets/PlatinaWidgets.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: Platina
         SKIP_INSTALL: YES

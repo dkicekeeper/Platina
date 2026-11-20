@@ -27,7 +27,12 @@ public final class LibrarySync {
     public private(set) var lastSyncedAt: Date?
 
     /// Session errors go here, for the app to sign out.
-    public var onError: ((PSNError) -> Void)?
+    @ObservationIgnored public var onError: ((PSNError) -> Void)?
+    /// Trophies a sync found earned since the store last saw them (not on a first fill): the
+    /// background refresh tells the person about them.
+    @ObservationIgnored public var onNewTrophies: (([TrophyRecord]) -> Void)?
+    /// After every finished sync: the widgets' snapshot follows.
+    @ObservationIgnored public var onSynced: (() -> Void)?
 
     public var isSyncing: Bool {
         if case .syncing = status { return true }
@@ -78,9 +83,13 @@ public final class LibrarySync {
                 titles: titles, stored: try store.detailStates(), requestBudget: requestBudget, priority: priority
             )
             status = .syncing(done: 0, total: plan.items.count)
+            var newlyEarned: [TrophyRecord] = []
             for (index, item) in plan.items.enumerated() {
-                try await fetchTrophies(of: item.title, groups: item.fetchesGroups)
+                newlyEarned += try await fetchTrophies(of: item.title, groups: item.fetchesGroups)
                 status = .syncing(done: index + 1, total: plan.items.count)
+            }
+            if !newlyEarned.isEmpty {
+                onNewTrophies?(newlyEarned)
             }
             pendingGames = plan.deferred
 
@@ -90,6 +99,7 @@ public final class LibrarySync {
             try store.markSynced(at: finished)
             lastSyncedAt = finished
             status = .idle
+            onSynced?()
         } catch {
             fail(error)
         }
@@ -174,14 +184,15 @@ public final class LibrarySync {
         return gameId
     }
 
-    private func fetchTrophies(of title: TrophyTitle, groups fetchesGroups: Bool) async throws {
+    @discardableResult
+    private func fetchTrophies(of title: TrophyTitle, groups fetchesGroups: Bool) async throws -> [TrophyRecord] {
         async let trophiesRequest = client.trophies(for: title)
         var groups: [TrophyGroup]?
         if fetchesGroups {
             groups = try await client.trophyGroups(for: title)
         }
         let trophies = try await trophiesRequest
-        try store.save(trophies: trophies, groups: groups, for: title)
+        return try store.save(trophies: trophies, groups: groups, for: title)
     }
 
     /// The time played. Only a session or rate-limit error stops the sync: without the game

@@ -4,6 +4,7 @@ import DesignComponents
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage("onboarding.completed") private var isOnboardingDone = false
 
     var body: some View {
         Group {
@@ -11,8 +12,13 @@ struct RootView: View {
             case .launching:
                 AppColors.Background.base.ignoresSafeArea()
             case .signedOut:
-                SignInView()
-                    .transition(.opacity)
+                if isOnboardingDone {
+                    SignInView()
+                        .transition(.opacity)
+                } else {
+                    OnboardingView { isOnboardingDone = true }
+                        .transition(.opacity)
+                }
             case .signedIn:
                 MainTabView()
                     .transition(.opacity)
@@ -25,10 +31,11 @@ struct RootView: View {
 enum AppTab: Hashable {
     case path
     case games
+    case plati
     case profile
 }
 
-/// The tabs (docs/PLAN.md §3). Plati comes with stage 3.
+/// The tabs (docs/PLAN.md §3): the path, the games, Plati, the profile.
 struct MainTabView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.scenePhase) private var scenePhase
@@ -42,6 +49,11 @@ struct MainTabView: View {
             }
             Tab(String(localized: "tab.games"), systemImage: "square.stack.fill", value: AppTab.games) {
                 LibraryView()
+            }
+            Tab(value: AppTab.plati) {
+                PlatiView()
+            } label: {
+                CreatureTabLabel(title: String(localized: "tab.plati"))
             }
             Tab(String(localized: "tab.profile"), systemImage: "person.crop.circle.fill", value: AppTab.profile) {
                 ProfileView()
@@ -70,8 +82,14 @@ struct MainTabView: View {
             await runChecks()
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
+            app.isActive = phase == .active
+            switch phase {
+            case .active:
                 Task { await app.sync.sync() }
+            case .background:
+                BackgroundRefresh.schedule()
+            default:
+                break
             }
         }
     }

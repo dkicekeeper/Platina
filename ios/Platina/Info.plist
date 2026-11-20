@@ -27,6 +27,19 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>PlatinaAssistantHost</key>
+	<string>$(PLATINA_ASSISTANT_HOST)</string>
+	<key>PlatinaAssistantDevToken</key>
+	<string>$(PLATINA_ASSISTANT_DEV_TOKEN)</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>dakacom.Platina.refresh</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>LSRequiresIPhoneOS</key>

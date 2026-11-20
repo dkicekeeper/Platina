@@ -44,6 +44,8 @@ struct TrophyView: View {
 
                         StatsStrip(items: facts(of: trophy))
 
+                        TrophyTipSection(trophy: trophy)
+
                         if let progress = trophy.progress, !trophy.isEarned {
                             TrophyProgressCard(progress: progress, color: trophy.type.color)
                         }

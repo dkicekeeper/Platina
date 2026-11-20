@@ -13,6 +13,8 @@ struct PlatinaWidgets: WidgetBundle {
 
     var body: some Widget {
         SessionLiveActivityWidget()
+        PlatinumProgressWidget()
+        LatestTrophyWidget()
     }
 }
 

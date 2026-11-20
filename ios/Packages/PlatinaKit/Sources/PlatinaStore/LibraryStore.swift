@@ -11,8 +11,11 @@ import PlatinaCore
 public final class LibraryStore {
     public static let cacheModels: [any PersistentModel.Type] = [
         GameRecord.self, TrophyRecord.self, TrophyGroupRecord.self, ProfileRecord.self, TitleLinkRecord.self,
+        GuideRecord.self,
     ]
-    public static let userModels: [any PersistentModel.Type] = [GamePlanRecord.self, PlaySessionRecord.self, NoteRecord.self]
+    public static let userModels: [any PersistentModel.Type] = [
+        GamePlanRecord.self, PlaySessionRecord.self, NoteRecord.self, ConversationRecord.self,
+    ]
 
     public let container: ModelContainer
     public var context: ModelContext { container.mainContext }
@@ -28,8 +31,11 @@ public final class LibraryStore {
         let cache = ModelConfiguration(
             "cache", schema: Schema(cacheModels), isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none
         )
+        // The person's own store syncs through iCloud when the app has the iCloud entitlement
+        // (`.automatic` takes its first container); in memory, never.
         let user = ModelConfiguration(
-            "user", schema: Schema(userModels), isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none
+            "user", schema: Schema(userModels), isStoredInMemoryOnly: inMemory,
+            cloudKitDatabase: inMemory ? .none : .automatic
         )
         do {
             return try ModelContainer(for: schema, configurations: [cache, user])
@@ -38,7 +44,16 @@ public final class LibraryStore {
             for suffix in ["", "-shm", "-wal"] {
                 try? fileManager.removeItem(at: URL(fileURLWithPath: cache.url.path + suffix))
             }
-            return try ModelContainer(for: schema, configurations: [cache, user])
+            do {
+                return try ModelContainer(for: schema, configurations: [cache, user])
+            } catch {
+                // iCloud refused the store (no container on this account yet): the same store,
+                // on the device only, rather than nothing.
+                let localUser = ModelConfiguration(
+                    "user", schema: Schema(userModels), isStoredInMemoryOnly: false, cloudKitDatabase: .none
+                )
+                return try ModelContainer(for: schema, configurations: [cache, localUser])
+            }
         }
     }
 
@@ -137,8 +152,11 @@ public final class LibraryStore {
         try context.save()
     }
 
-    /// A game's trophies (and its groups, when fetched) as PSN has them now.
-    public func save(trophies: [Trophy], groups: [TrophyGroup]?, for title: TrophyTitle) throws {
+    /// A game's trophies (and its groups, when fetched) as PSN has them now. Returns the trophies
+    /// earned since the store last saw them: only trophies it already knew unearned, so a first
+    /// fill reports nothing.
+    @discardableResult
+    public func save(trophies: [Trophy], groups: [TrophyGroup]?, for title: TrophyTitle) throws -> [TrophyRecord] {
         let game: GameRecord
         if let existing = try self.game(title.id) {
             game = existing
@@ -150,9 +168,13 @@ public final class LibraryStore {
 
         let stored = Dictionary(game.trophies.map { ($0.trophyId, $0) }, uniquingKeysWith: { first, _ in first })
         var seen = Set<Int>()
+        var newlyEarned: [TrophyRecord] = []
         for trophy in trophies {
             seen.insert(trophy.id)
             if let record = stored[trophy.id] {
+                if trophy.isEarned, !record.isEarned {
+                    newlyEarned.append(record)
+                }
                 record.update(from: trophy)
             } else {
                 let record = TrophyRecord(gameId: game.id, trophy: trophy)
@@ -185,6 +207,7 @@ public final class LibraryStore {
         game.detailsLastUpdated = title.lastUpdatedDateTime
         game.detailsVersion = title.trophySetVersion
         try context.save()
+        return newlyEarned
     }
 
     /// The trophy lists of the titles just asked about; a title with none is remembered too, so
@@ -220,6 +243,7 @@ public final class LibraryStore {
         for game in try games() { context.delete(game) }
         for profile in try context.fetch(FetchDescriptor<ProfileRecord>()) { context.delete(profile) }
         for link in try context.fetch(FetchDescriptor<TitleLinkRecord>()) { context.delete(link) }
+        for guide in try context.fetch(FetchDescriptor<GuideRecord>()) { context.delete(guide) }
         try context.save()
     }
 

@@ -3,6 +3,7 @@ import Observation
 import SwiftData
 import PSNKit
 import PlatinaStore
+import PlatinaAssistant
 
 /// The app's session: signed in to PSN or not, the client, the store and the sync.
 @MainActor
@@ -22,9 +23,12 @@ final class AppModel {
     let store: LibraryStore
     let sync: LibrarySync
     let sessions: SessionTracker
+    let assistant: AssistantService
 
     /// The session screen is open.
     var isShowingSession = false
+    /// The app is on screen; when it is not, new trophies become notifications.
+    var isActive = true
     /// A session that just ended, for its summary sheet.
     var endedSession: PlaySessionRecord?
     /// Trophies earned during the session that the screen has not celebrated yet.
@@ -48,17 +52,37 @@ final class AppModel {
         store = LibraryStore(container: container)
         sync = LibrarySync(client: client, store: store)
         sessions = SessionTracker(store: store, sync: sync)
+        assistant = AssistantService(
+            store: store,
+            sessions: sessions,
+            transport: Self.assistantTransport(),
+            language: AppLanguage.code
+        )
         sync.onError = { [weak self] error in
             self?.handle(error)
         }
+        sync.onNewTrophies = { [weak self] trophies in
+            guard let self, !isActive else { return }
+            BackgroundRefresh.notify(trophies)
+        }
+        sync.onSynced = { [weak self] in
+            guard let self else { return }
+            WidgetSnapshotWriter.write(store: store)
+        }
         sessions.onChange = { [weak self] session in
             self?.updateLiveActivity(session)
+            if session == nil, let self {
+                WidgetSnapshotWriter.write(store: store)
+            }
         }
         sessions.onEarned = { [weak self] trophies, _ in
             self?.celebrate(trophies)
         }
         sessions.onEnded = { [weak self] session in
-            self?.endedSession = session
+            guard let self else { return }
+            endedSession = session
+            // Plati writes the summary into the journal; the summary sheet shows it when it comes.
+            Task { await self.assistant.summarizeSession(session) }
         }
         // A session left running by an earlier launch: its activity shows it again.
         updateLiveActivity(sessions.current)
@@ -70,11 +94,38 @@ final class AppModel {
     func startSession(gameId: String) async {
         await sessions.start(gameId: gameId)
         isShowingSession = sessions.current != nil
+        // Plati plans the session: goals for today, the missables nearby.
+        if let session = sessions.current, session.goalTrophyIds.isEmpty {
+            Task { await assistant.planSession(session) }
+        }
+    }
+
+    /// The server's client: App Attest on a device, the dev token in the Simulator; nil without
+    /// a server (docs/assistant.md §7).
+    private static func assistantTransport() -> (any AssistantTransport)? {
+        guard let url = AssistantConfig.serverURL else { return nil }
+        let signer: (any AssistantSigner)?
+        if AssistantAttestation.isSupported {
+            signer = AssistantAttestation(baseURL: url)
+        } else if let token = AssistantConfig.devToken {
+            signer = DevTokenSigner(token: token)
+        } else {
+            signer = nil
+        }
+        return AssistantServerClient(baseURL: url, signer: signer)
     }
 
     func endSession() async {
         isShowingSession = false
         await sessions.end()
+    }
+
+    /// iOS woke the app in the background: sync, and tell about new trophies.
+    func backgroundRefresh() async {
+        isActive = false
+        BackgroundRefresh.schedule()
+        guard await client.isSignedIn else { return }
+        await sync.sync(force: true)
     }
 
     func celebrationShown() {
@@ -138,8 +189,12 @@ final class AppModel {
 
 /// The language PSN answers in: the app's own (Russian or English).
 enum AppLanguage {
+    /// "ru" or "en": the language Plati answers in.
+    static var code: String {
+        (Bundle.main.preferredLocalizations.first ?? "ru").hasPrefix("en") ? "en" : "ru"
+    }
+
     static var psnLanguage: String {
-        let code = Bundle.main.preferredLocalizations.first ?? "ru"
-        return code.hasPrefix("en") ? "en-US" : "ru-RU"
+        code == "en" ? "en-US" : "ru-RU"
     }
 }

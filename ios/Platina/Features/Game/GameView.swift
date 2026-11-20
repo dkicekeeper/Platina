@@ -50,6 +50,8 @@ struct GameView: View {
     @State private var revealedHidden: Set<Int> = []
     @State private var openedTrophy: String?
     @State private var isLoadingTrophies = false
+    @State private var isShowingChat = false
+    @State private var isShowingShare = false
 
     init(gameId: String) {
         self.gameId = gameId
@@ -83,6 +85,7 @@ struct GameView: View {
                                 }
                             }
                         )
+                        GuideSection(game: game)
                         SegmentedPicker(
                             title: String(localized: "game.filter.title"),
                             selection: $filter,
@@ -102,6 +105,12 @@ struct GameView: View {
                     .padding(.bottom, AppSpacing.xxl)
                 }
                 .navigationTitle(Text(verbatim: game.name))
+                .sheet(isPresented: $isShowingChat) {
+                    GameChatSheet(gameId: game.id, gameName: game.name)
+                }
+                .sheet(isPresented: $isShowingShare) {
+                    GameShareSheet(game: game)
+                }
             } else {
                 EmptyState(icon: "questionmark.square.dashed", title: String(localized: "game.missing"))
                     .screenPadding()
@@ -111,6 +120,13 @@ struct GameView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    isShowingChat = true
+                } label: {
+                    Label(String(localized: "game.askPlati"), systemImage: "bubble.left.and.text.bubble.right")
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Picker(selection: $sort) {
                         ForEach(TrophySort.allCases, id: \.self) { sort in
@@ -119,8 +135,14 @@ struct GameView: View {
                     } label: {
                         Text("library.sort")
                     }
+                    Divider()
+                    Button {
+                        isShowingShare = true
+                    } label: {
+                        Label(String(localized: "game.share"), systemImage: "square.and.arrow.up")
+                    }
                 } label: {
-                    Label(String(localized: "library.sort"), systemImage: "arrow.up.arrow.down")
+                    Label(String(localized: "game.more"), systemImage: "ellipsis")
                 }
             }
         }

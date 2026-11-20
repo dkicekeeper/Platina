@@ -1,0 +1,15 @@
+// Build settings of the app (ios/project.yml, configFiles).
+
+// Plati's server (docs/assistant.md §7, server/assistant/README.md): the Worker's host,
+// without https:// (an xcconfig reads // as a comment), e.g. platina-assistant.<you>.workers.dev.
+// Empty: Plati is off and its tab says the server is not set up.
+PLATINA_ASSISTANT_HOST =
+
+// Debug only: the server's DEV_TOKEN, which lets the Simulator in without App Attest. Keep it
+// out of git: put it in Config/Local.xcconfig (ignored), which overrides this file.
+PLATINA_ASSISTANT_DEV_TOKEN =
+
+#include? "Local.xcconfig"
+
+// Never in a release build.
+PLATINA_ASSISTANT_DEV_TOKEN[config=Release] =

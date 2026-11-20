@@ -289,6 +289,25 @@ public final class TitleLinkRecord {
     }
 }
 
+/// A game's guide as the server built it (docs/assistant.md §4), kept for offline reading.
+@Model
+public final class GuideRecord {
+    /// `NPWR28536_00:ru`.
+    @Attribute(.unique) public var key: String
+    public var gameId: String
+    public var language: String
+    public var json: Data
+    public var fetchedAt: Date
+
+    public init(gameId: String, language: String, json: Data, fetchedAt: Date) {
+        key = "\(gameId):\(language)"
+        self.gameId = gameId
+        self.language = language
+        self.json = json
+        self.fetchedAt = fetchedAt
+    }
+}
+
 // MARK: - The person's own data
 
 /// What the person plans for a game.
@@ -367,6 +386,21 @@ public final class PlaySessionRecord {
 
     public func isGoalDone(_ trophyId: Int) -> Bool {
         earnedTrophyIds.contains(trophyId) || checkedGoalTrophyIds.contains(trophyId)
+    }
+}
+
+/// A conversation with Plati: the general one (`gameId` "") or a game's. The wire history goes
+/// back to the server as it is; the display history is what the chat shows.
+@Model
+public final class ConversationRecord {
+    public var gameId: String = ""
+    public var messagesData: Data = Data()
+    public var displayData: Data = Data()
+    public var updatedAt: Date = Date.distantPast
+
+    public init(gameId: String, updatedAt: Date) {
+        self.gameId = gameId
+        self.updatedAt = updatedAt
     }
 }
 

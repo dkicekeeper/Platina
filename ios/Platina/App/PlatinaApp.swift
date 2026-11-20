@@ -27,11 +27,16 @@ struct PlatinaApp: App {
     }
 
     var body: some Scene {
+        // The background task's closure is Sendable: it takes the model, not the App.
+        let model = model
         WindowGroup {
             RootView()
                 .environment(model)
                 .task { await model.start() }
         }
         .modelContainer(model.store.container)
+        .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) {
+            await model.backgroundRefresh()
+        }
     }
 }

@@ -9,6 +9,7 @@ import PackageDescription
 // - PlatinaStore: the SwiftData store and the sync that fills it (Apple platforms only; on
 //   Linux its files compile to nothing).
 // - PlatinaShared: what the app and its widget extension share.
+// - PlatinaAssistant: Plati's client (docs/assistant.md).
 // PSNKit and PlatinaCore depend on Foundation alone, so their tests also run on Linux
 // (`swift test` in this folder).
 let package = Package(
@@ -19,23 +20,29 @@ let package = Package(
         .library(name: "PlatinaCore", targets: ["PlatinaCore"]),
         .library(name: "PlatinaStore", targets: ["PlatinaStore"]),
         .library(name: "PlatinaShared", targets: ["PlatinaShared"]),
+        .library(name: "PlatinaAssistant", targets: ["PlatinaAssistant"]),
     ],
     targets: [
         .target(name: "PSNKit"),
         .target(name: "PlatinaCore", dependencies: ["PSNKit"]),
-        .target(name: "PlatinaStore", dependencies: ["PSNKit", "PlatinaCore"]),
+        .target(name: "PlatinaStore", dependencies: ["PSNKit", "PlatinaCore", "PlatinaAssistant"]),
         // Shared by the app and its widget extension: the Live Activity's attributes, the widgets'
         // snapshot. Foundation only (ActivityKit parts behind canImport).
         .target(name: "PlatinaShared"),
+        // Plati's client: the wire format, the conversation loop, the server client, App Attest
+        // (docs/assistant.md). Foundation only, so its tests run on Linux too.
+        .target(name: "PlatinaAssistant"),
         .testTarget(
             name: "PSNKitTests",
             dependencies: ["PSNKit"],
             resources: [.copy("Fixtures")]
         ),
         .testTarget(name: "PlatinaCoreTests", dependencies: ["PlatinaCore", "PSNKit"]),
+        .testTarget(name: "PlatinaAssistantTests", dependencies: ["PlatinaAssistant"]),
+        .testTarget(name: "PlatinaSharedTests", dependencies: ["PlatinaShared"]),
         .testTarget(
             name: "PlatinaStoreTests",
-            dependencies: ["PlatinaStore", "PlatinaCore", "PSNKit"],
+            dependencies: ["PlatinaStore", "PlatinaCore", "PSNKit", "PlatinaAssistant"],
             resources: [.copy("Fixtures")]
         ),
     ]

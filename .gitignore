@@ -15,3 +15,6 @@ Package.resolved
 
 # Claude Code worktrees of parallel agents
 .claude/worktrees/
+
+# Local build settings (Plati server host, dev token)
+ios/Config/Local.xcconfig
