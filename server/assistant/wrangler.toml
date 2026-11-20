@@ -1,0 +1,62 @@
+name = "platina-assistant"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# No request bodies or responses are logged. Workers observability keeps only the metadata
+# Cloudflare records itself (status, duration, colo) and the server's own lines, which carry
+# status and error codes only.
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[vars]
+# Off switch: "false" answers every turn and guide with 503 `disabled`, calling no model.
+ASSISTANT_ENABLED = "true"
+# The chat's model and effort (POST /v1/turn). Haiku 5.5: fast and cheap, the eval decides.
+ASSISTANT_MODEL = "claude-haiku-5-5"
+ASSISTANT_EFFORT = "low"
+ASSISTANT_MAX_TOKENS = "16000"
+# The guide builder (POST /v1/guide): accuracy matters more than speed there.
+GUIDE_MODEL = "claude-sonnet-5-5"
+GUIDE_EFFORT = "medium"
+GUIDE_MAX_TOKENS = "32000"
+# Web searches per guide model call, $0.01 each ("0" builds guides from Stratege alone).
+GUIDE_MAX_SEARCHES = "5"
+# The chat's own web search (server-side), and the searches one chat call may make.
+WEB_SEARCH_ENABLED = "true"
+WEB_SEARCH_MAX_USES = "3"
+# Model calls per App Attest key (one install) per calendar month, UTC. One question is about
+# 2 to 4 calls (the tools run on the phone between them).
+MONTHLY_CALLS = "3000"
+# Guide builds per key per day, UTC. A guide from the cache is free.
+DAILY_GUIDES = "20"
+# Circuit breaker on spend: model calls per day across everyone. A chat call on Haiku 5.5 is
+# about $0.002; a guide build counts as GUIDE_CALL_WEIGHT calls (Sonnet 5.5 with searches,
+# about $0.10 to $0.20). Keep it under the Anthropic workspace's monthly limit / 30.
+GLOBAL_DAILY_CALLS = "3000"
+GUIDE_CALL_WEIGHT = "20"
+# Countries not served by the Anthropic API (anthropic.com/supported-countries).
+BLOCKED_COUNTRIES = "RU,BY"
+# The app App Attest assertions must come from: Team ID + bundle id.
+APP_ID = "SY2L2VMQP7.dakacom.Platina"
+
+# The KV namespaces. Create them once with Actions → Assistant server → setup (or
+# `npx wrangler kv namespace create ...`, server/assistant/README.md) and put their ids here.
+# App Attest challenges and keys.
+[[kv_namespaces]]
+binding = "ATTEST"
+id = "REPLACE_WITH_ATTEST_NAMESPACE_ID"
+
+# Call and guide counters.
+[[kv_namespaces]]
+binding = "QUOTA"
+id = "REPLACE_WITH_QUOTA_NAMESPACE_ID"
+
+# Built guides (30 days) and parsed Stratege pages (14 days).
+[[kv_namespaces]]
+binding = "GUIDES"
+id = "REPLACE_WITH_GUIDES_NAMESPACE_ID"
+
+# Secrets (never in this file), uploaded by the deploy action from the repository's secrets:
+# ANTHROPIC_API_KEY, and optionally DEV_TOKEN (the simulator's way past App Attest).
