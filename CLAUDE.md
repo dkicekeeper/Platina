@@ -25,20 +25,32 @@ xcodebuild build -project ios/Platina.xcodeproj -scheme Platina \
 ```
 ios/
 ├── project.yml                 XcodeGen; Platina.xcodeproj генерируется и не хранится в git
+├── Config/Platina.xcconfig     хост сервера Плати; локальные значения — Config/Local.xcconfig (не в git)
 ├── Platina/                    приложение
-│   ├── App/                    точка входа, AppModel (сессия PSN), RootView
-│   ├── Features/<Экран>/       экран и его модель (@Observable, @MainActor)
-│   ├── Support/                цвета приложения, тексты ошибок
+│   ├── App/                    точка входа, AppModel (сессия PSN, синхронизация, сессии, Плати),
+│   │                           RootView и вкладки, фоновое обновление
+│   ├── Features/<Экран>/       Path, Library, Game (+ гайд), Trophy, Session, Plati, Profile,
+│   │                           Onboarding, Share, Widgets (снимок для виджетов)
+│   ├── Support/                цвета приложения, тексты
 │   ├── Localizable.xcstrings   строки: русский (основной) и английский, плюс ключи DesignKit
-│   └── Assets.xcassets         AccentColor = акцент DesignKit, иконка-заглушка
+│   └── Platina.entitlements    App Group (виджеты), iCloud (данные человека), пуши CloudKit
+├── PlatinaWidgets/             расширение: Live Activity сессии, виджеты «Путь к платине» и
+│                               «Последний трофей» (читают снимок из App Group)
 └── Packages/PlatinaKit/
     ├── PSNKit                  единственная дверь в PSN: вход, токены (Keychain), клиент, модели
-    ├── PlatinaCore             логика без UI и без SwiftData: план синхронизации, время в играх,
-    │                           статистика, фильтры библиотеки (тесты идут и на Linux)
-    └── PlatinaStore            SwiftData: кэш PSN и данные человека, LibrarySync (только Apple;
-                                на Linux файлы в `#if canImport(SwiftData)` и компилируются в ничто)
+    ├── PlatinaCore             логика без UI и SwiftData: план синхронизации, время в играх,
+    │                           статистика, фильтры библиотеки
+    ├── PlatinaAssistant        клиент Плати: протокол, цикл разговора, сервер, App Attest, гайд
+    ├── PlatinaShared           общее с расширением: атрибуты Live Activity, снимок виджетов
+    └── PlatinaStore            SwiftData (кэш PSN + данные человека), LibrarySync,
+                                SessionTracker, AssistantService, GuideService, AssistantToolkit
+                                (только Apple; на Linux файлы в `#if canImport(SwiftData)`)
+server/assistant/               сервер Плати: Cloudflare Worker (docs/assistant.md)
 scripts/designkit_strings.py    ключи строк DesignKit → каталог приложения
 ```
+
+PSNKit, PlatinaCore, PlatinaAssistant и PlatinaShared тестируются и на Linux (`swift test`);
+PlatinaStore — на симуляторе в CI.
 
 ## PSN
 
@@ -64,6 +76,13 @@ scripts/designkit_strings.py    ключи строк DesignKit → катало
   изменившихся игр в пределах бюджета (`SyncPlanner.defaultRequestBudget`), время в играх.
   Сама — не чаще раза в 10 минут, если не ждут игры; открытая игра догружается сразу
   (`refreshGame`).
+
+## Плати
+
+Контракт приложения и сервера — [docs/assistant.md](docs/assistant.md). Инструменты на телефоне
+— `AssistantToolkit` (имена в `AssistantProtocol.Tool`, определения на сервере в
+`server/assistant/src/tools.ts`: менять вместе). История разговора только дописывается.
+Без хоста сервера (`PLATINA_ASSISTANT_HOST`) Плати выключен, остальное работает.
 
 ## DesignKit
 

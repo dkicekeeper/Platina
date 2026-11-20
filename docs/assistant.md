@@ -184,6 +184,7 @@ Markdown-текст, а не блоки `render_reply`.
 
 Описана в `server/assistant/README.md`: Cloudflare-аккаунт, KV-пространства, секреты
 `ANTHROPIC_API_KEY` (и опционально `DEV_TOKEN`), деплой из GitHub Actions
-(`.github/workflows/assistant.yml`, ручной запуск `deploy`). Адрес Worker'а — в
-`ios/Config/Platina.xcconfig` (`PLATINA_ASSISTANT_URL`); пустой адрес — вкладка Плати
-объясняет, что сервер не настроен.
+(`.github/workflows/assistant.yml`, ручной запуск `deploy`). Хост Worker'а (без `https://`:
+в xcconfig `//` — начало комментария) — `PLATINA_ASSISTANT_HOST` в `ios/Config/Local.xcconfig`
+(не в git) или в `ios/Config/Platina.xcconfig`; для симулятора там же
+`PLATINA_ASSISTANT_DEV_TOKEN`. Пустой хост — вкладка Плати объясняет, что сервер не настроен.
