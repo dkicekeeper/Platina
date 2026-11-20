@@ -109,7 +109,7 @@ describe("POST /v1/guide", () => {
     expect(fetched).toEqual([`${COTL_URL}?nax=1`]);
     const day = new Date().toISOString().slice(0, 10);
     expect(kv.quota.store.get(`guides:dev:${day}`)).toBe("1");
-    expect(kv.quota.store.get(`calls:all:${day}`)).toBe("20");
+    expect(kv.quota.store.get(`calls:all:${day}`)).toBe("50");
     expect((scripted.params[0] as { model: string }).model).toBe("claude-sonnet-5-5");
 
     // The next request is served from the cache: no model, no Stratege, no count.

@@ -84,7 +84,7 @@ export function readConfig(env: Partial<Env>): Config {
     monthlyCalls: int(env.MONTHLY_CALLS, 3000),
     dailyGuides: int(env.DAILY_GUIDES, 20),
     globalDailyCalls: int(env.GLOBAL_DAILY_CALLS, 3000),
-    guideCallWeight: Math.max(1, int(env.GUIDE_CALL_WEIGHT, 20)),
+    guideCallWeight: Math.max(1, int(env.GUIDE_CALL_WEIGHT, 50)),
     blockedCountries: new Set(
       (env.BLOCKED_COUNTRIES ?? "RU,BY")
         .split(",")

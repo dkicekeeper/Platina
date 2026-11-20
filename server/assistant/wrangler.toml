@@ -32,10 +32,11 @@ MONTHLY_CALLS = "3000"
 # Guide builds per key per day, UTC. A guide from the cache is free.
 DAILY_GUIDES = "20"
 # Circuit breaker on spend: model calls per day across everyone. A chat call on Haiku 5.5 is
-# about $0.002; a guide build counts as GUIDE_CALL_WEIGHT calls (Sonnet 5.5 with searches,
-# about $0.10 to $0.20). Keep it under the Anthropic workspace's monthly limit / 30.
+# about $0.002 (plus $0.01 a web search); a guide build counts as GUIDE_CALL_WEIGHT calls
+# (Sonnet 5.5 with searches, about $0.10 to $0.25). The Anthropic workspace's spend limit is
+# the hard stop behind it.
 GLOBAL_DAILY_CALLS = "3000"
-GUIDE_CALL_WEIGHT = "20"
+GUIDE_CALL_WEIGHT = "50"
 # Countries not served by the Anthropic API (anthropic.com/supported-countries).
 BLOCKED_COUNTRIES = "RU,BY"
 # The app App Attest assertions must come from: Team ID + bundle id.
