@@ -1,112 +1,15 @@
 import SwiftUI
+import SwiftData
 import DesignTokens
+import DesignSupport
 import DesignComponents
 import PSNKit
+import PlatinaCore
+import PlatinaStore
 
-/// A game: its progress and every trophy, base game and DLC. Stage 0: straight from PSN, no
-/// guide yet (docs/PLAN.md §3.3).
-struct GameView: View {
-    @State private var model: GameModel
-    @State private var revealedHidden: Set<Int> = []
+enum TrophyFilter: String, CaseIterable, Hashable {
+    case all, notEarned, earned
 
-    init(title: TrophyTitle, app: AppModel) {
-        _model = State(initialValue: GameModel(title: title, client: app.client, onError: { [weak app] error in
-            app?.handle(error)
-        }))
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                GameHeader(title: model.title)
-
-                SegmentedPicker(
-                    title: String(localized: "game.filter.title"),
-                    selection: $model.filter,
-                    options: GameModel.Filter.allCases.map { (label: $0.title, value: $0) }
-                )
-
-                content
-            }
-            .screenPadding()
-            .padding(.bottom, AppSpacing.xxl)
-        }
-        .background(AppColors.Background.base)
-        .navigationTitle(Text(verbatim: model.title.trophyTitleName))
-        .navigationBarTitleDisplayMode(.inline)
-        .refreshable { await model.load() }
-        .task {
-            if model.state == .loading { await model.load() }
-        }
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        switch model.state {
-        case .failed(let message):
-            EmptyState(
-                icon: "wifi.exclamationmark",
-                title: String(localized: "game.error.title"),
-                description: message,
-                actionTitle: String(localized: "common.retry"),
-                action: { Task { await model.load() } },
-                style: .error
-            )
-        case .loading:
-            CardListSkeleton(layout: .section, count: 6)
-        case .loaded:
-            let sections = model.sections
-            if sections.isEmpty {
-                if model.filter == .notEarned {
-                    EmptyState(icon: "checkmark.seal", title: String(localized: "game.empty.allEarned"))
-                } else {
-                    EmptyState(icon: "trophy", title: String(localized: "game.empty.noneEarned"))
-                }
-            } else {
-                ForEach(sections, id: \.id) { section in
-                    TrophySectionView(
-                        section: section,
-                        showsHeader: model.groups.count > 1,
-                        revealedHidden: $revealedHidden
-                    )
-                }
-            }
-        }
-    }
-}
-
-/// One group's trophies (the base game or a DLC) in one glass card, under the group's name
-/// when the game has DLC.
-private struct TrophySectionView: View {
-    let section: TrophySection
-    let showsHeader: Bool
-    @Binding var revealedHidden: Set<Int>
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            if showsHeader, let group = section.group {
-                SectionHeader(headerTitle(for: group))
-            }
-            CardList(section.trophies, layout: .section) { (trophy: Trophy) in
-                TrophyRow(
-                    trophy: trophy,
-                    isRevealed: revealedHidden.contains(trophy.id),
-                    onReveal: { reveal(trophy.id) }
-                )
-            }
-        }
-    }
-
-    private func headerTitle(for group: TrophyGroup) -> String {
-        group.isBaseGame ? String(localized: "game.group.base") : group.trophyGroupName
-    }
-
-    private func reveal(_ id: Int) {
-        revealedHidden.insert(id)
-    }
-}
-
-private extension GameModel.Filter {
     var title: String {
         switch self {
         case .all: String(localized: "game.filter.all")
@@ -116,42 +19,283 @@ private extension GameModel.Filter {
     }
 }
 
-/// The game's icon, its progress and the trophy counts.
-private struct GameHeader: View {
-    let title: TrophyTitle
+enum TrophySort: String, CaseIterable, Hashable {
+    /// Platinum first, then gold, silver, bronze; the most common first within a type.
+    case type
+    /// The rarest first.
+    case rarity
+    /// The latest earned first; the rest after them.
+    case earned
+
+    var title: String {
+        switch self {
+        case .type: String(localized: "trophySort.type")
+        case .rarity: String(localized: "trophySort.rarity")
+        case .earned: String(localized: "trophySort.earned")
+        }
+    }
+}
+
+/// A game: its progress, time played, the person's plan and every trophy (docs/PLAN.md §3.3).
+/// The guide and the road map come with Plati (stage 3).
+struct GameView: View {
+    let gameId: String
+
+    @Environment(AppModel.self) private var app
+    @Query private var games: [GameRecord]
+    @Query private var plans: [GamePlanRecord]
+    @State private var filter: TrophyFilter = .notEarned
+    @State private var sort: TrophySort = .type
+    @State private var revealedHidden: Set<Int> = []
+    @State private var openedTrophy: String?
+    @State private var isLoadingTrophies = false
+
+    init(gameId: String) {
+        self.gameId = gameId
+        let id = gameId
+        _games = Query(filter: #Predicate<GameRecord> { $0.id == id })
+        _plans = Query(filter: #Predicate<GamePlanRecord> { $0.gameId == id })
+    }
+
+    private var status: GamePlanStatus { plans.first?.status ?? .none }
 
     var body: some View {
-        HStack(alignment: .center, spacing: AppSpacing.lg) {
-            RemotePhoto(key: "game-\(title.id)", url: title.iconURL)
-                .frame(width: 96, height: 96)
-                .clipShape(.rect(cornerRadius: AppRadius.lg))
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text(verbatim: "\(title.progress)%")
-                    .font(AppTypography.h2)
-                    .monospacedDigit()
-                    .foregroundStyle(title.isPlatinumEarned ? TrophyType.platinum.color : AppColors.Text.primary)
-                LinearProgressBar(
-                    value: Double(title.progress) / 100,
-                    color: title.isPlatinumEarned ? TrophyType.platinum.color : AppColors.accent
-                )
-                TrophyCountsLine(earned: title.earnedTrophies, defined: title.definedTrophies)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.Text.secondary)
+        Group {
+            if let game = games.first {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                        GameHeader(game: game, status: status) { newStatus in
+                            try? app.store.setPlan(newStatus, for: gameId)
+                        }
+                        SegmentedPicker(
+                            title: String(localized: "game.filter.title"),
+                            selection: $filter,
+                            options: TrophyFilter.allCases.map { (label: $0.title, value: $0) }
+                        )
+                        trophies(of: game)
+                    }
+                    .screenPadding()
+                    .padding(.bottom, AppSpacing.xxl)
+                }
+                .navigationTitle(Text(verbatim: game.name))
+            } else {
+                EmptyState(icon: "questionmark.square.dashed", title: String(localized: "game.missing"))
+                    .screenPadding()
             }
+        }
+        .background(AppColors.Background.base)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker(selection: $sort) {
+                        ForEach(TrophySort.allCases, id: \.self) { sort in
+                            Text(sort.title).tag(sort)
+                        }
+                    } label: {
+                        Text("library.sort")
+                    }
+                } label: {
+                    Label(String(localized: "library.sort"), systemImage: "arrow.up.arrow.down")
+                }
+            }
+        }
+        .navigationDestination(item: $openedTrophy) { key in
+            TrophyView(trophyKey: key)
+        }
+        .refreshable {
+            await app.sync.sync(force: true, priority: gameId)
+        }
+        .task {
+            isLoadingTrophies = true
+            await app.sync.refreshGame(gameId)
+            isLoadingTrophies = false
+        }
+    }
+
+    @ViewBuilder
+    private func trophies(of game: GameRecord) -> some View {
+        if game.trophies.isEmpty {
+            if isLoadingTrophies || game.detailsLastUpdated == nil {
+                CardListSkeleton(layout: .section, count: 6)
+            } else {
+                EmptyState(icon: "trophy", title: String(localized: "game.empty.noneEarned"))
+            }
+        } else {
+            let sections = sections(of: game)
+            if sections.isEmpty {
+                if filter == .notEarned {
+                    EmptyState(icon: "checkmark.seal", title: String(localized: "game.empty.allEarned"))
+                } else {
+                    EmptyState(icon: "trophy", title: String(localized: "game.empty.noneEarned"))
+                }
+            } else {
+                ForEach(sections) { section in
+                    TrophySectionView(
+                        section: section,
+                        showsHeader: game.groups.count > 1,
+                        revealedHidden: $revealedHidden,
+                        onOpen: { openedTrophy = $0 }
+                    )
+                }
+            }
+        }
+    }
+
+    private func sections(of game: GameRecord) -> [TrophySection] {
+        let visible = game.trophies.filter { trophy in
+            switch filter {
+            case .all: true
+            case .notEarned: !trophy.isEarned
+            case .earned: trophy.isEarned
+            }
+        }
+        let byGroup = Dictionary(grouping: visible, by: \.groupId)
+        // The base game ("default") first, then the DLC in their order ("001", "002"…).
+        let groupIds = game.groups.isEmpty ? Array(byGroup.keys) : game.groups.map(\.groupId)
+        let groupOrder = groupIds.sorted { lhs, rhs in
+            if (lhs == "default") != (rhs == "default") { return lhs == "default" }
+            return lhs < rhs
+        }
+        return groupOrder.compactMap { id in
+            guard let items = byGroup[id], !items.isEmpty else { return nil }
+            let group = game.groups.first { $0.groupId == id }
+            return TrophySection(id: id, title: sectionTitle(group), trophies: items.sorted(by: sort.areInIncreasingOrder))
+        }
+    }
+
+    private func sectionTitle(_ group: TrophyGroupRecord?) -> String? {
+        guard let group else { return nil }
+        return group.isBaseGame ? String(localized: "game.group.base") : group.name
+    }
+}
+
+extension TrophySort {
+    func areInIncreasingOrder(_ lhs: TrophyRecord, _ rhs: TrophyRecord) -> Bool {
+        switch self {
+        case .type:
+            if lhs.type != rhs.type { return lhs.type < rhs.type }
+            return (lhs.earnedRate ?? 100) > (rhs.earnedRate ?? 100)
+        case .rarity:
+            return (lhs.earnedRate ?? 100) < (rhs.earnedRate ?? 100)
+        case .earned:
+            switch (lhs.earnedAt, rhs.earnedAt) {
+            case let (left?, right?): return left > right
+            case (.some, nil): return true
+            case (nil, .some): return false
+            case (nil, nil): return lhs.trophyId < rhs.trophyId
+            }
+        }
+    }
+}
+
+/// The trophies of one group (the base game or a DLC) under the current filter.
+struct TrophySection: Identifiable {
+    let id: String
+    let title: String?
+    let trophies: [TrophyRecord]
+}
+
+/// The game's cover, progress, counts, time played and the person's plan.
+private struct GameHeader: View {
+    let game: GameRecord
+    let status: GamePlanStatus
+    let onPlan: (GamePlanStatus) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            HStack(alignment: .center, spacing: AppSpacing.lg) {
+                RemotePhoto(key: "game-\(game.id)", url: game.iconURL)
+                    .frame(width: 96, height: 96)
+                    .clipShape(.rect(cornerRadius: AppRadius.lg))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text(verbatim: "\(game.progress)%")
+                        .font(AppTypography.h2)
+                        .monospacedDigit()
+                        .foregroundStyle(game.isPlatinumEarned ? TrophyType.platinum.color : AppColors.Text.primary)
+                    LinearProgressBar(
+                        value: Double(game.progress) / 100,
+                        color: game.isPlatinumEarned ? TrophyType.platinum.color : AppColors.accent
+                    )
+                    TrophyCountsLine(earned: game.earned, defined: game.defined)
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.Text.secondary)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
+            if let seconds = game.playSeconds, seconds > 0 {
+                StatsStrip(items: playItems(seconds: seconds))
+            }
+
+            UniversalFilterButton(
+                title: status.title,
+                isSelected: status != .none,
+                icon: { Icon(status.systemImage, size: AppIconSize.sm) },
+                menuContent: {
+                    ForEach(GamePlanStatus.allCases, id: \.self) { option in
+                        Button {
+                            onPlan(option)
+                        } label: {
+                            Label(option.title, systemImage: option.systemImage)
+                        }
+                    }
+                }
+            )
         }
         .padding(AppSpacing.lg)
         .cardStyle()
-        .accessibilityElement(children: .combine)
+    }
+
+    private func playItems(seconds: TimeInterval) -> [StatsStrip.Item] {
+        var items: [StatsStrip.Item] = [
+            .init(value: PlayTimeText.duration(seconds), title: String(localized: "game.played")),
+        ]
+        if let lastPlayed = game.lastPlayed {
+            items.append(.init(value: Formatting.relativeTime(lastPlayed), title: String(localized: "game.lastPlayed")))
+        }
+        if let count = game.playCount, count > 0 {
+            items.append(.init(value: count.formatted(), title: String(localized: "game.launches")))
+        }
+        return items
+    }
+}
+
+/// One group's trophies in one glass card, under the group's name when the game has DLC.
+private struct TrophySectionView: View {
+    let section: TrophySection
+    let showsHeader: Bool
+    @Binding var revealedHidden: Set<Int>
+    let onOpen: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            if showsHeader, let title = section.title {
+                SectionHeader(title)
+            }
+            CardList(section.trophies, layout: .section) { (trophy: TrophyRecord) in
+                TrophyRow(trophy: trophy, isRevealed: revealedHidden.contains(trophy.trophyId))
+                    .contentShape(Rectangle())
+                    .onTapGesture { tap(trophy) }
+            }
+        }
+    }
+
+    private func tap(_ trophy: TrophyRecord) {
+        if trophy.isHidden, !trophy.isEarned, !revealedHidden.contains(trophy.trophyId) {
+            revealedHidden.insert(trophy.trophyId)
+        } else {
+            onOpen(trophy.key)
+        }
     }
 }
 
 /// One trophy: its icon (grey until earned), name, description, rarity and progress. A hidden
 /// trophy not earned yet keeps its name and description under a tap, so nothing is spoiled.
-private struct TrophyRow: View {
-    let trophy: Trophy
-    let isRevealed: Bool
-    let onReveal: () -> Void
+struct TrophyRow: View {
+    let trophy: TrophyRecord
+    var isRevealed = false
 
     private var isSpoilerHidden: Bool { trophy.isHidden && !trophy.isEarned && !isRevealed }
 
@@ -160,7 +304,7 @@ private struct TrophyRow: View {
             if isSpoilerHidden {
                 AchievementMedal(systemImage: "questionmark", color: trophy.type.color, isEarned: false, size: 64)
             } else {
-                RemotePhoto(key: "trophy-\(trophy.groupId)-\(trophy.id)-\(trophy.iconURL?.lastPathComponent ?? "")", url: trophy.iconURL)
+                RemotePhoto(key: "trophy-\(trophy.key)", url: trophy.iconURL)
                     .saturation(trophy.isEarned ? 1 : 0)
                     .opacity(trophy.isEarned ? 1 : 0.7)
             }
@@ -172,6 +316,7 @@ private struct TrophyRow: View {
                 } else if !trophy.detail.isEmpty {
                     Text(verbatim: trophy.detail)
                         .foregroundStyle(AppColors.Text.secondary)
+                        .lineLimit(3)
                 }
                 if let progress = trophy.progress, !trophy.isEarned {
                     HStack(spacing: AppSpacing.sm) {
@@ -180,25 +325,27 @@ private struct TrophyRow: View {
                             .monospacedDigit()
                     }
                 }
-                MetaLine(meta)
+                MetaLine(TrophyMeta.items(for: trophy))
             }
         }
         .padding(.vertical, AppSpacing.md)
         .rowDividerInset(64 + AppSpacing.md)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if isSpoilerHidden { onReveal() }
-        }
     }
+}
 
-    private var meta: [MetaItem] {
+enum TrophyMeta {
+    static func items(for trophy: TrophyRecord) -> [MetaItem] {
         var items: [MetaItem] = [.label(trophy.type.title, systemImage: trophy.type.systemImage, tint: trophy.type.color)]
         if let rate = trophy.earnedRate {
-            items.append(.text(String(localized: "trophy.rate \(rate.formatted(.number.precision(.fractionLength(1))))")))
+            items.append(.text(rateText(rate)))
         }
         if let earnedAt = trophy.earnedAt {
-            items.append(.label(earnedAt.formatted(date: .abbreviated, time: .shortened), systemImage: "checkmark.circle.fill", tint: AppColors.success))
+            items.append(.label(earnedAt.formatted(date: .abbreviated, time: .omitted), systemImage: "checkmark.circle.fill", tint: AppColors.success))
         }
         return items
+    }
+
+    static func rateText(_ rate: Double) -> String {
+        String(localized: "trophy.rate \(rate.formatted(.number.precision(.fractionLength(1))))")
     }
 }

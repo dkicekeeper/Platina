@@ -41,6 +41,10 @@ targets:
         product: DesignKit
       - package: PlatinaKit
         product: PSNKit
+      - package: PlatinaKit
+        product: PlatinaCore
+      - package: PlatinaKit
+        product: PlatinaStore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dakacom.Platina

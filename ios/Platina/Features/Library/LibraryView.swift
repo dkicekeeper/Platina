@@ -1,201 +1,127 @@
 import SwiftUI
+import SwiftData
 import DesignTokens
 import DesignComponents
 import PSNKit
+import PlatinaCore
+import PlatinaStore
 
-/// Stage 0's main screen: who is signed in and their PS5 games.
+/// The PS5 games: shelves, an order, search (docs/PLAN.md §3.2).
 struct LibraryView: View {
     @Environment(AppModel.self) private var app
-    @State private var model: LibraryModel
-    @State private var selectedGame: TrophyTitle?
-    @State private var isConfirmingSignOut = false
+    @Query(sort: \GameRecord.lastUpdated, order: .reverse) private var games: [GameRecord]
+    @Query private var plans: [GamePlanRecord]
 
-    init(app: AppModel) {
-        _model = State(initialValue: LibraryModel(client: app.client, onError: { [weak app] error in
-            app?.handle(error)
-        }))
+    /// nil: every game (the chips' "All").
+    @State private var shelf: GameShelf?
+    @State private var sort: GameSort = .recent
+    @State private var query = ""
+    @State private var openedGame: String?
+
+    private var statuses: [String: GamePlanStatus] {
+        Dictionary(plans.map { ($0.gameId, $0.status) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    private var summaries: [GameSummary] {
+        let lookup = statuses
+        return games.map { $0.summary(status: lookup[$0.id] ?? .none) }
     }
 
     var body: some View {
         NavigationStack {
-            content
-                .background(AppColors.Background.base)
-                .navigationTitle(Text("library.title"))
-                .navigationDestination(item: $selectedGame) { game in
-                    GameView(title: game, app: app)
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                    SyncStatusBanner()
+                    content
                 }
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Menu {
-                            Button(role: .destructive) {
-                                isConfirmingSignOut = true
-                            } label: {
-                                Label(String(localized: "library.signOut"), systemImage: "rectangle.portrait.and.arrow.right")
+                .screenPadding()
+                .padding(.bottom, AppSpacing.xxl)
+            }
+            .background(AppColors.Background.base)
+            .navigationTitle(Text("library.title"))
+            .searchable(text: $query, prompt: Text("library.search"))
+            .refreshable { await app.sync.sync(force: true) }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker(selection: $sort) {
+                            ForEach(GameSort.allCases) { sort in
+                                Text(sort.title).tag(sort)
                             }
                         } label: {
-                            Label(String(localized: "library.account"), systemImage: "person.crop.circle")
+                            Text("library.sort")
                         }
+                    } label: {
+                        Label(String(localized: "library.sort"), systemImage: "arrow.up.arrow.down")
                     }
                 }
-                .confirmationDialog(
-                    Text("library.signOut.confirm"),
-                    isPresented: $isConfirmingSignOut,
-                    titleVisibility: .visible
-                ) {
-                    Button(String(localized: "library.signOut"), role: .destructive) {
-                        Task { await app.signOut() }
-                    }
-                }
-        }
-        .task {
-            // Once: coming back from a game does not load the library again (pull to refresh does).
-            if !model.hasLoaded { await model.load() }
+            }
+            .navigationDestination(item: $openedGame) { gameId in
+                GameView(gameId: gameId)
+            }
         }
     }
 
     @ViewBuilder
     private var content: some View {
-        switch model.state {
-        case .failed(let message):
+        if games.isEmpty {
+            emptyLibrary
+        } else {
+            let all = summaries
+            let counts = all.counts()
+            ChipPicker(
+                options: GameShelf.allCases.filter { $0 != .all },
+                selection: $shelf,
+                allTitle: String(localized: "shelf.all.count \(counts[.all] ?? 0)")
+            ) { shelf in
+                String(localized: "shelf.chip \(shelf.title) \(counts[shelf] ?? 0)")
+            }
+
+            let visible = all.filtered(shelf: shelf ?? .all, query: query, sort: sort)
+            if visible.isEmpty {
+                EmptyState(
+                    icon: "line.3.horizontal.decrease.circle",
+                    title: String(localized: "library.noMatches.title"),
+                    description: String(localized: "library.noMatches.message")
+                )
+            } else {
+                let byId = Dictionary(games.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+                CardList(visible, layout: .cards, onOpen: { openedGame = $0.id }) { (summary: GameSummary) in
+                    if let game = byId[summary.id] {
+                        GameRow(game: game, status: summary.status)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var emptyLibrary: some View {
+        switch app.sync.status {
+        case .failed(let error):
             EmptyState(
                 icon: "wifi.exclamationmark",
                 title: String(localized: "library.error.title"),
-                description: message,
+                description: error.userMessage,
                 actionTitle: String(localized: "common.retry"),
-                action: { Task { await model.load() } },
+                action: { Task { await app.sync.sync(force: true) } },
                 style: .error
             )
-            .screenPadding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        case .loading, .loaded:
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                    SkeletonReveal(isLoading: model.state == .loading) {
-                        ProfileCard(profile: model.profile, summary: model.summary, platinums: model.platinumCount, games: model.games.count)
-                    } skeleton: {
-                        StatsStripSkeleton(count: 4)
-                    }
-
-                    SectionHeader(String(localized: "library.games.header"), style: .large)
-
-                    SkeletonReveal(isLoading: model.state == .loading) {
-                        if model.games.isEmpty {
-                            EmptyState(
-                                icon: "gamecontroller",
-                                title: String(localized: "library.empty.title"),
-                                description: String(localized: "library.empty.message")
-                            )
-                        } else {
-                            CardList(model.games, layout: .cards, onOpen: { selectedGame = $0 }) { game in
-                                GameRow(game: game)
-                            }
-                        }
-                    } skeleton: {
-                        VStack(spacing: AppSpacing.md) {
-                            ForEach(0..<5, id: \.self) { _ in
-                                ThumbnailRowSkeleton()
-                                    .padding(AppSpacing.lg)
-                                    .cardStyle()
-                            }
-                        }
-                    }
-                }
-                .screenPadding()
-                .padding(.bottom, AppSpacing.xxl)
+        case .syncing:
+            VStack(spacing: AppSpacing.md) {
+                ChipPickerSkeleton(showsTitle: false)
+                CardListSkeleton(layout: .cards, count: 5)
             }
-            .refreshable { await model.load() }
-        }
-    }
-}
-
-/// The person's level, avatar and totals.
-private struct ProfileCard: View {
-    let profile: PSNProfile?
-    let summary: TrophySummary?
-    let platinums: Int
-    let games: Int
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            if let profile {
-                HStack(spacing: AppSpacing.md) {
-                    RemotePhoto(key: "avatar-\(profile.onlineId)", url: profile.avatarURL)
-                        .frame(width: AppIconSize.Tile.md, height: AppIconSize.Tile.md)
-                        .clipShape(Circle())
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                        Text(verbatim: profile.onlineId)
-                            .font(AppTypography.bodyEmphasis)
-                            .foregroundStyle(AppColors.Text.primary)
-                        if let summary {
-                            Text("library.level \(summary.level) \(summary.progress)")
-                                .font(AppTypography.caption)
-                                .foregroundStyle(AppColors.Text.secondary)
-                        }
-                    }
-                }
-            }
-            StatsStrip(items: [
-                .init(value: summary.map { "\($0.level)" } ?? "–", title: String(localized: "library.stat.level")),
-                .init(value: "\(platinums)", title: String(localized: "library.stat.platinums")),
-                .init(value: summary.map { "\($0.earnedTrophies.total)" } ?? "–", title: String(localized: "library.stat.trophies")),
-                .init(value: "\(games)", title: String(localized: "library.stat.games")),
-            ])
-        }
-    }
-}
-
-/// A game in the library: its icon, name, progress and how many of each trophy.
-struct GameRow: View {
-    let game: TrophyTitle
-
-    var body: some View {
-        HStack(alignment: .center, spacing: AppSpacing.md) {
-            ThumbnailRow(title: game.trophyTitleName) {
-                RemotePhoto(key: "game-\(game.id)", url: game.iconURL)
-            } details: {
-                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    TrophyCountsLine(earned: game.earnedTrophies, defined: game.definedTrophies)
-                    RelativeTime(game.lastUpdatedDateTime)
-                }
-            }
-            ProgressRing(
-                progress: Double(game.progress) / 100,
-                size: AppIconSize.Tile.sm,
-                lineWidth: 4,
-                overrideColor: game.isPlatinumEarned ? TrophyType.platinum.color : nil,
-                accessibilityLabel: String(localized: "game.progress \(game.progress)"),
-                showsTrack: true
-            )
-            .overlay {
-                Text(verbatim: "\(game.progress)%")
-                    .font(AppTypography.caption2)
-                    .monospacedDigit()
-                    .foregroundStyle(AppColors.Text.secondary)
-                    .accessibilityHidden(true)
+        case .idle:
+            if app.sync.lastSyncedAt == nil {
+                CardListSkeleton(layout: .cards, count: 5)
+            } else {
+                EmptyState(
+                    icon: "gamecontroller",
+                    title: String(localized: "library.empty.title"),
+                    description: String(localized: "library.empty.message")
+                )
             }
         }
-    }
-}
-
-/// "🏆 1 · 12/21 · 2/4 · 22/31": what is earned of each trophy type, platinum first.
-struct TrophyCountsLine: View {
-    let earned: TrophyCounts
-    let defined: TrophyCounts
-
-    var body: some View {
-        HStack(spacing: AppSpacing.sm) {
-            ForEach(TrophyType.allCases.filter { defined[$0] > 0 }, id: \.self) { type in
-                HStack(spacing: AppSpacing.xxs) {
-                    Image(systemName: type.systemImage)
-                        .foregroundStyle(type.color)
-                    Text(verbatim: "\(earned[type])/\(defined[type])")
-                        .monospacedDigit()
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text("trophy.counts.accessibility \(type.title) \(earned[type]) \(defined[type])"))
-            }
-        }
-        .lineLimit(1)
     }
 }
