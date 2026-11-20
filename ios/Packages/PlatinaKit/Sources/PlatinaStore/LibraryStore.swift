@@ -213,11 +213,13 @@ public final class LibraryStore {
     /// Everything PSN gave: on sign-out, or when another account signs in. The person's own data
     /// stays.
     public func eraseCache() throws {
-        try context.delete(model: TrophyRecord.self)
-        try context.delete(model: TrophyGroupRecord.self)
-        try context.delete(model: GameRecord.self)
-        try context.delete(model: ProfileRecord.self)
-        try context.delete(model: TitleLinkRecord.self)
+        // Object by object, not `delete(model:)`: a batch delete goes straight to the store, and
+        // the main context kept handing out the objects it already had.
+        for trophy in try context.fetch(FetchDescriptor<TrophyRecord>()) { context.delete(trophy) }
+        for group in try context.fetch(FetchDescriptor<TrophyGroupRecord>()) { context.delete(group) }
+        for game in try games() { context.delete(game) }
+        for profile in try context.fetch(FetchDescriptor<ProfileRecord>()) { context.delete(profile) }
+        for link in try context.fetch(FetchDescriptor<TitleLinkRecord>()) { context.delete(link) }
         try context.save()
     }
 

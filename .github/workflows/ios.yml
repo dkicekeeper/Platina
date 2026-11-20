@@ -77,9 +77,24 @@ jobs:
             -scheme "$SCHEME" \
             -destination "id=$DEVICE_ID" \
             -derivedDataPath build \
+            -resultBundlePath "$RUNNER_TEMP/PackageTests.xcresult" \
             -quiet
 
       - name: Build log on failure
         if: failure()
         run: |
           [ -f "$RUNNER_TEMP/build.log" ] && grep -E -B2 -A6 "error:" "$RUNNER_TEMP/build.log" | head -200 || true
+
+      # With -quiet only the names of failed tests show. Here: what each failed check said.
+      - name: Test failures
+        if: failure()
+        run: |
+          RESULT="$RUNNER_TEMP/PackageTests.xcresult"
+          [ -d "$RESULT" ] || { echo "No test results"; exit 0; }
+          xcrun xcresulttool get test-results summary --path "$RESULT" --format json | python3 -c '
+          import json, sys
+          summary = json.load(sys.stdin)
+          for failure in summary.get("testFailures", []):
+              print("✘", failure.get("targetName", ""), failure.get("testName", ""))
+              print("  ", failure.get("failureText", "").replace("\n", "\n   "))
+          ' || true
