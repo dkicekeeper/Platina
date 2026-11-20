@@ -1,0 +1,9 @@
+{
+  "basicPresence": {
+    "availability": "availableToPlay",
+    "primaryPlatformInfo": { "onlineStatus": "online", "platform": "PS5", "lastOnlineDate": "2026-11-20T08:01:00.000Z" },
+    "gameTitleInfoList": [
+      { "npTitleId": "PPSA03224_00", "titleName": "Cult of the Lamb", "format": "PS5", "launchPlatform": "PS5", "conceptIconUrl": "https://image.api.playstation.com/cotl-icon.png" }
+    ]
+  }
+}

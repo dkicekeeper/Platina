@@ -1,0 +1,22 @@
+{
+  "titles": [
+    {
+      "titleId": "PPSA03224_00",
+      "name": "Cult of the Lamb",
+      "localizedName": "Cult of the Lamb",
+      "imageUrl": "https://image.api.playstation.com/cotl.png",
+      "localizedImageUrl": "https://image.api.playstation.com/cotl-ru.png",
+      "category": "ps5_native_game",
+      "service": "none_purchased",
+      "playCount": 41,
+      "concept": { "id": 10002691, "titleIds": ["PPSA03224_00", "CUSA29470_00"], "name": "Cult of the Lamb", "media": { "audios": [], "videos": [], "images": [] } },
+      "media": {},
+      "firstPlayedDateTime": "2026-10-02T17:33:10.39Z",
+      "lastPlayedDateTime": "2026-11-18T22:01:09.12Z",
+      "playDuration": "PT38H12M5S"
+    }
+  ],
+  "nextOffset": 1,
+  "previousOffset": 0,
+  "totalItemCount": 1
+}

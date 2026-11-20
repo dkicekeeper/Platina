@@ -1,0 +1,309 @@
+#if canImport(SwiftData)
+import Foundation
+import SwiftData
+import PSNKit
+import PlatinaCore
+
+// Two stores (docs/PLAN.md §6):
+// - the cache: what PSN says (games, trophies, the profile). A sync can rebuild it, so a version
+//   that cannot open it simply starts it over;
+// - the person's own data (plans for games, later notes and sessions). Built for iCloud: every
+//   attribute has a default, nothing is unique, no relationships into the cache (games are
+//   referred to by id).
+
+// MARK: - Cache
+
+/// A PS5 trophy list: a game.
+@Model
+public final class GameRecord {
+    /// `NPWR28536_00`.
+    @Attribute(.unique) public var id: String
+    public var name: String
+    public var iconURLString: String?
+    /// The cover from the game list, when the game has time played.
+    public var coverURLString: String?
+    public var platform: String
+    public var serviceName: String
+    public var trophySetVersion: String
+    public var hasTrophyGroups: Bool
+    public var progress: Int
+    /// When PSN last saw a trophy change in it.
+    public var lastUpdated: Date
+
+    public var definedBronze: Int
+    public var definedSilver: Int
+    public var definedGold: Int
+    public var definedPlatinum: Int
+    public var earnedBronze: Int
+    public var earnedSilver: Int
+    public var earnedGold: Int
+    public var earnedPlatinum: Int
+
+    /// `lastUpdated` and `trophySetVersion` when the trophies were last fetched (nil: never).
+    public var detailsLastUpdated: Date?
+    public var detailsVersion: String?
+
+    public var playSeconds: Double?
+    public var firstPlayed: Date?
+    public var lastPlayed: Date?
+    public var playCount: Int?
+
+    @Relationship(deleteRule: .cascade, inverse: \TrophyRecord.game)
+    public var trophies: [TrophyRecord] = []
+    @Relationship(deleteRule: .cascade, inverse: \TrophyGroupRecord.game)
+    public var groups: [TrophyGroupRecord] = []
+
+    public init(title: TrophyTitle) {
+        id = title.npCommunicationId
+        name = title.trophyTitleName
+        platform = title.trophyTitlePlatform
+        serviceName = title.npServiceName
+        trophySetVersion = title.trophySetVersion
+        hasTrophyGroups = title.hasTrophyGroups
+        progress = title.progress
+        lastUpdated = title.lastUpdatedDateTime
+        definedBronze = 0
+        definedSilver = 0
+        definedGold = 0
+        definedPlatinum = 0
+        earnedBronze = 0
+        earnedSilver = 0
+        earnedGold = 0
+        earnedPlatinum = 0
+        update(from: title)
+    }
+
+    func update(from title: TrophyTitle) {
+        name = title.trophyTitleName
+        iconURLString = title.trophyTitleIconUrl
+        platform = title.trophyTitlePlatform
+        serviceName = title.npServiceName
+        trophySetVersion = title.trophySetVersion
+        hasTrophyGroups = title.hasTrophyGroups
+        progress = title.progress
+        lastUpdated = title.lastUpdatedDateTime
+        definedBronze = title.definedTrophies.bronze
+        definedSilver = title.definedTrophies.silver
+        definedGold = title.definedTrophies.gold
+        definedPlatinum = title.definedTrophies.platinum
+        earnedBronze = title.earnedTrophies.bronze
+        earnedSilver = title.earnedTrophies.silver
+        earnedGold = title.earnedTrophies.gold
+        earnedPlatinum = title.earnedTrophies.platinum
+    }
+
+    public var defined: TrophyCounts {
+        TrophyCounts(bronze: definedBronze, silver: definedSilver, gold: definedGold, platinum: definedPlatinum)
+    }
+
+    public var earned: TrophyCounts {
+        TrophyCounts(bronze: earnedBronze, silver: earnedSilver, gold: earnedGold, platinum: earnedPlatinum)
+    }
+
+    public var iconURL: URL? { iconURLString.flatMap(URL.init(string:)) }
+    public var coverURL: URL? { coverURLString.flatMap(URL.init(string:)) }
+    public var isPlatinumEarned: Bool { definedPlatinum > 0 && earnedPlatinum > 0 }
+    public var isCompleted: Bool { defined.total > 0 && earned.total >= defined.total }
+
+    /// The trophies are stored and match what PSN says about the game.
+    public var hasCurrentDetails: Bool {
+        detailsLastUpdated == lastUpdated && detailsVersion == trophySetVersion
+    }
+
+    /// The game as a trophy list again, to ask PSN for its trophies.
+    public var title: TrophyTitle {
+        TrophyTitle(
+            npCommunicationId: id, npServiceName: serviceName, trophySetVersion: trophySetVersion,
+            trophyTitleName: name, trophyTitleIconUrl: iconURLString, trophyTitlePlatform: platform,
+            hasTrophyGroups: hasTrophyGroups, definedTrophies: defined, earnedTrophies: earned,
+            progress: progress, lastUpdatedDateTime: lastUpdated
+        )
+    }
+
+    public func summary(status: GamePlanStatus) -> GameSummary {
+        GameSummary(
+            id: id, name: name, progress: progress, defined: defined, earned: earned,
+            lastUpdated: lastUpdated, playTime: playSeconds, status: status
+        )
+    }
+}
+
+/// A trophy of a game, with the person's progress on it.
+@Model
+public final class TrophyRecord {
+    /// `NPWR28536_00#12`.
+    @Attribute(.unique) public var key: String
+    public var gameId: String
+    public var trophyId: Int
+    public var groupId: String
+    public var typeRaw: String
+    public var name: String
+    public var detail: String
+    public var iconURLString: String?
+    public var isHidden: Bool
+    public var isEarned: Bool
+    public var earnedAt: Date?
+    public var earnedRate: Double?
+    public var rarityRaw: Int?
+    public var progressCurrent: Int?
+    public var progressTarget: Int?
+    public var progressUpdatedAt: Date?
+    public var game: GameRecord?
+
+    public init(gameId: String, trophy: Trophy) {
+        key = Self.key(gameId: gameId, trophyId: trophy.id)
+        self.gameId = gameId
+        trophyId = trophy.id
+        groupId = trophy.groupId
+        typeRaw = trophy.type.rawValue
+        name = trophy.name
+        detail = trophy.detail
+        isHidden = trophy.isHidden
+        isEarned = trophy.isEarned
+        update(from: trophy)
+    }
+
+    public static func key(gameId: String, trophyId: Int) -> String {
+        "\(gameId)#\(trophyId)"
+    }
+
+    func update(from trophy: Trophy) {
+        groupId = trophy.groupId
+        typeRaw = trophy.type.rawValue
+        name = trophy.name
+        detail = trophy.detail
+        iconURLString = trophy.iconURL?.absoluteString
+        isHidden = trophy.isHidden
+        isEarned = trophy.isEarned
+        earnedAt = trophy.earnedAt
+        earnedRate = trophy.earnedRate
+        rarityRaw = trophy.rarity?.rawValue
+        progressCurrent = trophy.progress?.current
+        progressTarget = trophy.progress?.target
+        progressUpdatedAt = trophy.progress?.updatedAt
+    }
+
+    public var type: TrophyType { TrophyType(rawValue: typeRaw) ?? .bronze }
+    public var rarity: TrophyRarity? { rarityRaw.flatMap(TrophyRarity.init(rawValue:)) }
+    public var iconURL: URL? { iconURLString.flatMap(URL.init(string:)) }
+
+    public var progress: TrophyProgress? {
+        guard let progressTarget else { return nil }
+        return TrophyProgress(current: progressCurrent ?? 0, target: progressTarget, updatedAt: progressUpdatedAt)
+    }
+}
+
+/// The base game or a DLC of a game.
+@Model
+public final class TrophyGroupRecord {
+    /// `NPWR28536_00#001`.
+    @Attribute(.unique) public var key: String
+    public var gameId: String
+    public var groupId: String
+    public var name: String
+    public var detail: String?
+    public var iconURLString: String?
+    public var definedTotal: Int
+    public var game: GameRecord?
+
+    public init(gameId: String, group: TrophyGroup) {
+        key = "\(gameId)#\(group.trophyGroupId)"
+        self.gameId = gameId
+        groupId = group.trophyGroupId
+        name = group.trophyGroupName
+        definedTotal = group.definedTrophies.total
+        update(from: group)
+    }
+
+    func update(from group: TrophyGroup) {
+        name = group.trophyGroupName
+        detail = group.trophyGroupDetail
+        iconURLString = group.trophyGroupIconUrl
+        definedTotal = group.definedTrophies.total
+    }
+
+    public var isBaseGame: Bool { groupId == "default" }
+}
+
+/// The signed-in person: level, totals, when the library was last synced.
+@Model
+public final class ProfileRecord {
+    @Attribute(.unique) public var accountId: String
+    public var onlineId: String?
+    public var avatarURLString: String?
+    public var level: Int
+    /// Percent towards the next level.
+    public var levelProgress: Int
+    /// 1–10: the colour of the level's badge.
+    public var tier: Int
+    public var earnedBronze: Int
+    public var earnedSilver: Int
+    public var earnedGold: Int
+    public var earnedPlatinum: Int
+    public var lastSyncedAt: Date?
+
+    public init(summary: TrophySummary) {
+        accountId = summary.accountId
+        level = summary.level
+        levelProgress = summary.progress
+        tier = summary.tier
+        earnedBronze = summary.earnedTrophies.bronze
+        earnedSilver = summary.earnedTrophies.silver
+        earnedGold = summary.earnedTrophies.gold
+        earnedPlatinum = summary.earnedTrophies.platinum
+    }
+
+    func update(summary: TrophySummary, profile: PSNProfile?) {
+        level = summary.level
+        levelProgress = summary.progress
+        tier = summary.tier
+        earnedBronze = summary.earnedTrophies.bronze
+        earnedSilver = summary.earnedTrophies.silver
+        earnedGold = summary.earnedTrophies.gold
+        earnedPlatinum = summary.earnedTrophies.platinum
+        if let profile {
+            onlineId = profile.onlineId
+            avatarURLString = profile.avatarURL?.absoluteString
+        }
+    }
+
+    /// Every platform's trophies, not only PS5's.
+    public var earned: TrophyCounts {
+        TrophyCounts(bronze: earnedBronze, silver: earnedSilver, gold: earnedGold, platinum: earnedPlatinum)
+    }
+
+    public var avatarURL: URL? { avatarURLString.flatMap(URL.init(string:)) }
+}
+
+/// Which trophy lists a game title (`PPSA…_00`) has. Asked once per title: it never changes.
+@Model
+public final class TitleLinkRecord {
+    @Attribute(.unique) public var titleId: String
+    public var listIds: [String]
+    public var checkedAt: Date
+
+    public init(titleId: String, listIds: [String], checkedAt: Date) {
+        self.titleId = titleId
+        self.listIds = listIds
+        self.checkedAt = checkedAt
+    }
+}
+
+// MARK: - The person's own data
+
+/// What the person plans for a game.
+@Model
+public final class GamePlanRecord {
+    public var gameId: String = ""
+    public var statusRaw: String = GamePlanStatus.none.rawValue
+    public var updatedAt: Date = Date.distantPast
+
+    public init(gameId: String, status: GamePlanStatus, updatedAt: Date) {
+        self.gameId = gameId
+        statusRaw = status.rawValue
+        self.updatedAt = updatedAt
+    }
+
+    public var status: GamePlanStatus { GamePlanStatus(rawValue: statusRaw) ?? .none }
+}
+#endif

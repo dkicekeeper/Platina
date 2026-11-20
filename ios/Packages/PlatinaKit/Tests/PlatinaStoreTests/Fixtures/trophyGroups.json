@@ -1,0 +1,11 @@
+{
+  "trophySetVersion": "01.20",
+  "trophyTitleName": "Cult of the Lamb",
+  "trophyTitleIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR28536_00/icon.png",
+  "trophyTitlePlatform": "PS5",
+  "definedTrophies": { "bronze": 31, "silver": 21, "gold": 4, "platinum": 1 },
+  "trophyGroups": [
+    { "trophyGroupId": "default", "trophyGroupName": "Cult of the Lamb", "trophyGroupIconUrl": "https://psnobj/default.png", "definedTrophies": { "bronze": 14, "silver": 19, "gold": 3, "platinum": 1 } },
+    { "trophyGroupId": "003", "trophyGroupName": "Шерстополь", "trophyGroupIconUrl": "https://psnobj/003.png", "definedTrophies": { "bronze": 17, "silver": 2, "gold": 1, "platinum": 0 } }
+  ]
+}

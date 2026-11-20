@@ -50,6 +50,36 @@ public struct TrophyCounts: Codable, Sendable, Hashable {
 
 /// One trophy list of the person: a game (or a version of it) with trophies.
 public struct TrophyTitle: Decodable, Sendable, Hashable, Identifiable {
+    public init(
+        npCommunicationId: String,
+        npServiceName: String = "trophy2",
+        trophySetVersion: String = "01.00",
+        trophyTitleName: String,
+        trophyTitleIconUrl: String? = nil,
+        trophyTitlePlatform: String = "PS5",
+        trophyTitleDetail: String? = nil,
+        hasTrophyGroups: Bool = false,
+        definedTrophies: TrophyCounts,
+        earnedTrophies: TrophyCounts,
+        progress: Int,
+        hiddenFlag: Bool? = false,
+        lastUpdatedDateTime: Date
+    ) {
+        self.npCommunicationId = npCommunicationId
+        self.npServiceName = npServiceName
+        self.trophySetVersion = trophySetVersion
+        self.trophyTitleName = trophyTitleName
+        self.trophyTitleIconUrl = trophyTitleIconUrl
+        self.trophyTitlePlatform = trophyTitlePlatform
+        self.trophyTitleDetail = trophyTitleDetail
+        self.hasTrophyGroups = hasTrophyGroups
+        self.definedTrophies = definedTrophies
+        self.earnedTrophies = earnedTrophies
+        self.progress = progress
+        self.hiddenFlag = hiddenFlag
+        self.lastUpdatedDateTime = lastUpdatedDateTime
+    }
+
     /// `NPWR28536_00`: the trophy list's id, the key of a game everywhere in the app.
     public let npCommunicationId: String
     /// `trophy2` for PS5, `trophy` for PS4, PS3 and Vita: every trophy request needs it.
@@ -90,6 +120,14 @@ struct TrophyTitlesPage: Decodable, PSNPage {
 // MARK: - Trophy groups (the base game and its DLC)
 
 public struct TrophyGroup: Decodable, Sendable, Hashable, Identifiable {
+    public init(trophyGroupId: String, trophyGroupName: String, trophyGroupDetail: String? = nil, trophyGroupIconUrl: String? = nil, definedTrophies: TrophyCounts) {
+        self.trophyGroupId = trophyGroupId
+        self.trophyGroupName = trophyGroupName
+        self.trophyGroupDetail = trophyGroupDetail
+        self.trophyGroupIconUrl = trophyGroupIconUrl
+        self.definedTrophies = definedTrophies
+    }
+
     /// `default` for the base game, `001`, `002`… for each DLC.
     public let trophyGroupId: String
     public let trophyGroupName: String
@@ -233,6 +271,14 @@ public struct TrophyProgress: Sendable, Hashable {
 
 /// The person's trophy level and totals.
 public struct TrophySummary: Decodable, Sendable, Hashable {
+    public init(accountId: String, trophyLevel: String, progress: Int, tier: Int, earnedTrophies: TrophyCounts) {
+        self.accountId = accountId
+        self.trophyLevel = trophyLevel
+        self.progress = progress
+        self.tier = tier
+        self.earnedTrophies = earnedTrophies
+    }
+
     public let accountId: String
     /// The level as text (`"412"`), as PSN sends it.
     public let trophyLevel: String
@@ -247,6 +293,11 @@ public struct TrophySummary: Decodable, Sendable, Hashable {
 
 public struct PSNProfile: Decodable, Sendable, Hashable {
     public struct Avatar: Decodable, Sendable, Hashable {
+        public init(size: String, url: String) {
+            self.size = size
+            self.url = url
+        }
+
         public let size: String
         public let url: String
     }
@@ -267,6 +318,30 @@ public struct PSNProfile: Decodable, Sendable, Hashable {
 
 /// A game in the person's game list, with the time played (PS4 and PS5 only).
 public struct PlayedGame: Decodable, Sendable, Hashable, Identifiable {
+    public init(
+        titleId: String,
+        name: String,
+        localizedName: String? = nil,
+        imageUrl: String? = nil,
+        localizedImageUrl: String? = nil,
+        category: String? = "ps5_native_game",
+        playCount: Int? = nil,
+        firstPlayedDateTime: Date? = nil,
+        lastPlayedDateTime: Date? = nil,
+        playDuration: String? = nil
+    ) {
+        self.titleId = titleId
+        self.name = name
+        self.localizedName = localizedName
+        self.imageUrl = imageUrl
+        self.localizedImageUrl = localizedImageUrl
+        self.category = category
+        self.playCount = playCount
+        self.firstPlayedDateTime = firstPlayedDateTime
+        self.lastPlayedDateTime = lastPlayedDateTime
+        self.playDuration = playDuration
+    }
+
     /// `PPSA01234_00`: the game's title id, not its trophy list's.
     public let titleId: String
     public let name: String
@@ -298,6 +373,10 @@ struct PlayedGamesPage: Decodable, PSNPage {
 /// Which trophy lists a game title (`PPSA…`) has: the bridge from time played to trophies.
 public struct TitleTrophyLink: Decodable, Sendable, Hashable {
     public struct List: Decodable, Sendable, Hashable {
+        public init(npCommunicationId: String) {
+            self.npCommunicationId = npCommunicationId
+        }
+
         public let npCommunicationId: String
     }
 
