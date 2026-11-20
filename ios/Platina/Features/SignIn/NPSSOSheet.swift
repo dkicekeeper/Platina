@@ -46,7 +46,7 @@ struct NPSSOSheet: View {
                 FormTextField(
                     text: $input,
                     placeholder: String(localized: "npsso.field.placeholder"),
-                    style: .rowMultiline,
+                    style: .rowMultiline(min: 2, max: 4),
                     errorMessage: errorMessage
                 )
             }

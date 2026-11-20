@@ -63,25 +63,46 @@ struct GameView: View {
                     EmptyState(icon: "trophy", title: String(localized: "game.empty.noneEarned"))
                 }
             } else {
-                ForEach(sections) { section in
-                    VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        if let group = section.group, model.groups.count > 1 {
-                            SectionHeader(
-                                group.isBaseGame ? String(localized: "game.group.base") : group.trophyGroupName,
-                                style: .compact
-                            )
-                        }
-                        CardList(section.trophies, layout: .section) { trophy in
-                            TrophyRow(
-                                trophy: trophy,
-                                isRevealed: revealedHidden.contains(trophy.id),
-                                onReveal: { _ = revealedHidden.insert(trophy.id) }
-                            )
-                        }
-                    }
+                ForEach(sections, id: \.id) { section in
+                    TrophySectionView(
+                        section: section,
+                        showsHeader: model.groups.count > 1,
+                        revealedHidden: $revealedHidden
+                    )
                 }
             }
         }
+    }
+}
+
+/// One group's trophies (the base game or a DLC) in one glass card, under the group's name
+/// when the game has DLC.
+private struct TrophySectionView: View {
+    let section: TrophySection
+    let showsHeader: Bool
+    @Binding var revealedHidden: Set<Int>
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            if showsHeader, let group = section.group {
+                SectionHeader(headerTitle(for: group), style: .compact)
+            }
+            CardList(section.trophies, layout: .section) { (trophy: Trophy) in
+                TrophyRow(
+                    trophy: trophy,
+                    isRevealed: revealedHidden.contains(trophy.id),
+                    onReveal: { reveal(trophy.id) }
+                )
+            }
+        }
+    }
+
+    private func headerTitle(for group: TrophyGroup) -> String {
+        group.isBaseGame ? String(localized: "game.group.base") : group.trophyGroupName
+    }
+
+    private func reveal(_ id: Int) {
+        revealedHidden.insert(id)
     }
 }
 
