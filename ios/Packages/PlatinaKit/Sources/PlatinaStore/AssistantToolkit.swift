@@ -91,9 +91,17 @@ public final class AssistantToolkit: AssistantToolExecuting {
         let progress_percent: Int
         let earned: Counts
         let total: Counts
+        let platinum_earned: Bool
         let hours_played: Double?
         let status: String
         let last_trophy_change: String
+        let guide: GuideBrief?
+    }
+
+    private struct GuideBrief: Encodable {
+        let difficulty: Int?
+        let hours_min: Double?
+        let hours_max: Double?
     }
 
     private func listGames(_ input: JSONValue) throws -> [GameLine] {
@@ -119,15 +127,18 @@ public final class AssistantToolkit: AssistantToolExecuting {
     }
 
     private func line(_ game: GameRecord, status: GamePlanStatus) -> GameLine {
-        GameLine(
+        let guide = guides.guide(for: game.id)
+        return GameLine(
             id: game.id,
             name: game.name,
             progress_percent: game.progress,
             earned: Counts(game.earned),
             total: Counts(game.defined),
+            platinum_earned: game.isPlatinumEarned,
             hours_played: game.playSeconds.map { ($0 / 360).rounded() / 10 },
             status: status.rawValue,
-            last_trophy_change: game.lastUpdated.formatted(.iso8601)
+            last_trophy_change: game.lastUpdated.formatted(.iso8601),
+            guide: guide.map { GuideBrief(difficulty: $0.summary.difficulty, hours_min: $0.summary.hoursMin, hours_max: $0.summary.hoursMax) }
         )
     }
 
@@ -181,7 +192,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
 
     private func listTrophies(_ input: JSONValue) throws -> [TrophyLine] {
         let game = try requireGame(input)
-        let filter = input["filter"]?.stringValue ?? "unearned"
+        let filter = input["filter"]?.stringValue ?? "all"
         let type = input["type"]?.stringValue
         let group = input["group_id"]?.stringValue
         let showHidden = input["include_hidden_details"]?.boolValue ?? false
@@ -301,11 +312,8 @@ public final class AssistantToolkit: AssistantToolExecuting {
         let known = Set(game.trophies.filter { !$0.isEarned }.map(\.trophyId))
         let ids = (input["trophy_ids"]?.arrayValue ?? []).compactMap { $0.numberValue.map(Int.init) }.filter { known.contains($0) }
         guard !ids.isEmpty else { throw ToolError("None of those trophy ids is an unearned trophy of this game.") }
-        sessions.setGoals(ids)
-        if let note = input["note"]?.stringValue, !note.isEmpty, session.note.isEmpty {
-            sessions.setNote(note)
-        }
-        return Done(ok: true, detail: "Goals set: \(ids.count)")
+        sessions.setGoals(Array(ids.prefix(6)))
+        return Done(ok: true, detail: "Goals set: \(min(ids.count, 6))")
     }
 
     private func setStatus(_ input: JSONValue) throws -> Done {

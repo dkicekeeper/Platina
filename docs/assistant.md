@@ -19,7 +19,9 @@ Markdown-текст, а не блоки `render_reply`.
 - Ключ Anthropic только на сервере. Токены PSN на сервер не уходят никогда.
 - Сервер ничего не пишет в логи о содержании: только коды статусов и ошибок.
 - Один вызов `/v1/turn` — один вызов модели. Цикл (модель просит инструмент → телефон отвечает
-  → новый вызов) крутит приложение.
+  → новый вызов) крутит приложение. Исключение — долгий серверный веб-поиск, поставленный
+  моделью на паузу (`pause_turn`): сервер сам продолжает ход (до двух раз) и отдаёт один `done`
+  со всем содержимым.
 
 ## 2. Защита и лимиты
 
@@ -28,16 +30,21 @@ Markdown-текст, а не блоки `render_reply`.
   `POST /v1/attest {keyId, attestation, challenge}`. Каждый `/v1/turn` и `/v1/guide` несёт
   заголовки `x-platina-key` (keyId) и `x-platina-assertion` (base64, подпись SHA256 тела).
   App id: `SY2L2VMQP7.dakacom.Platina`. Ответ 401 `{error: "attest", reason}`; `reason:
-  "unknown_key"` — приложение делает новый ключ и повторяет один раз.
+  "unknown_key"` — приложение делает новый ключ и повторяет один раз. Ключи и challenge — в KV
+  `ATTEST`. Отказ в регистрации ключа — 400 `{error: "attestation", reason}`.
 - **Симулятор и отладка**: App Attest на симуляторе не работает. Переменная Worker'а
   `DEV_TOKEN` (секрет, по умолчанию не задан): если задана, запрос с заголовком
-  `x-platina-dev: <DEV_TOKEN>` проходит без App Attest. В приложении — `PlatinaAssistantDevToken`
-  в Info.plist (через xcconfig, только Debug).
+  `x-platina-dev: <DEV_TOKEN>` проходит без App Attest (неверный токен — 401 `attest`,
+  `reason: "dev_token"`; без секрета заголовок ничего не значит). В приложении —
+  `PlatinaAssistantDevToken` в Info.plist (через xcconfig, только Debug).
 - **Квоты** (KV `QUOTA`): вызовов модели на ключ App Attest в месяц (`MONTHLY_CALLS`, 3000),
-  сборок гайда на ключ в день (`DAILY_GUIDES`, 20), всего вызовов в день
-  (`GLOBAL_DAILY_CALLS`, 3000) — предохранитель трат. 429 `{error: "quota"}`.
+  сборок гайда на ключ в день (`DAILY_GUIDES`, 20; гайд из кэша бесплатен), всего вызовов в день
+  (`GLOBAL_DAILY_CALLS`, 3000) — предохранитель трат; сборка гайда весит в нём
+  `GUIDE_CALL_WEIGHT` (50) вызовов. 429 `{error: "quota", reason: "monthly" | "daily" | "global",
+  used, limit}`.
 - Выключатель `ASSISTANT_ENABLED` ("false" → 503 `disabled`). Страны, где Anthropic не работает,
-  `BLOCKED_COUNTRIES` ("RU,BY") → 451 `region_unavailable`.
+  `BLOCKED_COUNTRIES` ("RU,BY") → 451 `region_unavailable`. Оба касаются `/v1/turn` и обоих
+  `/v1/guide`; `/v1/attest*` и `/v1/health` отвечают всегда.
 
 ## 3. `POST /v1/turn`
 
@@ -53,6 +60,8 @@ Markdown-текст, а не блоки `render_reply`.
 
 - Ограничения: тело до 256 КБ, до 80 сообщений, текстовый блок до 16 КБ, результат инструмента
   до 64 КБ; роль `system` и `cache_control` от клиента — 400 `invalid`.
+- `language` — код языка приложения (`ru`, `en`, `ru-RU`…): русская локаль → ответы на
+  русском, любая другая → на английском. Без него — 400 `invalid`, `reason: "language"`.
 - Сервер добавляет системный промпт (характер Плати, правила спойлеров и пропускаемых трофеев,
   язык ответа = `language`), клиентские инструменты из §5, серверный `web_search` (если
   `WEB_SEARCH_ENABLED`), модель (`ASSISTANT_MODEL`), кэширование промпта.
@@ -73,6 +82,11 @@ Markdown-текст, а не блоки `render_reply`.
 История только дописывается: `done.content` хранится и отправляется обратно как есть
 (иначе ломаются thinking-блоки и кэш). Ошибки до потока: 400 `invalid`, 401 `attest`,
 429 `quota`, 451 `region_unavailable`, 503 `disabled`.
+
+В `done` есть ещё: `model`; `refused` (модель отказалась: `content` пуст, ход не сохранять);
+`truncated` (вход инструмента обрезан `max_tokens`: не выполнять); `quota {used, limit}`;
+в `usage` — `web_search_requests`. Коды `error`: `upstream_busy`, `upstream_unavailable`
+(можно повторить), `bad_request`, `internal`.
 
 ## 4. Гайды: `POST /v1/guide`, `GET /v1/guide/{id}`
 
@@ -150,7 +164,16 @@ Markdown-текст, а не блоки `render_reply`.
 ```
 
 Числа сводки, которых нет ни в одном источнике, — `null`. `trophyIds` и `trophyId` — только из
-переданного списка трофеев.
+переданного списка трофеев. `stratege` — `null`, если на Stratege нет страницы игры. В
+`sources` подсказки Stratege — `st<id подсказки>` со ссылкой на страницу трофея; веб-страницы —
+только из результатов поиска этой сборки (сервер проверяет). Шаги и обзор не называют скрытые
+трофеи (сервер проверяет); подсказки и заметки о пропускаемых — могут: приложение показывает их
+по нажатию.
+
+Коды `error` гайда: `refused` (не повторять), `invalid_guide`, `no_guide`, `truncated`,
+`upstream_busy`, `upstream_unavailable` (можно повторить), `bad_request`, `internal`. Сборка,
+которую модель так и не начала, квоту не тратит. Разобранная страница Stratege хранится в
+`GUIDES` 14 дней (её же берёт гайд на другом языке).
 
 ## 5. Инструменты на телефоне
 
@@ -171,6 +194,14 @@ Markdown-текст, а не блоки `render_reply`.
 | `save_note` | `game_id`; `trophy_id`?; `text` | заметка к игре или трофею |
 | `save_session_summary` | `session_id`; `summary`; `next_steps` | итог сессии в журнал |
 
+Типы входов: `game_id` — строка (npCommunicationId); `trophy_id` — целое (PSN trophyId);
+`trophy_ids` — массив целых, 1–6; `limit` — целое; `include_hidden_details` — bool; `session_id`,
+`note`, `text`, `summary`, `next_steps` — строки (`next_steps` — короткий Markdown-список).
+Обязательны только `game_id` (кроме `list_games`, `get_sessions`), `trophy_ids`, `status`,
+`text`, `session_id`, `summary`, `next_steps`; остальные модель может не прислать:
+`filter` у `list_games` и `list_trophies` по умолчанию `all`, `include_hidden_details` — `false`,
+`get_sessions` без `game_id` — все игры. Лишних полей нет (`additionalProperties: false`).
+
 ## 6. Режимы
 
 - **Чат** (вкладка «Плати», чат игры): вопросы, «что пройти дальше», подсказки.
@@ -182,9 +213,10 @@ Markdown-текст, а не блоки `render_reply`.
 
 ## 7. Настройка (один раз)
 
-Описана в `server/assistant/README.md`: Cloudflare-аккаунт, KV-пространства, секреты
-`ANTHROPIC_API_KEY` (и опционально `DEV_TOKEN`), деплой из GitHub Actions
-(`.github/workflows/assistant.yml`, ручной запуск `deploy`). Хост Worker'а (без `https://`:
-в xcconfig `//` — начало комментария) — `PLATINA_ASSISTANT_HOST` в `ios/Config/Local.xcconfig`
-(не в git) или в `ios/Config/Platina.xcconfig`; для симулятора там же
-`PLATINA_ASSISTANT_DEV_TOKEN`. Пустой хост — вкладка Плати объясняет, что сервер не настроен.
+Описана в `server/assistant/README.md`: Cloudflare-аккаунт, KV-пространства (ручной запуск
+`setup`), секреты `ANTHROPIC_API_KEY` (и опционально `DEV_TOKEN` из секрета репозитория
+`PLATINA_DEV_TOKEN`), деплой из GitHub Actions (`.github/workflows/assistant.yml`, ручной
+запуск `deploy`). Хост Worker'а (без `https://`: в xcconfig `//` — начало комментария) —
+`PLATINA_ASSISTANT_HOST` в `ios/Config/Local.xcconfig` (не в git) или в
+`ios/Config/Platina.xcconfig`; для симулятора там же `PLATINA_ASSISTANT_DEV_TOKEN`. Пустой хост —
+вкладка Плати объясняет, что сервер не настроен.
