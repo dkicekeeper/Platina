@@ -19,6 +19,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # DesignKit's rules (tokens, no swipe actions or system Form, section rows) at the pinned
+  # version, as docs/agents.md of DesignKit asks before a push.
+  design-lint:
+    name: DesignKit lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: DesignKit's lint at the pinned version
+        run: |
+          VERSION=$(python3 -c 'import re; print(re.search(r"DesignKit:\s*\n\s*url:.*\n\s*exactVersion:\s*\"([^\"]+)\"", open("ios/project.yml").read()).group(1))')
+          echo "DesignKit $VERSION"
+          git clone --depth 1 --branch "$VERSION" https://github.com/dkicekeeper/DesignKit "$RUNNER_TEMP/DesignKit"
+          python3 "$RUNNER_TEMP/DesignKit/scripts/designkit_lint.py" all --source ios/Platina --source ios/PlatinaWidgets
+
   psnkit-linux:
     name: PSNKit tests (Linux)
     runs-on: ubuntu-latest

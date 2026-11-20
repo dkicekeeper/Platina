@@ -1,13 +1,14 @@
 import SwiftUI
 import WidgetKit
 import DesignTokens
+import PlatinaShared
 
 /// Platina's widget extension: the session's Live Activity (stage 2) and the home screen
 /// widgets (stage 4).
 @main
 struct PlatinaWidgets: WidgetBundle {
     init() {
-        DesignKitTheme.accent = WidgetColors.accent
+        DesignKitTheme.accent = PlatinaPalette.accent
         DesignKitFonts.registerIfNeeded()
     }
 
@@ -16,9 +17,4 @@ struct PlatinaWidgets: WidgetBundle {
         PlatinumProgressWidget()
         LatestTrophyWidget()
     }
-}
-
-enum WidgetColors {
-    /// The app's accent, #3573BA (PlatinaColors.accent in the app).
-    static let accent = Color(red: 53 / 255, green: 115 / 255, blue: 186 / 255)
 }

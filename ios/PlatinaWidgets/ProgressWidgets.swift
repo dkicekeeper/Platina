@@ -55,10 +55,10 @@ private struct PlatinumProgressView: View {
                 }
                 .gaugeStyle(.accessoryCircularCapacity)
             case .accessoryRectangular:
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: first.name).font(.headline).lineLimit(1)
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                    Text(verbatim: first.name).font(AppTypography.bodyEmphasis).lineLimit(1)
                     ProgressView(value: Double(first.progress), total: 100)
-                    Text(verbatim: "\(first.progress)% · \(first.detail)").font(.caption).lineLimit(1)
+                    Text(verbatim: "\(first.progress)% · \(first.detail)").font(AppTypography.caption).lineLimit(1)
                 }
             case .systemMedium:
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -107,7 +107,7 @@ private struct GameLine: View {
     let game: WidgetSnapshot.Game
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
             HStack {
                 Text(verbatim: game.name)
                     .font(AppTypography.caption)
@@ -149,7 +149,7 @@ private struct EmptySnapshotView: View {
     var body: some View {
         VStack(spacing: AppSpacing.xs) {
             Image(systemName: "trophy")
-                .font(.title2)
+                .font(AppTypography.h3)
                 .foregroundStyle(AppColors.accent)
             Text(verbatim: text ?? "Platina")
                 .font(AppTypography.caption)
@@ -179,18 +179,18 @@ private struct LatestTrophyView: View {
     var body: some View {
         if let snapshot = entry.snapshot, let trophy = snapshot.latestTrophy {
             if family == .accessoryRectangular {
-                VStack(alignment: .leading, spacing: 2) {
-                    Label(trophy.name, systemImage: "trophy.fill").font(.headline).lineLimit(1)
-                    Text(verbatim: trophy.gameName).font(.caption).lineLimit(1)
-                    Text(trophy.earnedAt, style: .relative).font(.caption2)
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                    Label(trophy.name, systemImage: "trophy.fill").font(AppTypography.bodyEmphasis).lineLimit(1)
+                    Text(verbatim: trophy.gameName).font(AppTypography.caption).lineLimit(1)
+                    Text(trophy.earnedAt, style: .relative).font(AppTypography.caption2)
                 }
             } else {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Header(title: snapshot.title("latest"))
                     Spacer(minLength: 0)
                     Image(systemName: "trophy.fill")
-                        .font(.title)
-                        .foregroundStyle(TrophyMetal.color(trophy.type))
+                        .font(AppTypography.h2)
+                        .foregroundStyle(PlatinaPalette.metal(trophy.type))
                     Text(verbatim: trophy.name)
                         .font(AppTypography.caption)
                         .fontWeight(.semibold)
@@ -203,18 +203,6 @@ private struct LatestTrophyView: View {
             }
         } else {
             EmptySnapshotView(text: entry.snapshot?.title("empty"))
-        }
-    }
-}
-
-/// The metals' colours, as `TrophyType.color` in the app.
-enum TrophyMetal {
-    static func color(_ type: String) -> Color {
-        switch type {
-        case "platinum": Color(red: 122 / 255, green: 160 / 255, blue: 196 / 255)
-        case "gold": Color(red: 214 / 255, green: 163 / 255, blue: 36 / 255)
-        case "silver": Color(red: 150 / 255, green: 158 / 255, blue: 168 / 255)
-        default: Color(red: 176 / 255, green: 112 / 255, blue: 64 / 255)
         }
     }
 }

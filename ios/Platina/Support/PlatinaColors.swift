@@ -1,24 +1,17 @@
 import SwiftUI
 import PSNKit
+import PlatinaShared
 
 /// The app's own colours. Everything else is DesignKit's tokens.
 enum PlatinaColors {
-    /// Cool platinum blue, #3573BA: white text on it reads at 4.9:1. The asset catalog's
-    /// AccentColor is the same colour (system chrome reads that one).
-    static let accent = Color(red: 53 / 255, green: 115 / 255, blue: 186 / 255)
+    /// Cool platinum blue, #3573BA (PlatinaPalette). The asset catalog's AccentColor is the same
+    /// colour (system chrome reads that one).
+    static let accent = PlatinaPalette.accent
 }
 
-/// The colours of the four trophy metals. A candidate for DesignKit tokens (docs/PLAN.md §4);
-/// until then they live only here.
+/// The colours of the four trophy metals (PlatinaPalette, shared with the widgets).
 extension TrophyType {
-    var color: Color {
-        switch self {
-        case .platinum: Color(red: 122 / 255, green: 160 / 255, blue: 196 / 255)
-        case .gold: Color(red: 214 / 255, green: 163 / 255, blue: 36 / 255)
-        case .silver: Color(red: 150 / 255, green: 158 / 255, blue: 168 / 255)
-        case .bronze: Color(red: 176 / 255, green: 112 / 255, blue: 64 / 255)
-        }
-    }
+    var color: Color { PlatinaPalette.metal(rawValue) }
 
     var systemImage: String { "trophy.fill" }
 
