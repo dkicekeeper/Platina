@@ -1,5 +1,6 @@
 import SwiftUI
 import DesignTokens
+import DesignComponents
 
 struct RootView: View {
     @Environment(AppModel.self) private var model

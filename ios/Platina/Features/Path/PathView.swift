@@ -273,9 +273,11 @@ struct SessionRow: View {
             session.gameName,
             detail: session.summary,
             meta: [
-                .text(session.startedAt.formatted(date: .abbreviated, time: .shortened)),
-                .label(PlayTimeText.duration(session.elapsed(at: session.endedAt ?? Date())), systemImage: "clock"),
-                .label(session.earnedTrophyIds.count.formatted(), systemImage: "trophy.fill"),
+                MetaLine([
+                    .text(session.startedAt.formatted(date: .abbreviated, time: .shortened)),
+                    .label(PlayTimeText.duration(session.elapsed(at: session.endedAt ?? Date())), systemImage: "clock"),
+                    .label(session.earnedTrophyIds.count.formatted(), systemImage: "trophy.fill"),
+                ]),
             ],
             leading: .symbol("gamecontroller.fill"),
             titleLineLimit: 1
