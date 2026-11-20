@@ -85,7 +85,7 @@ private struct TrophySectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             if showsHeader, let group = section.group {
-                SectionHeader(headerTitle(for: group), style: .compact)
+                SectionHeader(headerTitle(for: group))
             }
             CardList(section.trophies, layout: .section) { (trophy: Trophy) in
                 TrophyRow(
