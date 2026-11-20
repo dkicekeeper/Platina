@@ -75,7 +75,7 @@ struct GameView: View {
                             TrophyRow(
                                 trophy: trophy,
                                 isRevealed: revealedHidden.contains(trophy.id),
-                                onReveal: { revealedHidden.insert(trophy.id) }
+                                onReveal: { _ = revealedHidden.insert(trophy.id) }
                             )
                         }
                     }
