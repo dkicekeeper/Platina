@@ -31,7 +31,7 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
 /// person's store after every turn.
 @MainActor
 @Observable
-public final class ChatThread: Identifiable {
+public final class ChatThread {
     public let gameId: String
     public private(set) var messages: [ChatMessage]
     public private(set) var isResponding = false
@@ -41,8 +41,6 @@ public final class ChatThread: Identifiable {
     public private(set) var streamingText = ""
     /// The last turn's failure, for its Retry: the server's code.
     public private(set) var failure: String?
-
-    public var id: String { gameId }
 
     private let conversation: AssistantConversation?
     private let record: ConversationRecord
