@@ -1,0 +1,13 @@
+{
+  "onlineId": "trophy_hunter",
+  "aboutMe": "",
+  "avatars": [
+    { "size": "s", "url": "https://psn-rsc.prod.dl.playstation.net/avatar_s.png" },
+    { "size": "xl", "url": "https://psn-rsc.prod.dl.playstation.net/avatar_xl.png" },
+    { "size": "m", "url": "https://psn-rsc.prod.dl.playstation.net/avatar_m.png" }
+  ],
+  "languages": ["ru-RU"],
+  "isPlus": true,
+  "isOfficiallyVerified": false,
+  "isMe": true
+}

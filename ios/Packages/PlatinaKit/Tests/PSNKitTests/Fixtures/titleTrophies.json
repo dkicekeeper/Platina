@@ -1,0 +1,35 @@
+{
+  "trophySetVersion": "01.20",
+  "hasTrophyGroups": true,
+  "trophies": [
+    {
+      "trophyId": 0,
+      "trophyHidden": false,
+      "trophyType": "platinum",
+      "trophyName": "Божественность",
+      "trophyDetail": "Настало время слуге стать божеством.",
+      "trophyIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR28536_00/TROP000.PNG",
+      "trophyGroupId": "default"
+    },
+    {
+      "trophyId": 12,
+      "trophyHidden": false,
+      "trophyType": "silver",
+      "trophyName": "Улыбка фортуны",
+      "trophyDetail": "Выиграйте у всех игроков в кости.",
+      "trophyIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR28536_00/TROP012.PNG",
+      "trophyGroupId": "default",
+      "trophyProgressTargetValue": "4"
+    },
+    {
+      "trophyId": 40,
+      "trophyHidden": true,
+      "trophyType": "gold",
+      "trophyName": "Шерстополь",
+      "trophyDetail": "Победите финального босса дополнения.",
+      "trophyIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR28536_00/TROP040.PNG",
+      "trophyGroupId": "003"
+    }
+  ],
+  "totalItemCount": 3
+}

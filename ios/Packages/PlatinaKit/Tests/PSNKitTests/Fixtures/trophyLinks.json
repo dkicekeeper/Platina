@@ -1,0 +1,5 @@
+{
+  "titles": [
+    { "npTitleId": "PPSA03224_00", "trophyTitles": [ { "npServiceName": "trophy2", "npCommunicationId": "NPWR28536_00", "trophySetVersion": "01.20", "trophyTitleName": "Cult of the Lamb", "trophyTitleIconUrl": "", "trophyTitlePlatform": "PS5", "hasTrophyGroups": true, "definedTrophies": { "bronze": 31, "silver": 21, "gold": 4, "platinum": 1 }, "progress": 64, "earnedTrophies": { "bronze": 22, "silver": 12, "gold": 2, "platinum": 0 }, "hiddenFlag": false, "lastUpdatedDateTime": "2026-11-18T21:14:03Z" } ] }
+  ]
+}

@@ -1,0 +1,85 @@
+name: iOS
+
+# Код пишется в облачном контейнере на Linux, где SwiftUI не собрать: этот workflow — компилятор.
+# PSNKit не зависит от UIKit, поэтому его тесты идут и на Linux (быстро), и на симуляторе iOS.
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  psnkit-linux:
+    name: PSNKit tests (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - name: swift test
+        working-directory: ios/Packages/PlatinaKit
+        run: swift test
+
+  build:
+    name: Build app and run package tests
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build app for iOS Simulator
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Platina.xcodeproj \
+            -scheme Platina \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/build.log" | grep -E "error:|warning: .*Platina/|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build.log"
+
+      - name: Run package tests on a simulator
+        working-directory: ios/Packages/PlatinaKit
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ids = [d["udid"] for runtime, items in sorted(devices.items(), reverse=True)
+                 if ".iOS-" in runtime for d in items if d["name"].startswith("iPhone")]
+          print(ids[0])
+          ')
+          echo "Simulator: $DEVICE_ID"
+          SCHEMES=$(xcodebuild -list -json | python3 -c 'import json, sys; print("\n".join(json.load(sys.stdin)["workspace"]["schemes"]))')
+          echo "Schemes:"; echo "$SCHEMES"
+          SCHEME=$(echo "$SCHEMES" | grep -x 'PlatinaKit-Package' || echo "$SCHEMES" | grep -x 'PSNKit' || echo "$SCHEMES" | head -1)
+          xcodebuild test \
+            -scheme "$SCHEME" \
+            -destination "id=$DEVICE_ID" \
+            -derivedDataPath build \
+            -quiet
+
+      - name: Build log on failure
+        if: failure()
+        run: |
+          [ -f "$RUNNER_TEMP/build.log" ] && grep -E -B2 -A6 "error:" "$RUNNER_TEMP/build.log" | head -200 || true
