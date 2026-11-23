@@ -32,15 +32,19 @@ struct SessionLiveActivityWidget: Widget {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
                         ProgressView(value: Double(context.state.progress), total: 100)
                             .tint(AppColors.accent)
-                        HStack {
-                            Text(verbatim: context.state.statusText ?? context.state.trophiesText)
-                            Spacer(minLength: 0)
-                            if let goals = context.state.goalsText {
-                                Text(verbatim: goals)
+                        if let step = context.state.step {
+                            StepRow(gameId: context.attributes.gameId, step: step)
+                        } else {
+                            HStack {
+                                Text(verbatim: context.state.statusText ?? context.state.trophiesText)
+                                Spacer(minLength: 0)
+                                if let goals = context.state.goalsText {
+                                    Text(verbatim: goals)
+                                }
                             }
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.Text.secondary)
                         }
-                        .font(AppTypography.caption)
-                        .foregroundStyle(AppColors.Text.secondary)
                     }
                 }
             } compactLeading: {
@@ -89,7 +93,9 @@ private struct LockScreenView: View {
             }
             .font(AppTypography.caption)
             .foregroundStyle(AppColors.Text.secondary)
-            if let next = state.nextGoal {
+            if let step = state.step {
+                StepRow(gameId: attributes.gameId, step: step)
+            } else if let next = state.nextGoal {
                 Label {
                     Text(verbatim: next).lineLimit(1)
                 } icon: {
@@ -97,6 +103,34 @@ private struct LockScreenView: View {
                 }
                 .font(AppTypography.caption)
             }
+        }
+    }
+}
+
+/// The walkthrough's step to do now, with a ✓ that ticks it without opening the app.
+private struct StepRow: View {
+    let gameId: String
+    let step: SessionActivityAttributes.ContentState.Step
+
+    var body: some View {
+        HStack(alignment: .center, spacing: AppSpacing.sm) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                Text(verbatim: step.chapterText)
+                    .font(AppTypography.caption2)
+                    .foregroundStyle(AppColors.Text.secondary)
+                    .lineLimit(1)
+                Text(verbatim: step.text)
+                    .font(AppTypography.caption)
+                    .lineLimit(2)
+            }
+            Spacer(minLength: AppSpacing.sm)
+            Button(intent: CompleteStepIntent(gameId: gameId, chapterId: step.chapterId, stepId: step.stepId)) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(AppTypography.h3)
+                    .foregroundStyle(AppColors.accent)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(verbatim: step.doneLabel))
         }
     }
 }

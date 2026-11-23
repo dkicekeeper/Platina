@@ -37,6 +37,8 @@ targets:
         excludes:
           - Info.plist
           - Platina.entitlements
+      # The Live Activity's intents: in the app and in the extension.
+      - path: Shared
     configFiles:
       Debug: Config/Platina.xcconfig
       Release: Config/Platina.xcconfig
@@ -76,6 +78,7 @@ targets:
         excludes:
           - Info.plist
           - PlatinaWidgets.entitlements
+      - path: Shared
     dependencies:
       - package: DesignKit
         product: DesignKit

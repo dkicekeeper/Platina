@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "Готово в ${applicationName}" : {
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Done in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Следующий шаг в ${applicationName}" : {
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Next step in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Что дальше в ${applicationName}" : {
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "What's next in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Шаг сделан в ${applicationName}" : {
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Step done in ${applicationName}"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

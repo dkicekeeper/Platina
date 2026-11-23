@@ -35,14 +35,17 @@ ios/
 ├── Config/Platina.xcconfig     хост сервера Плати; локальные значения — Config/Local.xcconfig (не в git)
 ├── Platina/                    приложение
 │   ├── App/                    точка входа, AppModel (сессия PSN, синхронизация, сессии, Плати),
-│   │                           RootView и вкладки, фоновое обновление
+│   │                           RootView и вкладки, фоновое обновление, Siri (StepShortcuts,
+│   │                           фразы — AppShortcuts.xcstrings)
 │   ├── Features/<Экран>/       Path, Library, Game (+ гайд), Walkthrough (прохождение по главам),
 │   │                           Trophy, Session, Plati, Profile, Onboarding, Share, Widgets
 │   ├── Support/                цвета приложения, тексты
 │   ├── Localizable.xcstrings   строки: русский (основной) и английский, плюс ключи DesignKit
 │   └── Platina.entitlements    App Group (виджеты), iCloud (данные человека), пуши CloudKit
-├── PlatinaWidgets/             расширение: Live Activity сессии, виджеты «Путь к платине» и
-│                               «Последний трофей» (читают снимок из App Group)
+├── PlatinaWidgets/             расширение: Live Activity сессии (с шагом и ✓), виджеты «Путь к
+│                               платине» и «Последний трофей» (читают снимок из App Group)
+├── Shared/                     в обоих таргетах: `CompleteStepIntent` — ✓ на Live Activity
+│                               (LiveActivityIntent выполняется в приложении)
 └── Packages/PlatinaKit/
     ├── PSNKit                  единственная дверь в PSN: вход, токены (Keychain), клиент, модели
     ├── PlatinaCore             логика без UI и SwiftData: план синхронизации, время в играх,

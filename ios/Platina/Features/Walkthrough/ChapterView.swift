@@ -227,6 +227,12 @@ struct ChapterView: View {
     private func actions(_ chapter: Walkthrough.Chapter) -> some View {
         let state = walkthroughs.position(gameId: gameId)?.state(of: chapter.id) ?? .ahead
         VStack(spacing: AppSpacing.md) {
+            if let next = walkthroughs.currentStep(gameId: gameId), next.chapter.id == chapter.id {
+                DSButton(String(localized: "walkthrough.speak"), systemImage: "speaker.wave.2", appearance: .secondary, fullWidth: true) {
+                    let text = next.step.spoiler ? String(localized: "intent.step.spoiler") : WalkthroughText.plain(next.step.text)
+                    StepSpeaker.shared.speak(text)
+                }
+            }
             if state != .done {
                 DSButton(String(localized: "walkthrough.chapter.finish"), systemImage: "flag.checkered", fullWidth: true) {
                     walkthroughs.setChapter(chapter.id, done: true, gameId: gameId)

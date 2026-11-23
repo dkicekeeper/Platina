@@ -3050,6 +3050,261 @@
         }
       }
     },
+    "intent.completeCurrent.chapterDone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticked. This chapter’s steps are done — open the next chapter in Platina."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отметил. Шаги этой главы пройдены — откройте следующую главу в Platina."
+          }
+        }
+      }
+    },
+    "intent.completeCurrent.description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticks the walkthrough’s current step and tells you the next one."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмечает текущий шаг прохождения и говорит следующий."
+          }
+        }
+      }
+    },
+    "intent.completeCurrent.next %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticked. Next: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отметил. Дальше: %@"
+          }
+        }
+      }
+    },
+    "intent.completeCurrent.short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
+          }
+        }
+      }
+    },
+    "intent.completeCurrent.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step done"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаг сделан"
+          }
+        }
+      }
+    },
+    "intent.completeStep.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tick a step"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отметить шаг"
+          }
+        }
+      }
+    },
+    "intent.nextStep.description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plati tells you the walkthrough’s next step."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плати говорит следующий шаг прохождения."
+          }
+        }
+      }
+    },
+    "intent.nextStep.short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What’s next"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что дальше"
+          }
+        }
+      }
+    },
+    "intent.nextStep.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What’s next"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что дальше"
+          }
+        }
+      }
+    },
+    "intent.param.chapter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapter"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Глава"
+          }
+        }
+      }
+    },
+    "intent.param.game": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Игра"
+          }
+        }
+      }
+    },
+    "intent.param.step": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаг"
+          }
+        }
+      }
+    },
+    "intent.step.line %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
+          }
+        }
+      }
+    },
+    "intent.step.none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There’s no walkthrough step right now. Open a game in Platina and ask Plati to lead you chapter by chapter."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сейчас нет шага прохождения. Откройте игру в Platina и попросите Плати вести по главам."
+          }
+        }
+      }
+    },
+    "intent.step.spoiler": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the next step is a spoiler; it’s in the app"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "следующий шаг — спойлер, он в приложении"
+          }
+        }
+      }
+    },
     "library.empty.message": {
       "extractionState": "manual",
       "localizations": {
@@ -7621,6 +7876,40 @@
         }
       }
     },
+    "walkthrough.activity.chapter %lld %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapter %1$lld · %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Глава %1$lld · %2$@"
+          }
+        }
+      }
+    },
+    "walkthrough.activity.done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step done"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаг сделан"
+          }
+        }
+      }
+    },
     "walkthrough.all %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -8318,6 +8607,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Шаги пересказаны своими словами; подробности и картинки — на страницах источников."
+          }
+        }
+      }
+    },
+    "walkthrough.speak": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the next step aloud"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитать следующий шаг вслух"
           }
         }
       }

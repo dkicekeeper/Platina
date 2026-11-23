@@ -20,10 +20,31 @@ public struct SessionActivityAttributes: ActivityAttributes, Sendable {
         public var nextGoal: String?
         /// "Paused", or the last trophy earned: "New trophy: …".
         public var statusText: String?
+        /// The walkthrough's step to do now, ticked with the activity's ✓ (docs/PLAN.md, stage 8).
+        public var step: Step?
+
+        public struct Step: Codable, Hashable, Sendable {
+            public var chapterId: String
+            public var stepId: String
+            /// The chapter's title, "Chapter 3 · The forest".
+            public var chapterText: String
+            /// The step, plain text (a spoiler step says so instead).
+            public var text: String
+            /// The ✓'s VoiceOver name.
+            public var doneLabel: String
+
+            public init(chapterId: String, stepId: String, chapterText: String, text: String, doneLabel: String) {
+                self.chapterId = chapterId
+                self.stepId = stepId
+                self.chapterText = chapterText
+                self.text = text
+                self.doneLabel = doneLabel
+            }
+        }
 
         public init(
             clockStart: Date, pausedElapsed: TimeInterval?, progress: Int, trophiesText: String,
-            goalsText: String?, nextGoal: String?, statusText: String?
+            goalsText: String?, nextGoal: String?, statusText: String?, step: Step? = nil
         ) {
             self.clockStart = clockStart
             self.pausedElapsed = pausedElapsed
@@ -32,6 +53,7 @@ public struct SessionActivityAttributes: ActivityAttributes, Sendable {
             self.goalsText = goalsText
             self.nextGoal = nextGoal
             self.statusText = statusText
+            self.step = step
         }
     }
 

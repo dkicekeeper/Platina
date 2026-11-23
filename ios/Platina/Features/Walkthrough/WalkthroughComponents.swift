@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import AVFoundation
 import DesignTokens
 import DesignSupport
 import DesignComponents
@@ -293,4 +294,18 @@ private struct YouTubePlayer: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
+}
+
+/// Reads a step aloud, in the app's language: the controller in the hands, the phone on the sofa.
+@MainActor
+final class StepSpeaker {
+    static let shared = StepSpeaker()
+    private let synthesizer = AVSpeechSynthesizer()
+
+    func speak(_ text: String) {
+        synthesizer.stopSpeaking(at: .immediate)
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: AppLanguage.code == "en" ? "en-US" : "ru-RU")
+        synthesizer.speak(utterance)
+    }
 }

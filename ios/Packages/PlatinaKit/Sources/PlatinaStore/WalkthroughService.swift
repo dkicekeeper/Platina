@@ -27,6 +27,8 @@ public final class WalkthroughService {
     private let transport: (any WalkthroughTransport)?
     private let language: String
     private let now: () -> Date
+    /// Called after a plan, a chapter or a mark changes: the Live Activity's step follows.
+    @ObservationIgnored public var onChange: (() -> Void)?
     @ObservationIgnored private var plans: [String: Walkthrough] = [:]
     @ObservationIgnored private var chapters: [String: ChapterSteps] = [:]
 
@@ -91,6 +93,17 @@ public final class WalkthroughService {
         let earned = (try? store.earnedTrophyIds(gameId: gameId)) ?? []
         let state = position(gameId: gameId)?.state(of: chapterId) ?? .ahead
         return WalkthroughPosition.isStepDone(step, chapterId: chapterId, earned: earned, marks: marks(gameId: gameId), chapterState: state)
+    }
+
+    /// The step to do now in a game: its current chapter's first step not done, if the steps are
+    /// built.
+    public func currentStep(gameId: String) -> (chapter: Walkthrough.Chapter, step: ChapterSteps.Step)? {
+        guard let plan = walkthrough(for: gameId),
+              let chapterId = position(gameId: gameId)?.currentChapterId,
+              let chapter = plan.chapter(chapterId),
+              let steps = self.chapter(gameId: gameId, chapterId: chapterId),
+              let step = steps.steps.first(where: { !isStepDone($0, gameId: gameId, chapterId: chapterId) }) else { return nil }
+        return (chapter, step)
     }
 
     // MARK: Fetching and building
@@ -203,6 +216,7 @@ public final class WalkthroughService {
     private func mark(gameId: String, _ change: (inout WalkthroughMarks) -> Void) {
         try? store.updateWalkthroughMarks(gameId: gameId, at: now(), change)
         revision += 1
+        onChange?()
     }
 
     /// A rebuilt chapter's steps are new: the old ticks would land on the wrong ones.
@@ -255,6 +269,7 @@ public final class WalkthroughService {
         // A new plan: the chapters kept in memory may belong to the old one.
         chapters = chapters.filter { !$0.key.hasPrefix("\(plan.gameId)/") }
         revision += 1
+        onChange?()
     }
 
     private func save(_ steps: ChapterSteps) {
@@ -271,6 +286,7 @@ public final class WalkthroughService {
         try? store.context.save()
         chapters["\(steps.gameId)/\(steps.chapterId)"] = steps
         revision += 1
+        onChange?()
     }
 }
 

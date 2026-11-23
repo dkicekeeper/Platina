@@ -11,12 +11,16 @@ final class SessionLiveActivityController {
     private var activityId: String?
     private var lastState: SessionActivityAttributes.ContentState?
 
-    func update(session: PlaySessionRecord?, game: GameRecord?, goals: [TrophyRecord], lastTrophy: TrophyRecord?) {
+    func update(
+        session: PlaySessionRecord?, game: GameRecord?, goals: [TrophyRecord], lastTrophy: TrophyRecord?,
+        step: SessionActivityAttributes.ContentState.Step? = nil
+    ) {
         guard let session, session.isRunning else {
             end()
             return
         }
-        let state = Self.state(session: session, game: game, goals: goals, lastTrophy: lastTrophy)
+        var state = Self.state(session: session, game: game, goals: goals, lastTrophy: lastTrophy)
+        state.step = step
         // After a relaunch the activity may still be on screen: carry on with it.
         let existing = Activity<SessionActivityAttributes>.activities.first { $0.attributes.gameId == session.gameId }
         if activityId == nil, let existing {

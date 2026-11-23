@@ -4,6 +4,7 @@ import SwiftData
 import PSNKit
 import PlatinaStore
 import PlatinaAssistant
+import PlatinaShared
 
 /// The app's session: signed in to PSN or not, the client, the store and the sync.
 @MainActor
@@ -88,8 +89,57 @@ final class AppModel {
             // Plati writes the summary into the journal; the summary sheet shows it when it comes.
             Task { await self.assistant.summarizeSession(session) }
         }
+        // The walkthrough's step to do now follows every tick: on the Live Activity too.
+        assistant.walkthroughs.onChange = { [weak self] in
+            guard let self else { return }
+            updateLiveActivity(sessions.current)
+        }
+        // The Live Activity's ✓ and Siri (docs/PLAN.md, stage 8).
+        StepIntentHandler.complete = { [weak self] gameId, chapterId, stepId in
+            self?.assistant.walkthroughs.setStep(stepId, done: true, gameId: gameId, chapterId: chapterId)
+        }
+        PlatiVoice.current = { [weak self] in
+            guard let self, let found = stepToDo() else { return nil }
+            return Self.line(found.chapter, found.step)
+        }
+        PlatiVoice.completeCurrent = { [weak self] in
+            guard let self, let found = stepToDo() else { return nil }
+            assistant.walkthroughs.setStep(found.step.id, done: true, gameId: found.gameId, chapterId: found.chapter.id)
+            guard let next = stepToDo() else { return String(localized: "intent.completeCurrent.chapterDone") }
+            return String(localized: "intent.completeCurrent.next \(Self.line(next.chapter, next.step))")
+        }
         // A session left running by an earlier launch: its activity shows it again.
         updateLiveActivity(sessions.current)
+    }
+
+    // MARK: Walkthrough
+
+    /// The walkthrough step to do now: in the running session's game, or else in the game played
+    /// last that has one.
+    func stepToDo() -> (gameId: String, chapter: Walkthrough.Chapter, step: ChapterSteps.Step)? {
+        let walkthroughs = assistant.walkthroughs
+        let candidates: [String]
+        if let session = sessions.current {
+            candidates = [session.gameId]
+        } else {
+            let games = (try? store.games()) ?? []
+            candidates = games
+                .sorted { ($0.lastPlayed ?? .distantPast) > ($1.lastPlayed ?? .distantPast) }
+                .prefix(10)
+                .map(\.id)
+        }
+        for gameId in candidates {
+            if let found = walkthroughs.currentStep(gameId: gameId) {
+                return (gameId, found.chapter, found.step)
+            }
+        }
+        return nil
+    }
+
+    /// A step as Siri says it: the chapter, then the step (a spoiler one says so instead).
+    private static func line(_ chapter: Walkthrough.Chapter, _ step: ChapterSteps.Step) -> String {
+        let text = step.spoiler ? String(localized: "intent.step.spoiler") : WalkthroughText.plain(step.text)
+        return String(localized: "intent.step.line \(chapter.title) \(text)")
     }
 
     // MARK: Sessions
@@ -151,7 +201,20 @@ final class AppModel {
         }
         let game = try? store.game(session.gameId)
         let lastTrophy = sessions.lastEarned.last
-        liveActivity.update(session: session, game: game, goals: sessions.goalTrophies(), lastTrophy: lastTrophy)
+        var step: SessionActivityAttributes.ContentState.Step?
+        let walkthroughs = assistant.walkthroughs
+        if let found = walkthroughs.currentStep(gameId: session.gameId),
+           let plan = walkthroughs.walkthrough(for: session.gameId) {
+            let number = (plan.chapters.firstIndex { $0.id == found.chapter.id } ?? 0) + 1
+            step = .init(
+                chapterId: found.chapter.id,
+                stepId: found.step.id,
+                chapterText: String(localized: "walkthrough.activity.chapter \(number) \(found.chapter.title)"),
+                text: found.step.spoiler ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(found.step.text),
+                doneLabel: String(localized: "walkthrough.activity.done")
+            )
+        }
+        liveActivity.update(session: session, game: game, goals: sessions.goalTrophies(), lastTrophy: lastTrophy, step: step)
     }
 
     func start() async {
