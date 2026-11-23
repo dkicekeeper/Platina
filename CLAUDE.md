@@ -58,12 +58,23 @@ PlatinaStore — на симуляторе в CI.
 - Вход: страница OAuth Sony в системном окне Safari (`webAuthenticationSession`, эфемерная
   сессия), окно само ловит редирект `com.scee.psxandroid.scecompcall://redirect?code=…`;
   запасной путь — токен NPSSO вручную. Этот URL-scheme приложение **не регистрирует**: это
-  схема PlayStation App. Не `WKWebView`: защита Sony от ботов подвешивает в нём запросы своей
-  страницы, и она показывает «Время соединения с сервером истекло».
+  схема PlayStation App.
 - Токены — в Keychain (`KeychainTokenStore`), на наш сервер они не уходят.
+- Страница входа клиента PlayStation App (`/sonyacct/signin` с нашим `client_id`) у части людей
+  не грузится нигде, даже в Safari («Время соединения с сервером истекло»; у пользователей GOG
+  Galaxy то же). Вход на store.playstation.com (веб-клиент) у них работает, и после него
+  `ssocookie` отдаёт `npsso`: это рабочий путь (окно «Вход по токену»). На playstation.com
+  Safari может не оставить `npsso`.
+- Где-то DNS подменяет адрес `m.np.playstation.com` (адреса не Akamai, TLS обрывается,
+  `URLError -1200`): у владельца на Wi-Fi, на сотовой сети всё работает.
 - Тесты `PSNKit` идут на JSON-фикстурах (`Tests/PSNKitTests/Fixtures`) через `MockTransport`;
-  сеть в тестах не трогается. Фикстуры собраны по моделям psn-api: когда появятся настоящие
-  ответы PSN (без личных данных), заменить ими.
+  сеть в тестах не трогается. Фикстуры собраны по моделям psn-api и сверены с настоящими
+  ответами из [andshrew/PlayStation-Trophies](https://github.com/andshrew/PlayStation-Trophies/blob/master/docs/APIv2.md)
+  (psn-api ошибается: `trophyLevel` — число, не строка). Модели читают поля терпимо там, где
+  PSN и библиотеки расходятся.
+- Сбои запросов PSN и синхронизации пишутся в системный журнал (`PSNLog`, категория `PSN` и
+  `Sync`): пути и коды ошибок, без токенов. Первым делом проси у владельца эти строки из
+  консоли Xcode.
 - Запросы PSN бережём: у Sony неопубликованные лимиты. Без лишних повторов и опросов.
 
 ## Данные
