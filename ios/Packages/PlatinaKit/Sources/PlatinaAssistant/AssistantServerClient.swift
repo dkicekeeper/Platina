@@ -77,9 +77,9 @@ public struct DevTokenSigner: AssistantSigner {
 }
 
 #if canImport(Darwin)
-/// Calls the Worker (docs/assistant.md): `POST /v1/turn` and `POST /v1/guide` as server-sent
-/// events, `GET /v1/guide/{id}` for a guide already built. Every body is signed.
-public final class AssistantServerClient: AssistantTransport, @unchecked Sendable {
+/// Calls the Worker (docs/assistant.md): `POST /v1/turn`, `/v1/guide` and `/v1/walkthrough[/chapter]`
+/// as server-sent events, GETs for what is already built. Every body is signed.
+public final class AssistantServerClient: AssistantTransport, WalkthroughTransport, @unchecked Sendable {
     private let baseURL: URL
     private let session: URLSession
     private let signer: (any AssistantSigner)?
@@ -99,7 +99,28 @@ public final class AssistantServerClient: AssistantTransport, @unchecked Sendabl
     }
 
     public func cachedGuide(gameId: String, language: String) async throws -> Guide? {
-        var components = URLComponents(url: baseURL.appending(path: "v1/guide/\(gameId)"), resolvingAgainstBaseURL: false)!
+        try await cached(path: "v1/guide/\(gameId)", language: language)
+    }
+
+    public func walkthrough(_ request: GuideRequest) -> AsyncThrowingStream<WalkthroughStreamEvent, Error> {
+        stream(path: "v1/walkthrough", body: request) { WalkthroughStreamEvent($0) }
+    }
+
+    public func chapter(_ request: ChapterRequest) -> AsyncThrowingStream<WalkthroughStreamEvent, Error> {
+        stream(path: "v1/walkthrough/chapter", body: request) { WalkthroughStreamEvent($0) }
+    }
+
+    public func cachedWalkthrough(gameId: String, language: String) async throws -> Walkthrough? {
+        try await cached(path: "v1/walkthrough/\(gameId)", language: language)
+    }
+
+    public func cachedChapter(gameId: String, language: String, chapterId: String) async throws -> ChapterSteps? {
+        try await cached(path: "v1/walkthrough/\(gameId)/chapter/\(chapterId)", language: language)
+    }
+
+    /// A GET of something already built: nil on 404.
+    private func cached<Answer: Decodable>(path: String, language: String) async throws -> Answer? {
+        var components = URLComponents(url: baseURL.appending(path: path), resolvingAgainstBaseURL: false)!
         components.queryItems = [URLQueryItem(name: "language", value: language)]
         var request = URLRequest(url: components.url!)
         request.timeoutInterval = 30
@@ -107,7 +128,7 @@ public final class AssistantServerClient: AssistantTransport, @unchecked Sendabl
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 404 { return nil }
         guard status == 200 else { throw AssistantServerError.from(status: status, body: data) }
-        return try JSONDecoder().decode(Guide.self, from: data)
+        return try JSONDecoder().decode(Answer.self, from: data)
     }
 
     private func stream<Body: Encodable, Event: Sendable>(
@@ -155,7 +176,7 @@ public final class AssistantServerClient: AssistantTransport, @unchecked Sendabl
     ) async throws -> Result<URLSession.AsyncBytes, AssistantServerError> {
         var request = URLRequest(url: baseURL.appending(path: path))
         request.httpMethod = "POST"
-        // A guide searches the web and writes for a minute or two.
+        // A guide or a chapter searches the web, reads pages and writes for a minute or two.
         request.timeoutInterval = 240
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")

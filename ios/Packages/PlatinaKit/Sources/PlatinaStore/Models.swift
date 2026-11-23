@@ -308,6 +308,44 @@ public final class GuideRecord {
     }
 }
 
+/// A game's walkthrough plan as the server built it (docs/assistant.md §8): `NPWR…:ru`.
+@Model
+public final class WalkthroughRecord {
+    @Attribute(.unique) public var key: String
+    public var gameId: String
+    public var language: String
+    public var json: Data
+    public var fetchedAt: Date
+
+    public init(gameId: String, language: String, json: Data, fetchedAt: Date) {
+        key = "\(gameId):\(language)"
+        self.gameId = gameId
+        self.language = language
+        self.json = json
+        self.fetchedAt = fetchedAt
+    }
+}
+
+/// A chapter's steps as the server built them: `NPWR…:ru:c3`.
+@Model
+public final class ChapterRecord {
+    @Attribute(.unique) public var key: String
+    public var gameId: String
+    public var language: String
+    public var chapterId: String
+    public var json: Data
+    public var fetchedAt: Date
+
+    public init(gameId: String, language: String, chapterId: String, json: Data, fetchedAt: Date) {
+        key = "\(gameId):\(language):\(chapterId)"
+        self.gameId = gameId
+        self.language = language
+        self.chapterId = chapterId
+        self.json = json
+        self.fetchedAt = fetchedAt
+    }
+}
+
 // MARK: - The person's own data
 
 /// What the person plans for a game.
@@ -396,6 +434,23 @@ public final class ConversationRecord {
     public var gameId: String = ""
     public var messagesData: Data = Data()
     public var displayData: Data = Data()
+    public var updatedAt: Date = Date.distantPast
+
+    public init(gameId: String, updatedAt: Date) {
+        self.gameId = gameId
+        self.updatedAt = updatedAt
+    }
+}
+
+/// Where the person is in a game's walkthrough, beyond what their trophies say: the steps they
+/// ticked (`c2/s5`), the chapters they marked done, the chapter they said they are on ("" when
+/// worked out from the rest). One per game; the language of the walkthrough doesn't matter.
+@Model
+public final class WalkthroughProgressRecord {
+    public var gameId: String = ""
+    public var checkedSteps: [String] = []
+    public var doneChapters: [String] = []
+    public var currentChapter: String = ""
     public var updatedAt: Date = Date.distantPast
 
     public init(gameId: String, updatedAt: Date) {

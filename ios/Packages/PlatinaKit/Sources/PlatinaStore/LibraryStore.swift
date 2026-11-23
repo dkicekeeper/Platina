@@ -3,6 +3,7 @@ import Foundation
 import SwiftData
 import PSNKit
 import PlatinaCore
+import PlatinaAssistant
 
 /// The app's SwiftData container and every write into it. Writes happen on the main context: a
 /// sync writes one game at a time (a few dozen trophies), small enough for the main thread,
@@ -11,10 +12,11 @@ import PlatinaCore
 public final class LibraryStore {
     public static let cacheModels: [any PersistentModel.Type] = [
         GameRecord.self, TrophyRecord.self, TrophyGroupRecord.self, ProfileRecord.self, TitleLinkRecord.self,
-        GuideRecord.self,
+        GuideRecord.self, WalkthroughRecord.self, ChapterRecord.self,
     ]
     public static let userModels: [any PersistentModel.Type] = [
         GamePlanRecord.self, PlaySessionRecord.self, NoteRecord.self, ConversationRecord.self,
+        WalkthroughProgressRecord.self,
     ]
 
     public let container: ModelContainer
@@ -244,6 +246,8 @@ public final class LibraryStore {
         for profile in try context.fetch(FetchDescriptor<ProfileRecord>()) { context.delete(profile) }
         for link in try context.fetch(FetchDescriptor<TitleLinkRecord>()) { context.delete(link) }
         for guide in try context.fetch(FetchDescriptor<GuideRecord>()) { context.delete(guide) }
+        for plan in try context.fetch(FetchDescriptor<WalkthroughRecord>()) { context.delete(plan) }
+        for chapter in try context.fetch(FetchDescriptor<ChapterRecord>()) { context.delete(chapter) }
         try context.save()
     }
 
@@ -418,6 +422,47 @@ public final class LibraryStore {
         session.summary = summary
         session.nextSteps = nextSteps
         try context.save()
+    }
+
+    // MARK: Walkthrough progress
+
+    /// What the person marked in a game's walkthrough. iCloud may bring two records of one game
+    /// (two devices before they met): their marks are taken together.
+    public func walkthroughMarks(gameId: String) throws -> WalkthroughMarks {
+        let records = try context.fetch(FetchDescriptor<WalkthroughProgressRecord>(predicate: #Predicate { $0.gameId == gameId }))
+        var marks = WalkthroughMarks()
+        for record in records.sorted(by: { $0.updatedAt < $1.updatedAt }) {
+            marks.checkedSteps.formUnion(record.checkedSteps)
+            marks.doneChapters.formUnion(record.doneChapters)
+            if !record.currentChapter.isEmpty { marks.currentChapter = record.currentChapter }
+        }
+        return marks
+    }
+
+    /// Changes a game's walkthrough marks; duplicates from iCloud become one record.
+    public func updateWalkthroughMarks(gameId: String, at date: Date = Date(), _ change: (inout WalkthroughMarks) -> Void) throws {
+        var marks = try walkthroughMarks(gameId: gameId)
+        change(&marks)
+        let records = try context.fetch(FetchDescriptor<WalkthroughProgressRecord>(predicate: #Predicate { $0.gameId == gameId }))
+        let record: WalkthroughProgressRecord
+        if let first = records.first {
+            record = first
+            for duplicate in records.dropFirst() { context.delete(duplicate) }
+        } else {
+            record = WalkthroughProgressRecord(gameId: gameId, updatedAt: date)
+            context.insert(record)
+        }
+        record.checkedSteps = marks.checkedSteps.sorted()
+        record.doneChapters = marks.doneChapters.sorted()
+        record.currentChapter = marks.currentChapter ?? ""
+        record.updatedAt = date
+        try context.save()
+    }
+
+    /// The ids of a game's earned trophies.
+    public func earnedTrophyIds(gameId: String) throws -> Set<Int> {
+        let descriptor = FetchDescriptor<TrophyRecord>(predicate: #Predicate { $0.gameId == gameId && $0.isEarned == true })
+        return Set(try context.fetch(descriptor).map(\.trophyId))
     }
 
     // MARK: Notes

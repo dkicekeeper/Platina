@@ -64,22 +64,7 @@ public final class GuideService {
         guard let transport else { return nil }
         if case .building = state(for: gameId) { return nil }
         guard let game = try? store.game(gameId) else { return nil }
-        let request = GuideRequest(
-            language: language,
-            refresh: refresh,
-            game: GuideRequest.Game(
-                npCommunicationId: game.id,
-                name: game.name,
-                platform: game.platform,
-                trophySetVersion: game.trophySetVersion,
-                trophies: game.trophies.sorted { $0.trophyId < $1.trophyId }.map {
-                    GuideRequest.Game.Trophy(
-                        id: $0.trophyId, name: $0.name, detail: $0.detail, type: $0.typeRaw,
-                        hidden: $0.isHidden, groupId: $0.groupId
-                    )
-                }
-            )
-        )
+        let request = GuideRequest(language: language, refresh: refresh, game: GuideRequest.Game(record: game))
         states[gameId] = .building(step: "start")
         do {
             for try await event in transport.guide(request) {
