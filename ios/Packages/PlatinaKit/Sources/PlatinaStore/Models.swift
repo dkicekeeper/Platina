@@ -100,8 +100,8 @@ public final class GameRecord {
         TrophyCounts(bronze: earnedBronze, silver: earnedSilver, gold: earnedGold, platinum: earnedPlatinum)
     }
 
-    public var iconURL: URL? { iconURLString.flatMap(URL.init(string:)) }
-    public var coverURL: URL? { coverURLString.flatMap(URL.init(string:)) }
+    public var iconURL: URL? { PSNImageURL.from(iconURLString) }
+    public var coverURL: URL? { PSNImageURL.from(coverURLString) }
     public var isPlatinumEarned: Bool { definedPlatinum > 0 && earnedPlatinum > 0 }
     public var isCompleted: Bool { defined.total > 0 && earned.total >= defined.total }
 
@@ -185,7 +185,7 @@ public final class TrophyRecord {
 
     public var type: TrophyType { TrophyType(rawValue: typeRaw) ?? .bronze }
     public var rarity: TrophyRarity? { rarityRaw.flatMap(TrophyRarity.init(rawValue:)) }
-    public var iconURL: URL? { iconURLString.flatMap(URL.init(string:)) }
+    public var iconURL: URL? { PSNImageURL.from(iconURLString) }
 
     public var progress: TrophyProgress? {
         guard let progressTarget else { return nil }
@@ -272,7 +272,7 @@ public final class ProfileRecord {
         TrophyCounts(bronze: earnedBronze, silver: earnedSilver, gold: earnedGold, platinum: earnedPlatinum)
     }
 
-    public var avatarURL: URL? { avatarURLString.flatMap(URL.init(string:)) }
+    public var avatarURL: URL? { PSNImageURL.from(avatarURLString) }
 }
 
 /// Which trophy lists a game title (`PPSA…_00`) has. Asked once per title: it never changes.

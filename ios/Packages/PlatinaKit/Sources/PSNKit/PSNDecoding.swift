@@ -70,3 +70,15 @@ extension JSONDecoder {
         return decoder
     }()
 }
+
+/// A picture's address as PSN writes it. Some come as `http://` (avatars), which iOS refuses to
+/// load; PSN's picture servers answer the same address over https.
+public enum PSNImageURL {
+    public static func from(_ string: String?) -> URL? {
+        guard let string, !string.isEmpty, var components = URLComponents(string: string) else { return nil }
+        if components.scheme?.lowercased() == "http" {
+            components.scheme = "https"
+        }
+        return components.url
+    }
+}

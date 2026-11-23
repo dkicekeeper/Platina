@@ -121,6 +121,16 @@ struct ModelTests {
         #expect(try JSONDecoder.psn.decode(TrophySummary.self, from: Data(number.utf8)).level == 437)
     }
 
+    @Test("Picture links go over https: iOS does not load PSN's http avatars")
+    func imageURLs() {
+        #expect(PSNImageURL.from("http://psn-rsc.prod.dl.playstation.net/psn-rsc/avatar/a_xl.png")?.absoluteString
+            == "https://psn-rsc.prod.dl.playstation.net/psn-rsc/avatar/a_xl.png")
+        #expect(PSNImageURL.from("https://image.api.playstation.com/trophy/np/x.png")?.absoluteString
+            == "https://image.api.playstation.com/trophy/np/x.png")
+        #expect(PSNImageURL.from(nil) == nil)
+        #expect(PSNImageURL.from("") == nil)
+    }
+
     @Test("Trophy types sort platinum first")
     func typeOrder() {
         #expect([TrophyType.bronze, .platinum, .silver, .gold].sorted() == [.platinum, .gold, .silver, .bronze])

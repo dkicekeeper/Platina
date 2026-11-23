@@ -103,7 +103,6 @@ struct ProfileView: View {
                 series: .keyed("trophies", name: String(localized: "profile.months.series"), coloring: .solid(AppColors.accent)),
                 valueFormat: .custom { Int($0).formatted() }
             )
-            .frame(height: 220)
             .padding(AppSpacing.lg)
             .cardStyle()
         }

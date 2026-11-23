@@ -99,7 +99,7 @@ public struct TrophyTitle: Decodable, Sendable, Hashable, Identifiable {
     public let lastUpdatedDateTime: Date
 
     public var id: String { npCommunicationId }
-    public var iconURL: URL? { trophyTitleIconUrl.flatMap(URL.init(string:)) }
+    public var iconURL: URL? { PSNImageURL.from(trophyTitleIconUrl) }
     public var platforms: [String] {
         trophyTitlePlatform.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
     }
@@ -137,7 +137,7 @@ public struct TrophyGroup: Decodable, Sendable, Hashable, Identifiable {
 
     public var id: String { trophyGroupId }
     public var isBaseGame: Bool { trophyGroupId == "default" }
-    public var iconURL: URL? { trophyGroupIconUrl.flatMap(URL.init(string:)) }
+    public var iconURL: URL? { PSNImageURL.from(trophyGroupIconUrl) }
 }
 
 struct TrophyGroupsResponse: Decodable {
@@ -253,7 +253,7 @@ public struct Trophy: Sendable, Hashable, Identifiable {
             type: definition.trophyType,
             name: definition.trophyName ?? "",
             detail: definition.trophyDetail ?? "",
-            iconURL: definition.trophyIconUrl.flatMap(URL.init(string:)),
+            iconURL: PSNImageURL.from(definition.trophyIconUrl),
             isHidden: definition.trophyHidden,
             isEarned: earning?.earned ?? false,
             earnedAt: earning?.earnedDateTime,
@@ -373,7 +373,7 @@ public struct PSNProfile: Decodable, Sendable, Hashable {
     public var avatarURL: URL? {
         let order = ["xl", "l", "m", "s"]
         let best = avatars?.min { (order.firstIndex(of: $0.size) ?? 9) < (order.firstIndex(of: $1.size) ?? 9) }
-        return best.flatMap { URL(string: $0.url) }
+        return PSNImageURL.from(best?.url)
     }
 }
 
@@ -421,7 +421,7 @@ public struct PlayedGame: Decodable, Sendable, Hashable, Identifiable {
 
     public var id: String { titleId }
     public var displayName: String { localizedName ?? name }
-    public var imageURL: URL? { (localizedImageUrl ?? imageUrl).flatMap(URL.init(string:)) }
+    public var imageURL: URL? { PSNImageURL.from((localizedImageUrl ?? imageUrl)) }
     public var timePlayed: TimeInterval? { playDuration.flatMap(PSNDuration.parse) }
 }
 
@@ -463,7 +463,7 @@ public struct Presence: Decodable, Sendable, Hashable {
         public let npTitleIconUrl: String?
         public let conceptIconUrl: String?
 
-        public var iconURL: URL? { (conceptIconUrl ?? npTitleIconUrl).flatMap(URL.init(string:)) }
+        public var iconURL: URL? { PSNImageURL.from((conceptIconUrl ?? npTitleIconUrl)) }
     }
 
     public let availability: String?
