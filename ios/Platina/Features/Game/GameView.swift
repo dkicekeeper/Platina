@@ -48,6 +48,8 @@ struct GameView: View {
     @State private var filter: TrophyFilter = .notEarned
     @State private var sort: TrophySort = .type
     @State private var revealedHidden: Set<Int> = []
+    /// The trophies PlayStation's Game Help covers: a mark in the list.
+    @State private var helpedTrophies: Set<Int> = []
     @State private var openedTrophy: String?
     @State private var isLoadingTrophies = false
     @State private var isShowingChat = false
@@ -157,6 +159,9 @@ struct GameView: View {
             await app.sync.refreshGame(gameId)
             isLoadingTrophies = false
         }
+        .task(id: gameId) {
+            helpedTrophies = await app.gameHelp.helpedTrophyIds(gameId: gameId)
+        }
     }
 
     @ViewBuilder
@@ -181,6 +186,7 @@ struct GameView: View {
                         section: section,
                         showsHeader: game.groups.count > 1,
                         revealedHidden: $revealedHidden,
+                        helpedTrophies: helpedTrophies,
                         onOpen: { openedTrophy = $0 }
                     )
                 }
@@ -322,6 +328,7 @@ private struct TrophySectionView: View {
     let section: TrophySection
     let showsHeader: Bool
     @Binding var revealedHidden: Set<Int>
+    var helpedTrophies: Set<Int> = []
     let onOpen: (String) -> Void
 
     var body: some View {
@@ -330,7 +337,11 @@ private struct TrophySectionView: View {
                 SectionHeader(title)
             }
             CardList(section.trophies, layout: .section) { (trophy: TrophyRecord) in
-                TrophyRow(trophy: trophy, isRevealed: revealedHidden.contains(trophy.trophyId))
+                TrophyRow(
+                    trophy: trophy,
+                    isRevealed: revealedHidden.contains(trophy.trophyId),
+                    hasGameHelp: helpedTrophies.contains(trophy.trophyId)
+                )
                     .contentShape(Rectangle())
                     .onTapGesture { tap(trophy) }
             }
@@ -351,6 +362,8 @@ private struct TrophySectionView: View {
 struct TrophyRow: View {
     let trophy: TrophyRecord
     var isRevealed = false
+    /// PlayStation's Game Help covers this trophy (shown once it is not a spoiler).
+    var hasGameHelp = false
 
     private var isSpoilerHidden: Bool { trophy.isHidden && !trophy.isEarned && !isRevealed }
 
@@ -380,7 +393,7 @@ struct TrophyRow: View {
                             .monospacedDigit()
                     }
                 }
-                MetaLine(TrophyMeta.items(for: trophy))
+                MetaLine(TrophyMeta.items(for: trophy) + (hasGameHelp && !isSpoilerHidden ? [TrophyMeta.gameHelp] : []))
             }
         }
         .padding(.vertical, AppSpacing.md)
@@ -398,6 +411,11 @@ enum TrophyMeta {
             items.append(.label(earnedAt.formatted(date: .abbreviated, time: .omitted), systemImage: "checkmark.circle.fill", tint: AppColors.success))
         }
         return items
+    }
+
+    /// The trophy has PlayStation's Game Help.
+    static var gameHelp: MetaItem {
+        .label(String(localized: "trophy.gameHelp.badge"), systemImage: "questionmark.bubble", tint: AppColors.accent)
     }
 
     static func rateText(_ rate: Double) -> String {

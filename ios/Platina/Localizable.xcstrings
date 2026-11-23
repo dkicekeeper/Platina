@@ -7144,6 +7144,23 @@
         }
       }
     },
+    "trophy.gameHelp.badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game Help"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подсказка"
+          }
+        }
+      }
+    },
     "trophy.gameHelp.header": {
       "extractionState": "manual",
       "localizations": {

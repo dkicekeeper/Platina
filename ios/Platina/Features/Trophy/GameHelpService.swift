@@ -31,6 +31,13 @@ final class GameHelpService {
         return help
     }
 
+    /// The trophies of a game that have help: a mark in the game's list. Empty when PSN would
+    /// not say.
+    func helpedTrophyIds(gameId: String) async -> Set<Int> {
+        guard let hints = try? await hints(for: gameId) else { return [] }
+        return Set(hints.compactMap(\.trophyNumber))
+    }
+
     /// Whether the trophy has help, without asking for it: for the trophy screen's first look.
     func hasHelp(gameId: String, trophyId: Int) async -> Bool {
         guard let hints = try? await hints(for: gameId) else { return false }
