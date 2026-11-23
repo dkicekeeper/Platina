@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { languageInstruction, PROMPT_VERSION, SYSTEM_PROMPT } from "../src/prompt";
-import { chatTools, PHONE_TOOLS, TOOL_NAMES, webSearchTool } from "../src/tools";
+import { chatTools, PHONE_TOOLS, TOOL_NAMES, webFetchTool, webSearchTool } from "../src/tools";
 
 // The phone tools are the contract with the app (docs/assistant.md §5).
 
@@ -74,6 +74,19 @@ describe("web search", () => {
     expect(on).toHaveLength(13);
     expect(on.at(-1)).toMatchObject({ name: "web_search" });
     expect(chatTools({ model: "claude-haiku-5-5", webSearch: false, webSearchMaxUses: 3 })).toHaveLength(12);
+  });
+});
+
+describe("web fetch", () => {
+  it("takes the filtering version where the model has it, with a page size cap", () => {
+    expect(webFetchTool("claude-haiku-5-5", 2)).toEqual({ type: "web_fetch_20250910", name: "web_fetch", max_uses: 2, max_content_tokens: 20000 });
+    expect(webFetchTool("claude-sonnet-5-5", 4, ["powerpyx.com"])).toEqual({
+      type: "web_fetch_20260209",
+      name: "web_fetch",
+      max_uses: 4,
+      max_content_tokens: 20000,
+      allowed_domains: ["powerpyx.com"],
+    });
   });
 });
 

@@ -23,6 +23,13 @@ GUIDE_EFFORT = "medium"
 GUIDE_MAX_TOKENS = "32000"
 # Web searches per guide model call, $0.01 each ("0" builds guides from Stratege alone).
 GUIDE_MAX_SEARCHES = "5"
+# Pages one walkthrough model call may read with web fetch (PowerPyx and the like), each up to
+# about 20k tokens of text. "0" builds walkthroughs from search results alone.
+WALKTHROUGH_MAX_FETCHES = "4"
+# Sites whose pictures a walkthrough step may show: loaded from the site by the app, with the
+# source's name and a link (docs/PLAN.md §10). Remove a site on its owner's request; "" turns
+# pictures from guides off.
+IMAGE_SOURCES = "powerpyx.com,psnprofiles.com,stratege.ru,playstationtrophies.org"
 # The chat's own web search (server-side), and the searches one chat call may make.
 WEB_SEARCH_ENABLED = "true"
 WEB_SEARCH_MAX_USES = "3"

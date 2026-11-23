@@ -182,6 +182,15 @@ export function webSearchTool(model: string, maxUses: number, allowedDomains?: s
     : { type: "web_search_20250305", name: "web_search", max_uses: maxUses, ...domains };
 }
 
+/** Web fetch: reads a page whose address is already in the conversation (a search result, the
+ * request, an earlier page). Same model split as web search. */
+export function webFetchTool(model: string, maxUses: number, allowedDomains?: string[], maxContentTokens = 20000): Anthropic.Beta.BetaToolUnion {
+  const options = { max_uses: maxUses, max_content_tokens: maxContentTokens, ...(allowedDomains?.length ? { allowed_domains: allowedDomains } : {}) };
+  return DYNAMIC_FILTERING_MODELS.has(model)
+    ? { type: "web_fetch_20260209", name: "web_fetch", ...options }
+    : { type: "web_fetch_20250910", name: "web_fetch", ...options };
+}
+
 /** The chat's tools: the phone's, then web search when it is on. */
 export function chatTools(config: { model: string; webSearch: boolean; webSearchMaxUses: number }): Anthropic.Beta.BetaToolUnion[] {
   return config.webSearch ? [...PHONE_TOOLS, webSearchTool(config.model, config.webSearchMaxUses)] : PHONE_TOOLS;

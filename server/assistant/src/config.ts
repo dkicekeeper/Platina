@@ -18,6 +18,8 @@ export interface Env {
   GUIDE_EFFORT?: string;
   GUIDE_MAX_TOKENS?: string;
   GUIDE_MAX_SEARCHES?: string;
+  WALKTHROUGH_MAX_FETCHES?: string;
+  IMAGE_SOURCES?: string;
   WEB_SEARCH_ENABLED?: string;
   WEB_SEARCH_MAX_USES?: string;
   MONTHLY_CALLS?: string;
@@ -44,6 +46,11 @@ export interface Config {
   guideMaxTokens: number;
   /** Web searches one guide build may make, $0.01 each. */
   guideMaxSearches: number;
+  /** Pages one walkthrough model call may read with web fetch ("0": search results only). */
+  walkthroughMaxFetches: number;
+  /** Sites whose pictures a walkthrough step may show, loaded from there with credit and a
+   * link (docs/PLAN.md §10). Empty: no pictures from guides. */
+  imageSources: string[];
   /** The chat gets the server-side web_search tool. */
   webSearch: boolean;
   /** Web searches per chat call. */
@@ -79,6 +86,11 @@ export function readConfig(env: Partial<Env>): Config {
     guideEffort: effortOf(env.GUIDE_EFFORT, "medium"),
     guideMaxTokens: Math.max(4096, int(env.GUIDE_MAX_TOKENS, 32000)),
     guideMaxSearches: Math.min(int(env.GUIDE_MAX_SEARCHES, 5), 20),
+    walkthroughMaxFetches: Math.min(int(env.WALKTHROUGH_MAX_FETCHES, 4), 10),
+    imageSources: (env.IMAGE_SOURCES ?? "powerpyx.com,psnprofiles.com,stratege.ru,playstationtrophies.org")
+      .split(",")
+      .map((s) => s.trim().toLowerCase().replace(/^www\./, ""))
+      .filter(Boolean),
     webSearch: env.WEB_SEARCH_ENABLED === "true",
     webSearchMaxUses: Math.max(1, Math.min(int(env.WEB_SEARCH_MAX_USES, 3), 10)),
     monthlyCalls: int(env.MONTHLY_CALLS, 3000),

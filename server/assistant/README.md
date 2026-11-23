@@ -12,8 +12,9 @@ Cloudflare Worker между приложением Platina и Claude: хран�
 | `src/index.ts` | маршруты, App Attest или `DEV_TOKEN`, квоты, SSE |
 | `src/claude.ts` | запрос к модели для чата, события потока → SSE, `done`, ошибки |
 | `src/prompt.ts` | характер и правила Плати (`PROMPT_VERSION`) |
-| `src/tools.ts` | 12 инструментов на телефоне и серверный `web_search` |
+| `src/tools.ts` | 12 инструментов на телефоне, серверные `web_search` и `web_fetch` |
 | `src/guide.ts` | сборка гайда: вход для модели, `save_guide`, проверка, кэш |
+| `src/walkthrough.ts` | прохождение по главам: план, шаги главы, `web_fetch`, проверка, кэш |
 | `src/stratege.ts` | поиск и разбор страницы Stratege.ru без модели |
 | `src/quota.ts`, `src/validate.ts` | квоты в KV, проверка тел запросов |
 | `src/appattest.ts`, `cbor.ts`, `der.ts`, `apple-root.ts` | App Attest (как в Tenra) |
@@ -25,14 +26,17 @@ Cloudflare Worker между приложением Platina и Claude: хран�
 
 | Запрос | Что отвечает |
 |---|---|
-| `GET /v1/health` | `{ok, protocol, prompt, guide_prompt}` |
+| `GET /v1/health` | `{ok, protocol, prompt, guide_prompt, walkthrough_prompt}` |
 | `GET /v1/attest/challenge` | `{challenge}`: одноразовый, 5 минут |
 | `POST /v1/attest` | регистрирует ключ App Attest: `{keyId, attestation, challenge}` → `{ok, environment}` |
 | `POST /v1/turn` | один вызов модели чата, SSE: `text`, `tool`, `search`, `done`, `error` |
 | `POST /v1/guide` | гайд из кэша сразу (`guide`) или сборка: `progress` (`stratege`, `search`, `writing`), `guide` или `error` |
 | `GET /v1/guide/{npCommunicationId}?language=ru` | гайд из кэша или 404 |
+| `POST /v1/walkthrough` | план прохождения (главы) из кэша или сборка: `progress` (`search`, `reading`, `writing`), `walkthrough` или `error` |
+| `POST /v1/walkthrough/chapter` | шаги главы (`chapterId`), так же: `chapter` или `error` (`no_walkthrough` — сначала план) |
+| `GET /v1/walkthrough/{id}[/chapter/{cid}]?language=ru` | план или шаги из кэша, или 404 |
 
-`/v1/turn` и `POST /v1/guide` принимают только подписанные App Attest запросы
+`/v1/turn`, `POST /v1/guide` и `POST /v1/walkthrough[/chapter]` принимают только подписанные App Attest запросы
 (`x-platina-key`, `x-platina-assertion`) или, пока задан секрет `DEV_TOKEN`, заголовок
 `x-platina-dev: <DEV_TOKEN>` (симулятор). Ошибки до потока: 400 `invalid` (с `reason`),
 401 `attest` (с `reason`; `unknown_key` — приложение делает новый ключ), 429 `quota`
@@ -46,17 +50,19 @@ Cloudflare Worker между приложением Platina и Claude: хран�
 | `ASSISTANT_MODEL`, `ASSISTANT_EFFORT` | `claude-haiku-5-5`, `low` | модель чата |
 | `GUIDE_MODEL`, `GUIDE_EFFORT` | `claude-sonnet-5-5`, `medium` | модель сборки гайдов |
 | `GUIDE_MAX_SEARCHES` | `5` | веб-поисков на вызов модели гайда (`0` — гайд только по Stratege) |
+| `WALKTHROUGH_MAX_FETCHES` | `4` | страниц, которые вызов модели прохождения читает `web_fetch` |
+| `IMAGE_SOURCES` | `powerpyx.com,psnprofiles.com,stratege.ru,playstationtrophies.org` | сайты, чьи картинки может показать шаг (пусто — ни одной) |
 | `WEB_SEARCH_ENABLED`, `WEB_SEARCH_MAX_USES` | `true`, `3` | веб-поиск в чате и его лимит на вызов |
 | `MONTHLY_CALLS` | `3000` | вызовов модели на ключ App Attest в месяц |
-| `DAILY_GUIDES` | `20` | сборок гайда на ключ в день (гайд из кэша бесплатен) |
+| `DAILY_GUIDES` | `20` | сборок гайда, плана или главы на ключ в день (из кэша бесплатно) |
 | `GLOBAL_DAILY_CALLS` | `3000` | всех вызовов за день — предохранитель трат |
 | `GUIDE_CALL_WEIGHT` | `50` | сколько вызовов в `GLOBAL_DAILY_CALLS` весит одна сборка гайда |
 | `BLOCKED_COUNTRIES` | `RU,BY` | страны, где Anthropic не работает → 451 |
 | `APP_ID` | `SY2L2VMQP7.dakacom.Platina` | Team ID + bundle id для App Attest |
 
 Секреты (не в файлах): `ANTHROPIC_API_KEY`, необязательный `DEV_TOKEN`. KV: `ATTEST`
-(ключи App Attest), `QUOTA` (счётчики), `GUIDES` (гайды на 30 дней, разобранный Stratege на
-14 дней).
+(ключи App Attest), `QUOTA` (счётчики), `GUIDES` (гайды, планы и главы прохождений на 30 дней, разобранный
+Stratege на 14 дней).
 
 Новая модель или лимит — правка `wrangler.toml` и деплой. Изменение промпта — новый
 `PROMPT_VERSION` и прогон eval до деплоя.

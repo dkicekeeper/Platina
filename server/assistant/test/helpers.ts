@@ -34,6 +34,14 @@ export const searchResult = (toolUseId: string, urls: string[]): Block =>
     content: urls.map((url, i) => ({ type: "web_search_result", url, title: `Result ${i + 1}`, encrypted_content: "x", page_age: null })),
   }) as unknown as Block;
 
+export const fetchUse = (id: string, url: string): Block => ({ type: "server_tool_use", id, name: "web_fetch", input: { url } }) as Block;
+export const fetchResult = (toolUseId: string, url: string, text: string): Block =>
+  ({
+    type: "web_fetch_tool_result",
+    tool_use_id: toolUseId,
+    content: { type: "web_fetch_result", url, retrieved_at: "2026-11-23T10:00:00Z", content: { type: "document", source: { type: "text", media_type: "text/plain", data: text }, title: null, citations: null } },
+  }) as unknown as Block;
+
 export function message(content: Block[], stop_reason = "end_turn", usage: Partial<Anthropic.Beta.BetaUsage> = {}): Anthropic.Beta.BetaMessage {
   return {
     id: "msg_1",

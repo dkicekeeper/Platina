@@ -13,6 +13,8 @@ Markdown-текст, а не блоки `render_reply`.
    инструменты на телефоне (база)  ◀── text / tool / done ──  web_search (серверный)
  GuideStore: гайд по игре           ──POST /v1/guide (SSE)──▶  Stratege.ru + Claude ──▶ Claude
                                     ◀── progress / guide ───   кэш в KV
+ WalkthroughService: главы, шаги    ──POST /v1/walkthrough[/chapter] (SSE)──▶ поиск + чтение
+                                    ◀── progress / walkthrough / chapter ──   страниц, кэш в KV
  AssistantAttestation: App Attest   ──/v1/attest/challenge, /v1/attest──▶ ключ в KV
 ```
 
@@ -27,7 +29,8 @@ Markdown-текст, а не блоки `render_reply`.
 
 - **App Attest**, как в Tenra: `GET /v1/attest/challenge` → `{challenge}` (одноразовый, 5 минут);
   приложение создаёт ключ `DCAppAttestService`, аттестацию с `clientDataHash = SHA256(challenge)`;
-  `POST /v1/attest {keyId, attestation, challenge}`. Каждый `/v1/turn` и `/v1/guide` несёт
+  `POST /v1/attest {keyId, attestation, challenge}`. Каждый `/v1/turn`, `POST /v1/guide` и
+  `POST /v1/walkthrough[/chapter]` несёт
   заголовки `x-platina-key` (keyId) и `x-platina-assertion` (base64, подпись SHA256 тела).
   App id: `SY2L2VMQP7.dakacom.Platina`. Ответ 401 `{error: "attest", reason}`; `reason:
   "unknown_key"` — приложение делает новый ключ и повторяет один раз. Ключи и challenge — в KV
@@ -43,8 +46,8 @@ Markdown-текст, а не блоки `render_reply`.
   `GUIDE_CALL_WEIGHT` (50) вызовов. 429 `{error: "quota", reason: "monthly" | "daily" | "global",
   used, limit}`.
 - Выключатель `ASSISTANT_ENABLED` ("false" → 503 `disabled`). Страны, где Anthropic не работает,
-  `BLOCKED_COUNTRIES` ("RU,BY") → 451 `region_unavailable`. Оба касаются `/v1/turn` и обоих
-  `/v1/guide`; `/v1/attest*` и `/v1/health` отвечают всегда.
+  `BLOCKED_COUNTRIES` ("RU,BY") → 451 `region_unavailable`. Оба касаются `/v1/turn`, `/v1/guide`
+  и `/v1/walkthrough`; `/v1/attest*` и `/v1/health` отвечают всегда.
 
 ## 3. `POST /v1/turn`
 
@@ -225,15 +228,97 @@ Markdown-текст, а не блоки `render_reply`.
 `ios/Config/Platina.xcconfig`; для симулятора там же `PLATINA_ASSISTANT_DEV_TOKEN`. Пустой хост —
 вкладка Плати объясняет, что сервер не настроен.
 
-## 8. Дальше: прохождение по главам (этапы 6–9, черновик)
+## 8. Прохождение по главам: `/v1/walkthrough` (этап 6)
 
-Подробно — docs/PLAN.md §5, «Прохождение по главам». Для этого контракта:
+Подробно о задумке — docs/PLAN.md §5, «Прохождение по главам». Сервер собирает два слоя, оба
+моделью гайдов (`GUIDE_MODEL`) с `web_search` и `web_fetch`, оба в KV `GUIDES` на 30 дней:
 
-- **Сервер**: обзор игры (главы, пропускаемое, выборы, прохождения) и шаги главы собирает
-  модель гайдов (Sonnet), читая страницу источника (`web_fetch`: PowerPyx, PSNProfiles,
-  Stratege) и пересказывая её; кэш в `GUIDES` по игре, главе и языку на 30 дней. Эндпоинты
-  (имена — черновик): `POST /v1/walkthrough` (обзор), `POST /v1/walkthrough/chapter` (шаги
-  главы), с тем же потоком `progress` / результат / `error`, что у `/v1/guide`.
+- **план** (`walk:{npCommunicationId}:{language}`): главы игры по порядку, что в каждой можно
+  пропустить, выборы, коллекционки, трофеи, трофей за главу, зачистка;
+- **шаги главы** (`walk:{id}:{language}:{chapterId}`): что делать по порядку, собираются, когда
+  игрок до главы дошёл. Шаги привязаны к `generatedAt` плана: пересобранный план делает их
+  устаревшими (сервер их не отдаёт, приложение собирает заново).
+
+`GET /v1/walkthrough/{npCommunicationId}?language=ru` и
+`GET /v1/walkthrough/{npCommunicationId}/chapter/{chapterId}?language=ru` → 200 из кэша или 404.
+
+`POST /v1/walkthrough` — тело как у `POST /v1/guide` (§4). `POST /v1/walkthrough/chapter` — то
+же плюс `"chapterId": "c3"`. Ответ — SSE: `progress {"step": "search" | "reading" | "writing"}`,
+затем `walkthrough {…}` или `chapter {…}`, или `error {code, retryable}`. Квота — как у гайдов
+(`DAILY_GUIDES`, вес `GUIDE_CALL_WEIGHT`); из кэша бесплатно. Заголовок `x-platina-prompt` —
+`WALKTHROUGH_PROMPT_VERSION` (он же `walkthrough_prompt` в `/v1/health`).
+
+Как собирается: модель ищет прохождение (PowerPyx первым, затем PSNProfiles, Stratege,
+PlayStationTrophies), читает одну-две страницы `web_fetch` (только сайты гайдов, до
+`WALKTHROUGH_MAX_FETCHES` за вызов, страница до ~20k токенов) и сохраняет результат строгим
+инструментом `save_walkthrough` / `save_chapter`. Для плана в запрос идёт гайд игры из кэша, если
+он есть (его источники можно цитировать); для главы — план с отмеченной главой и его источники.
+Пересказ своими словами, ничего не копируется.
+
+### План
+
+```json
+{
+  "gameId": "NPWR12345_00", "language": "ru", "generatedAt": "2026-11-23T12:00:00Z",
+  "overview": "2–4 предложения: как идти к платине",
+  "playthroughs": 1,
+  "chapters": [
+    {
+      "id": "c1", "title": "Пролог", "summary": "1–2 предложения, без спойлеров",
+      "missable": [{"trophyId": 4, "note": "Пощадите рыцаря в конце главы"}],
+      "choices": ["Пощадить рыцаря"],
+      "collectibles": [{"kind": "Реликвии", "count": 3}],
+      "trophyIds": [1, 4], "completionTrophyId": 1, "playthrough": 1, "sourceIds": ["w1"]
+    }
+  ],
+  "cleanup": "Markdown: что останется после сюжета",
+  "sources": [{"id": "w1", "title": "PowerPyx: walkthrough", "url": "https://…"}]
+}
+```
+
+### Шаги главы
+
+```json
+{
+  "gameId": "NPWR12345_00", "language": "ru", "chapterId": "c1",
+  "walkthroughGeneratedAt": "2026-11-23T12:00:00Z", "generatedAt": "2026-11-23T12:05:00Z",
+  "steps": [
+    {
+      "id": "s2", "kind": "collectible", "text": "Markdown, 1–3 предложения",
+      "trophyIds": [2], "spoiler": false,
+      "collectible": {"kind": "Реликвия", "number": 1},
+      "sourceId": "w1",
+      "image": {"url": "https://www.powerpyx.com/wp-content/uploads/….jpg", "sourceId": "w1"},
+      "video": {"youtubeId": "dQw4w9WgXcQ", "startSeconds": 95}
+    }
+  ],
+  "sources": [{"id": "w1", "title": "PowerPyx: глава 1", "url": "https://…"}]
+}
+```
+
+`kind`: `path` (куда идти), `collectible`, `choice` (выбор ради трофея), `point_of_no_return`
+(дальше не вернуться — что доделать до него), `trophy`, `boss`, `tip`. Id шагов — `s1`, `s2`… по
+порядку, их приложение и хранит в прогрессе.
+
+Что проверяет сервер (как у гайда: одна просьба исправить, потом сохраняется пригодное):
+- `trophyIds`, `trophyId`, `completionTrophyId` — только из переданного списка; id глав `c1`…
+  уникальные, глав 1–60, шагов до 80;
+- ссылки источников — только страницы, которые сборка видела (результаты поиска, прочитанные
+  страницы и ссылки на них, источники гайда или плана);
+- скрытые трофеи: в плане имя не появляется (заменяется на «скрытый трофей»); шаг, который
+  называет или даёт скрытый трофей, — `spoiler: true` (приложение раскрывает по нажатию);
+- `image` — только `https`, только если адрес был на прочитанной странице и сайт в
+  `IMAGE_SOURCES` (по умолчанию `powerpyx.com,psnprofiles.com,stratege.ru,playstationtrophies.org`;
+  пусто — картинок нет); иначе `null` без жалобы. Приложение грузит картинку с сайта источника
+  (не хранит), с подписью источника и переходом на страницу;
+- `video` — id YouTube, который был в результатах или на странице; иначе `null`.
+
+Коды `error`: `no_walkthrough` (сначала план), `unknown_chapter`, `refused` — не повторять;
+`invalid`, `no_result`, `truncated`, `upstream_busy`, `upstream_unavailable` — можно повторить;
+`bad_request`, `internal`. Сборка, которую модель не начала, квоту не тратит.
+
+### Дальше (этапы 6–9)
+
 - **Инструменты на телефоне**: `get_walkthrough`, `get_chapter`, `set_walkthrough_progress`
   (прогресс — свои данные человека в приложении, на сервер не уходит, кроме того, что модель
   попросила).
@@ -242,8 +327,3 @@ Markdown-текст, а не блоки `render_reply`.
   Старое приложение на незнакомый инструмент ответит ошибкой; модель тогда пишет текстом.
 - **Фото** (этап 9): картинка в сообщении пользователя (content block `image`), только для
   ответа, сервер её не хранит.
-- Картинки шагов: адреса картинок со страницы источника, которую прочитал сервер, с подписью и
-  ссылкой на место гайда; приложение грузит их с сайта источника. Переменная Worker'а
-  `IMAGE_SOURCES` — домены, чьи картинки отдаём (пустая — ни одной). Видео — YouTube (id и
-  секунда начала) и подсказки PlayStation.
-

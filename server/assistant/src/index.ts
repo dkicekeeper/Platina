@@ -4,10 +4,32 @@ import { buildParams, donePayload, errorPayload, normalizeForEcho, TurnEventMapp
 import { readConfig, type Config, type Env } from "./config";
 import { equalBytes } from "./der";
 import { buildGuide, GUIDE_PROMPT_VERSION, GuideError, readGuide, storeGuide, type ModelCall } from "./guide";
-import { PROMPT_VERSION } from "./prompt";
+import { PROMPT_VERSION, type Language } from "./prompt";
 import { consumeCall, consumeGuide, refund, type QuotaStatus } from "./quota";
 import { eventStream } from "./sse";
-import { isValidGameId, LIMITS, parseGuideRequest, parseTurnRequest, PROTOCOL_VERSION, resolveLanguage, ValidationError, type TurnMessage } from "./validate";
+import {
+  isValidChapterId,
+  isValidGameId,
+  LIMITS,
+  parseChapterRequest,
+  parseGuideRequest,
+  parseTurnRequest,
+  PROTOCOL_VERSION,
+  resolveLanguage,
+  ValidationError,
+  type TurnMessage,
+} from "./validate";
+import {
+  buildChapter,
+  buildWalkthrough,
+  readChapter,
+  readWalkthrough,
+  storeChapter,
+  storeWalkthrough,
+  WALKTHROUGH_PROMPT_VERSION,
+  WalkthroughError,
+  type WalkthroughBuildOptions,
+} from "./walkthrough";
 
 // Plati's server: a Cloudflare Worker between the Platina app and Claude (docs/assistant.md).
 //
@@ -17,8 +39,12 @@ import { isValidGameId, LIMITS, parseGuideRequest, parseTurnRequest, PROTOCOL_VE
 //   POST /v1/turn                      one model call of the chat, as server-sent events
 //   POST /v1/guide                     a game's guide: from the cache, or built now (SSE)
 //   GET  /v1/guide/{id}?language=ru    a cached guide, or 404
+//   POST /v1/walkthrough               a game's walkthrough plan: cached, or built now (SSE)
+//   POST /v1/walkthrough/chapter       one chapter's steps: cached, or built now (SSE)
+//   GET  /v1/walkthrough/{id}?language=ru                 a cached plan, or 404
+//   GET  /v1/walkthrough/{id}/chapter/{cid}?language=ru   a chapter's cached steps, or 404
 //
-// /v1/turn and POST /v1/guide come only from the real app: each carries an App Attest
+// /v1/turn and the POSTs that build come only from the real app: each carries an App Attest
 // assertion over its body (x-platina-key, x-platina-assertion), or, while the DEV_TOKEN secret
 // is set, `x-platina-dev: <DEV_TOKEN>` for the simulator. Quotas count per attested key.
 //
@@ -37,7 +63,9 @@ export default {
     const url = new URL(request.url);
     const config = readConfig(env);
 
-    if (url.pathname === "/v1/health") return json({ ok: true, protocol: PROTOCOL_VERSION, prompt: PROMPT_VERSION, guide_prompt: GUIDE_PROMPT_VERSION });
+    if (url.pathname === "/v1/health") {
+      return json({ ok: true, protocol: PROTOCOL_VERSION, prompt: PROMPT_VERSION, guide_prompt: GUIDE_PROMPT_VERSION, walkthrough_prompt: WALKTHROUGH_PROMPT_VERSION });
+    }
 
     // Registering a key calls no model: it answers everywhere, always.
     if (url.pathname === "/v1/attest/challenge") {
@@ -50,7 +78,9 @@ export default {
     }
 
     const guidePath = /^\/v1\/guide\/([^/]+)$/.exec(url.pathname);
-    if (url.pathname !== "/v1/turn" && url.pathname !== "/v1/guide" && !guidePath) return fail(404, "not_found");
+    const walkthroughPath = /^\/v1\/walkthrough\/([^/]+)(?:\/chapter\/([^/]+))?$/.exec(url.pathname);
+    const builds = ["/v1/turn", "/v1/guide", "/v1/walkthrough", "/v1/walkthrough/chapter"];
+    if (!builds.includes(url.pathname) && !guidePath && !walkthroughPath) return fail(404, "not_found");
 
     if (!config.enabled) return fail(503, "disabled");
     // request.cf is set on every request; the cf-ipcountry header only with IP Geolocation on
@@ -68,10 +98,22 @@ export default {
       }
       return cachedGuide(env, gameId, url.searchParams.get("language"));
     }
+    if (walkthroughPath && url.pathname !== "/v1/walkthrough/chapter") {
+      if (request.method !== "GET") return fail(405, "method");
+      let gameId: string;
+      try {
+        gameId = decodeURIComponent(walkthroughPath[1]!);
+      } catch {
+        return fail(400, "invalid", { reason: "game_id" });
+      }
+      return cachedWalkthrough(env, gameId, walkthroughPath[2], url.searchParams.get("language"));
+    }
     if (request.method !== "POST") return fail(405, "method");
     const length = Number(request.headers.get("content-length") ?? "0");
     if (length > LIMITS.bodyBytes * 2) return fail(400, "invalid", { reason: "too_large" });
     if (url.pathname === "/v1/turn") return turn(request, env, ctx, config);
+    if (url.pathname === "/v1/walkthrough") return walkthrough(request, env, ctx, config);
+    if (url.pathname === "/v1/walkthrough/chapter") return chapter(request, env, ctx, config);
     return guide(request, env, ctx, config);
   },
 } satisfies ExportedHandler<Env>;
@@ -264,6 +306,131 @@ async function cachedGuide(env: Env, gameId: string, languageParam: string | nul
   const language = resolveLanguage(languageParam);
   if (!language) return fail(400, "invalid", { reason: "language" });
   const found = await readGuide(env.GUIDES, gameId, language);
+  return found ? json(found) : fail(404, "not_found");
+}
+
+// MARK: - Walkthroughs
+
+// POST /v1/walkthrough: the game's walkthrough plan (src/walkthrough.ts), from the cache or built
+// now; POST /v1/walkthrough/chapter: one chapter's steps, built against the cached plan. Events:
+//   progress    {step}                 search, reading, writing
+//   walkthrough {...Walkthrough}       or chapter {...ChapterSteps}
+//   error       {code, retryable}      no_walkthrough: build the plan first
+// Like guides: the cache is free, a build counts in DAILY_GUIDES and goes on when the app leaves.
+
+type BuildOutcome<T> = { result: T; calls: number; usage: { web_search_requests: number } };
+
+/** The common part of the two builds: authenticate, the cache, the quota, the SSE stream. */
+async function walkthroughBuild<Body extends { refresh: boolean }, T>(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+  config: Config,
+  parse: (raw: string) => Body,
+  cached: (body: Body) => Promise<T | undefined>,
+  build: (body: Body, options: WalkthroughBuildOptions) => Promise<BuildOutcome<T>>,
+  store: (result: T) => Promise<void>,
+  event: "walkthrough" | "chapter",
+): Promise<Response> {
+  const read = await readBody(request, parse);
+  if (read instanceof Response) return read;
+  const { bytes, body } = read;
+
+  const caller = await authenticate(request, env, config, bytes);
+  if (caller instanceof Response) return caller;
+
+  const headers = { "x-platina-prompt": WALKTHROUGH_PROMPT_VERSION };
+  if (!body.refresh) {
+    const found = await cached(body).catch(() => undefined);
+    if (found) {
+      const sse = eventStream(headers);
+      ctx.waitUntil(sse.send(event, found).then(() => sse.close()));
+      return sse.response;
+    }
+  }
+
+  const quota = await consumeGuide(env.QUOTA, caller, config);
+  if (!quota.allowed) return quotaRefusal(quota);
+
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1 });
+  const call: ModelCall = async (params, onEvent) => {
+    const stream = client.beta.messages.stream(params);
+    for await (const e of stream) onEvent(e);
+    return stream.finalMessage();
+  };
+  const sse = eventStream(headers);
+  let started = false;
+
+  ctx.waitUntil(
+    (async () => {
+      try {
+        const outcome = await build(body, {
+          config,
+          call,
+          kv: env.GUIDES,
+          onProgress: (step) => sse.send("progress", { step }),
+          onModelStarted: () => {
+            started = true;
+          },
+        });
+        await store(outcome.result).catch(() => console.log(`${event} not cached`));
+        console.log(`${event} built: calls ${outcome.calls}, searches ${outcome.usage.web_search_requests}`);
+        await sse.send(event, outcome.result);
+      } catch (error) {
+        const payload = error instanceof WalkthroughError ? { code: error.code, retryable: error.retryable } : errorPayload(error);
+        const refunded = !started && quota.charge !== undefined;
+        console.log(`${event} error ${payload.code}${error instanceof Anthropic.APIError ? ` ${error.status}` : ""}${refunded ? " refunded" : ""}`);
+        await sse.send("error", payload);
+        if (refunded && quota.charge) await refund(env.QUOTA, quota.charge);
+      } finally {
+        await sse.close();
+      }
+    })(),
+  );
+  return sse.response;
+}
+
+function walkthrough(request: Request, env: Env, ctx: ExecutionContext, config: Config): Promise<Response> {
+  return walkthroughBuild(
+    request,
+    env,
+    ctx,
+    config,
+    parseGuideRequest,
+    (body) => readWalkthrough(env.GUIDES, body.game.npCommunicationId, body.language),
+    async (body, options) => {
+      const { walkthrough, calls, usage } = await buildWalkthrough(body.game, body.language, options);
+      return { result: walkthrough, calls, usage };
+    },
+    (result) => storeWalkthrough(env.GUIDES, result),
+    "walkthrough",
+  );
+}
+
+function chapter(request: Request, env: Env, ctx: ExecutionContext, config: Config): Promise<Response> {
+  return walkthroughBuild(
+    request,
+    env,
+    ctx,
+    config,
+    parseChapterRequest,
+    (body) => readChapter(env.GUIDES, body.game.npCommunicationId, body.language, body.chapterId),
+    async (body, options) => {
+      const { chapter, calls, usage } = await buildChapter(body.game, body.language, body.chapterId, options);
+      return { result: chapter, calls, usage };
+    },
+    (result) => storeChapter(env.GUIDES, result),
+    "chapter",
+  );
+}
+
+/** GET /v1/walkthrough/{id}[/chapter/{cid}]?language=ru: the cached plan or chapter, or 404. */
+async function cachedWalkthrough(env: Env, gameId: string, chapterId: string | undefined, languageParam: string | null): Promise<Response> {
+  if (!isValidGameId(gameId)) return fail(400, "invalid", { reason: "game_id" });
+  if (chapterId !== undefined && !isValidChapterId(chapterId)) return fail(400, "invalid", { reason: "chapter_id" });
+  const language: Language | undefined = resolveLanguage(languageParam);
+  if (!language) return fail(400, "invalid", { reason: "language" });
+  const found = chapterId ? await readChapter(env.GUIDES, gameId, language, chapterId) : await readWalkthrough(env.GUIDES, gameId, language);
   return found ? json(found) : fail(404, "not_found");
 }
 

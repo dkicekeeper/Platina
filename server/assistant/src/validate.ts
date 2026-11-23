@@ -225,3 +225,19 @@ export function parseGuideRequest(raw: string): GuideRequest {
     },
   };
 }
+
+// MARK: - POST /v1/walkthrough/chapter
+
+export interface ChapterRequest extends GuideRequest {
+  chapterId: string;
+}
+
+export const isValidChapterId = (value: unknown): value is string => typeof value === "string" && /^c\d{1,3}$/.test(value);
+
+/** A guide request with the chapter whose steps to build. */
+export function parseChapterRequest(raw: string): ChapterRequest {
+  const request = parseGuideRequest(raw);
+  const chapterId = (JSON.parse(raw) as { chapterId?: unknown }).chapterId;
+  if (!isValidChapterId(chapterId)) throw new ValidationError("chapter_id");
+  return { ...request, chapterId };
+}
