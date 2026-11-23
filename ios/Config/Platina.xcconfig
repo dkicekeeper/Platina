@@ -2,8 +2,9 @@
 
 // Plati's server (docs/assistant.md §7, server/assistant/README.md): the Worker's host,
 // without https:// (an xcconfig reads // as a comment), e.g. platina-assistant.<you>.workers.dev.
-// Empty: Plati is off and its tab says the server is not set up.
-PLATINA_ASSISTANT_HOST =
+// Empty: Plati is off and its tab says the server is not set up. Not a secret: App Attest
+// guards the server. Deployed 2026-11-23 (Actions → Assistant server → deploy).
+PLATINA_ASSISTANT_HOST = platina-assistant.dakacom.workers.dev
 
 // Debug only: the server's DEV_TOKEN, which lets the Simulator in without App Attest. Keep it
 // out of git: put it in Config/Local.xcconfig (ignored), which overrides this file.

@@ -66,4 +66,5 @@ CI на `main` зелёный.
 - iCloud в сборках TestFlight работает с продакшен-окружением CloudKit: схему из
   Development нужно один раз выкатить в CloudKit Console (Deploy Schema Changes), иначе свои
   данные не синхронизируются (приложение при этом работает).
-- Плати в сборке TestFlight включится, когда задан `PLATINA_ASSISTANT_HOST`.
+- Плати: хост сервера — в `ios/Config/Platina.xcconfig`; переменная репозитория
+  `PLATINA_ASSISTANT_HOST`, если задана, его заменяет (пустая — нет).

@@ -117,6 +117,12 @@ PlatinaStore — на симуляторе в CI.
 `server/assistant/src/tools.ts`: менять вместе). История разговора только дописывается.
 Без хоста сервера (`PLATINA_ASSISTANT_HOST`) Плати выключен, остальное работает.
 
+Сервер развёрнут (2026-11-23): `platina-assistant.dakacom.workers.dev`, хост — в
+`ios/Config/Platina.xcconfig`. Деплой — Actions → Assistant server → `deploy` (секреты
+Cloudflare и Anthropic уже в репозитории); запускай его на `main`, когда в `server/assistant`
+пришло изменение и его тесты зелёные, затем проверь `/v1/health` (в нём `prompt` — текущий
+`PROMPT_VERSION`). Только App Attest: `DEV_TOKEN` не задан, симулятор к серверу не пройдёт.
+
 ## DesignKit
 
 Весь интерфейс — на DesignKit (`https://github.com/dkicekeeper/DesignKit`, точная версия в
