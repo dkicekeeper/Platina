@@ -20,6 +20,11 @@ xcodebuild build -project ios/Platina.xcodeproj -scheme Platina \
 (`.github/workflows/ios.yml`): на каждый пуш в `main` и `claude/**` тесты PSNKit на Linux,
 сборка приложения и тесты пакета на macOS. Запушил — прочитай логи.
 
+**TestFlight** — workflow `.github/workflows/testflight.yml` (ручной запуск; секреты ключа App
+Store Connect уже в репозитории). Запускай его на `main` после зелёного CI, когда владелец
+просит сборку или когда в `main` пришло то, что ему нужно проверить на телефоне; затем читай
+логи загрузки. Подробности и подводные камни — [docs/testflight.md](docs/testflight.md).
+
 ## Устройство
 
 ```

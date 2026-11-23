@@ -38,14 +38,31 @@ open Platina.xcodeproj
 
 ## TestFlight из GitHub Actions
 
-Workflow `.github/workflows/testflight.yml`, запуск вручную (Actions → TestFlight → Run).
+Workflow `.github/workflows/testflight.yml`, запуск вручную (Actions → TestFlight → Run). Его
+запускает и Claude (инструмент GitHub `actions_run_trigger`, ветка `main`) — после того как
+CI на `main` зелёный.
 
-Один раз:
+Сделано один раз (2026-11-23):
 
-1. В App Store Connect создайте приложение с bundle id `dakacom.Platina`.
-2. Создайте API-ключ App Store Connect (Users and Access → Integrations, роль App Manager или
-   Admin) и добавьте секреты репозитория: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (текст
-   файла `.p8`).
-3. Необязательно: переменная репозитория `PLATINA_ASSISTANT_HOST` — хост сервера Плати.
-4. Первую сборку проще отправить из Xcode (Product → Archive → Distribute): так Apple один раз
-   зарегистрирует App Group и iCloud-контейнер. Дальше workflow подписывает сам.
+1. Приложение в App Store Connect с bundle id `dakacom.Platina`.
+2. API-ключ App Store Connect с ролью **Admin** (Users and Access → Integrations) и секреты
+   репозитория `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (текст файла `.p8` целиком). С этой
+   ролью workflow сам создаёт сертификат и профили для публикации: первая сборка из Xcode не
+   понадобилась.
+
+Необязательно: переменная репозитория `PLATINA_ASSISTANT_HOST` — хост сервера Плати.
+
+Что знать:
+
+- Номер сборки — `10 + номер запуска workflow`; версия — `MARKETING_VERSION` в `ios/project.yml`.
+- Только iPhone: `TARGETED_DEVICE_FAMILY: "1"` стоит у самой цели приложения. Пресет XcodeGen
+  для iOS ставит цели `"1,2"`, и тогда App Store Connect отказывает (90474: нужны все
+  ориентации iPad).
+- Отметка о шифровании (`ITSAppUsesNonExemptEncryption = NO`) в Info.plist: вопрос о
+  шифровании в TestFlight не задаётся.
+- С апреля 2027 загружать можно только сборки из Xcode 27 (iOS 27 SDK); workflow берёт
+  `latest-stable` на `macos-26` — проверить, что там уже 27.
+- iCloud в сборках TestFlight работает с продакшен-окружением CloudKit: схему из
+  Development нужно один раз выкатить в CloudKit Console (Deploy Schema Changes), иначе свои
+  данные не синхронизируются (приложение при этом работает).
+- Плати в сборке TestFlight включится, когда задан `PLATINA_ASSISTANT_HOST`.
