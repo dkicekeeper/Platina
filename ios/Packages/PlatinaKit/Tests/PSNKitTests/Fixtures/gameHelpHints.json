@@ -1,0 +1,23 @@
+{
+  "data": {
+    "hintAvailabilityRetrieve": {
+      "__typename": "HintAvailability",
+      "trophies": [
+        {
+          "__typename": "TrophyInfoWithHintAvailable",
+          "helpType": "HINT",
+          "id": "NPWR20188_00::18",
+          "trophyId": "18",
+          "udsObjectId": "GATCHA_SECRET"
+        },
+        {
+          "__typename": "TrophyInfoWithHintAvailable",
+          "helpType": "HINT",
+          "id": "NPWR20188_00::21",
+          "trophyId": "21",
+          "udsObjectId": "PLAZA_SEND_BOT_FLYING"
+        }
+      ]
+    }
+  }
+}

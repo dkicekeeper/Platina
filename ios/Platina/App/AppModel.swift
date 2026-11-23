@@ -24,6 +24,7 @@ final class AppModel {
     let sync: LibrarySync
     let sessions: SessionTracker
     let assistant: AssistantService
+    let gameHelp: GameHelpService
 
     /// The session screen is open.
     var isShowingSession = false
@@ -52,6 +53,7 @@ final class AppModel {
         store = LibraryStore(container: container)
         sync = LibrarySync(client: client, store: store)
         sessions = SessionTracker(store: store, sync: sync)
+        gameHelp = GameHelpService(client: client)
         assistant = AssistantService(
             store: store,
             sessions: sessions,

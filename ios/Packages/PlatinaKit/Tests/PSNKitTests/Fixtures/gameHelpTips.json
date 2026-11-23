@@ -1,0 +1,43 @@
+{
+  "data": {
+    "tipsRetrieve": {
+      "__typename": "Tips",
+      "hasAccess": true,
+      "trophies": [
+        {
+          "__typename": "TrophyTip",
+          "groups": [
+            {
+              "__typename": "TipGroup",
+              "groupId": null,
+              "groupName": null,
+              "tipContents": [
+                {
+                  "__typename": "TipContent",
+                  "description": "To max out a weapon to level five, you'll want to use it on enemies at every possible opportunity. AoE (Area of Effect) weapons are typically the fastest to level, as they can hit multiple enemies at once, earning you more XP per ammo refill. Make a habit of kiting enemies into groups to get the most out of this strategy. ",
+                  "displayName": "HIGH FIVE",
+                  "mediaId": "psncbc9ffb8d893459688563506d4a1b78e",
+                  "mediaType": "VIDEO",
+                  "mediaUrl": "https://gms-ght.playstation-cloud.com/2/b3375403cf98e61102c97ebfba134389300aa653/psncbc9ffb8d893459688563506d4a1b78e/private/video/master_playlist.m3u8?token=redacted",
+                  "tipId": "NPWR20842_00__21_Weapon_to_Level_5_h1"
+                },
+                {
+                  "__typename": "TipContent",
+                  "description": "Always upgrade your weapon with Raritanium as it levels; the increased stats will usually make it gain XP faster. ",
+                  "displayName": "INCREASED STATS",
+                  "mediaId": "psn7e4553c0088e4cf09101f12d1dcb609b",
+                  "mediaType": "VIDEO",
+                  "mediaUrl": "https://gms-ght.playstation-cloud.com/3/b3375403cf98e61102c97ebfba134389300aa653/psn7e4553c0088e4cf09101f12d1dcb609b/private/video/master_playlist.m3u8?token=redacted",
+                  "tipId": "NPWR20842_00__21_Weapon_to_Level_5_h2"
+                }
+              ]
+            }
+          ],
+          "id": "NPWR20842_00::21",
+          "totalGroupCount": 1,
+          "trophyId": "21"
+        }
+      ]
+    }
+  }
+}

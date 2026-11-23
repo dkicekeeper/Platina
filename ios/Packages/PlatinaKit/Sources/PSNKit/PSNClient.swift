@@ -216,8 +216,8 @@ public actor PSNClient {
         }
     }
 
-    func get<T: Decodable>(_ path: String, query: [URLQueryItem] = []) async throws -> T {
-        let data = try await send(path: path, query: query, retryOnUnauthorized: true)
+    func get<T: Decodable>(_ path: String, query: [URLQueryItem] = [], headers: [String: String] = [:]) async throws -> T {
+        let data = try await send(path: path, query: query, headers: headers, retryOnUnauthorized: true)
         do {
             return try JSONDecoder.psn.decode(T.self, from: data)
         } catch {
@@ -226,7 +226,7 @@ public actor PSNClient {
         }
     }
 
-    private func send(path: String, query: [URLQueryItem], retryOnUnauthorized: Bool) async throws -> Data {
+    private func send(path: String, query: [URLQueryItem], headers: [String: String], retryOnUnauthorized: Bool) async throws -> Data {
         let token = try await accessToken()
         var components = URLComponents(url: Self.apiBase.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if !query.isEmpty { components.queryItems = query }
@@ -234,6 +234,9 @@ public actor PSNClient {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(language, forHTTPHeaderField: "Accept-Language")
+        for (name, value) in headers {
+            request.setValue(value, forHTTPHeaderField: name)
+        }
         request.httpShouldHandleCookies = false
 
         let (data, response) = try await transport.send(request, followRedirects: true)
@@ -242,7 +245,7 @@ public actor PSNClient {
             return data
         case 401 where retryOnUnauthorized:
             _ = try await refreshedTokens(force: true)
-            return try await send(path: path, query: query, retryOnUnauthorized: false)
+            return try await send(path: path, query: query, headers: headers, retryOnUnauthorized: false)
         case 401:
             throw PSNError.sessionExpired
         case 429:

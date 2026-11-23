@@ -7144,6 +7144,40 @@
         }
       }
     },
+    "trophy.gameHelp.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PlayStation Game Help"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подсказка PlayStation"
+          }
+        }
+      }
+    },
+    "trophy.gameHelp.video": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watch the video"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Смотреть видео"
+          }
+        }
+      }
+    },
     "trophy.hidden.reveal": {
       "extractionState": "manual",
       "localizations": {

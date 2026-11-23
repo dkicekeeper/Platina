@@ -7,7 +7,7 @@ import PSNKit
 import PlatinaStore
 
 /// One trophy (docs/PLAN.md §3.4): the icon (a holographic foil for the platinum), how rare it
-/// is, when it was earned, its progress. Tips and notes come with Plati (stage 3).
+/// is, when it was earned, its progress, PlayStation's Game Help, Plati's tip and the person's note.
 struct TrophyView: View {
     @Environment(AppModel.self) private var app
     @Query private var trophies: [TrophyRecord]
@@ -43,6 +43,8 @@ struct TrophyView: View {
                         }
 
                         StatsStrip(items: facts(of: trophy))
+
+                        GameHelpSection(trophy: trophy)
 
                         TrophyTipSection(trophy: trophy)
 

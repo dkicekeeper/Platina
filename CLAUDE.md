@@ -80,6 +80,11 @@ PlatinaStore — на симуляторе в CI.
   ответами из [andshrew/PlayStation-Trophies](https://github.com/andshrew/PlayStation-Trophies/blob/master/docs/APIv2.md)
   (psn-api ошибается: `trophyLevel` — число, не строка). Модели читают поля терпимо там, где
   PSN и библиотеки расходятся.
+- Game Help (подсказки PlayStation к трофеям): `PSNGameHelp.swift`, GraphQL
+  `graphql/v1/op` с сохранёнными хэшами приложения PlayStation и заголовком
+  `apollographql-client-name`; в приложении — `GameHelpService` (кэш на запуск) и
+  `GameHelpSection` на экране трофея. Ошибка (например, Sony сменила хэш) — раздел молча не
+  показывается.
 - Сбои запросов PSN и синхронизации пишутся в системный журнал (`PSNLog`, категория `PSN` и
   `Sync`): пути и коды ошибок, без токенов. Первым делом проси у владельца эти строки из
   консоли Xcode.
