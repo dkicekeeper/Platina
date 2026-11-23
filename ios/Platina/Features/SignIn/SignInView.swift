@@ -1,4 +1,5 @@
 import SwiftUI
+import AuthenticationServices
 import DesignTokens
 import DesignComponents
 import PSNKit
@@ -6,7 +7,7 @@ import PSNKit
 /// The first screen: Plati and the two ways to sign in to PSN.
 struct SignInView: View {
     @Environment(AppModel.self) private var model
-    @State private var isShowingSonyLogin = false
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
     @State private var isShowingNPSSO = false
     @State private var isSigningIn = false
     @State private var errorMessage: String?
@@ -35,7 +36,7 @@ struct SignInView: View {
                         fullWidth: true,
                         isLoading: isSigningIn
                     ) {
-                        isShowingSonyLogin = true
+                        Task { await signInWithSony() }
                     }
                     DSButton(
                         String(localized: "signIn.npsso"),
@@ -69,12 +70,6 @@ struct SignInView: View {
             }
         }
         .animation(AppAnimation.gentleSpring, value: errorMessage)
-        .sheet(isPresented: $isShowingSonyLogin) {
-            SonyLoginSheet { result in
-                isShowingSonyLogin = false
-                Task { await signIn(with: result) }
-            }
-        }
         .sheet(isPresented: $isShowingNPSSO) {
             NPSSOSheet { token in
                 try await model.signIn(npsso: token)
@@ -82,19 +77,36 @@ struct SignInView: View {
         }
     }
 
-    private func signIn(with result: SonyLoginResult) async {
-        isSigningIn = true
+    /// Sony's sign-in page in Safari's own sheet, not in a web view of the app: Sony's bot
+    /// protection stalls its page inside a web view ("the connection timed out"), Safari it lets
+    /// through. Passwords and passkeys come from the Keychain, the app sees only the redirect
+    /// with the code. The session is ephemeral: Safari keeps nothing of it, and iOS asks nothing
+    /// before it opens. The redirect's scheme is the PlayStation App's; the sheet catches it
+    /// itself, the app does not register it.
+    private func signInWithSony() async {
         errorMessage = nil
+        let redirect: URL
+        do {
+            redirect = try await webAuthenticationSession.authenticate(
+                using: PSNAuth.authorizeURL,
+                callback: .customScheme(PSNAuth.redirectScheme),
+                preferredBrowserSession: .ephemeral,
+                additionalHeaderFields: [:]
+            )
+        } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
+            return
+        } catch {
+            errorMessage = String(localized: "error.signInFailed")
+            return
+        }
+        guard let code = PSNAuth.authorizationCode(fromRedirect: redirect) else {
+            errorMessage = String(localized: "error.signInFailed")
+            return
+        }
+        isSigningIn = true
         defer { isSigningIn = false }
         do {
-            switch result {
-            case .code(let code):
-                try await model.signIn(authorizationCode: code)
-            case .npsso(let token):
-                try await model.signIn(npsso: token)
-            case .failed:
-                errorMessage = String(localized: "error.signInFailed")
-            }
+            try await model.signIn(authorizationCode: code)
         } catch {
             errorMessage = error.userMessage
         }

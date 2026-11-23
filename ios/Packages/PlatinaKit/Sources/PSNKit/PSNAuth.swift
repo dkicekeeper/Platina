@@ -18,8 +18,9 @@ public enum PSNAuth {
     /// Where the person gets their NPSSO token by hand, after signing in on playstation.com.
     public static let ssoCookieURL = URL(string: "https://ca.account.sony.com/api/v1/ssocookie")!
 
-    /// The page the sign-in web view opens: Sony shows its sign-in form, then redirects to
-    /// `com.scee.psxandroid.scecompcall://redirect/?code=…`, which the web view intercepts.
+    /// The page the sign-in opens in Safari's authentication sheet: Sony shows its sign-in
+    /// form, then redirects to `com.scee.psxandroid.scecompcall://redirect/?code=…`, which the
+    /// sheet catches.
     public static var authorizeURL: URL {
         var components = URLComponents(url: oauthBase.appendingPathComponent("authorize"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
@@ -86,7 +87,7 @@ public struct PSNAuthenticator: Sendable {
         self.now = now
     }
 
-    /// Tokens for the code the sign-in web view intercepted.
+    /// Tokens for the code from Sony's redirect.
     public func tokens(fromAuthorizationCode code: String) async throws -> PSNTokens {
         try await requestTokens([
             ("code", code),
@@ -96,8 +97,7 @@ public struct PSNAuthenticator: Sendable {
         ])
     }
 
-    /// Tokens for an NPSSO token: the manual sign-in, and the web view's fallback when it finds
-    /// the `npsso` cookie but no redirect.
+    /// Tokens for an NPSSO token: the manual sign-in.
     public func tokens(fromNPSSO npsso: String) async throws -> PSNTokens {
         let code = try await authorizationCode(fromNPSSO: npsso)
         return try await tokens(fromAuthorizationCode: code)

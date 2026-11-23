@@ -55,9 +55,11 @@ PlatinaStore — на симуляторе в CI.
 ## PSN
 
 - API неофициальный (как у psn-api, PSNAWP); всё обращение к нему — только в `PSNKit`.
-- Вход: страница OAuth Sony в `WKWebView`, перехват редиректа
-  `com.scee.psxandroid.scecompcall://redirect?code=…`; запасной путь — токен NPSSO вручную.
-  Этот URL-scheme приложение **не регистрирует**: это схема PlayStation App.
+- Вход: страница OAuth Sony в системном окне Safari (`webAuthenticationSession`, эфемерная
+  сессия), окно само ловит редирект `com.scee.psxandroid.scecompcall://redirect?code=…`;
+  запасной путь — токен NPSSO вручную. Этот URL-scheme приложение **не регистрирует**: это
+  схема PlayStation App. Не `WKWebView`: защита Sony от ботов подвешивает в нём запросы своей
+  страницы, и она показывает «Время соединения с сервером истекло».
 - Токены — в Keychain (`KeychainTokenStore`), на наш сервер они не уходят.
 - Тесты `PSNKit` идут на JSON-фикстурах (`Tests/PSNKitTests/Fixtures`) через `MockTransport`;
   сеть в тестах не трогается. Фикстуры собраны по моделям psn-api: когда появятся настоящие

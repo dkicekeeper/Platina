@@ -20,13 +20,15 @@
 У Sony нет публичного API. Используем неофициальный, на котором работают PSNProfiles, Exophase
 и библиотеки `psn-api` (JS) и `PSNAWP` (Python):
 
-1. Вход в аккаунт Sony во встроенном WebView: открываем страницу OAuth-авторизации Sony
-   (`ca.account.sony.com/api/authz/v3/oauth/authorize`), человек входит как обычно, Sony
-   перенаправляет на `com.scee.psxandroid.scecompcall://redirect?code=…`, приложение
-   перехватывает код. Пароль приложение не видит.
+1. Вход в аккаунт Sony в системном окне Safari (`ASWebAuthenticationSession`): открываем
+   страницу OAuth-авторизации Sony (`ca.account.sony.com/api/authz/v3/oauth/authorize`),
+   человек входит как обычно (пароли и ключи входа — из Связки ключей), Sony перенаправляет на
+   `com.scee.psxandroid.scecompcall://redirect?code=…`, окно отдаёт приложению этот адрес.
+   Пароль приложение не видит. Встроенный `WKWebView` не годится: защита Sony от ботов
+   подвешивает в нём запросы страницы («Время соединения с сервером истекло»).
 2. Код меняем на access токен (час) и refresh токен (около двух месяцев).
 3. Refresh токен лежит в Keychain. Когда он истекает, просим войти снова.
-4. Запасной путь на случай, если Sony не пустит встроенный браузер: вставить токен NPSSO
+4. Запасной путь на случай, если вход в окне Safari не сработает: вставить токен NPSSO
    вручную (войти на playstation.com в Safari, открыть `ca.account.sony.com/api/v1/ssocookie`).
 5. Запросы идут **прямо с телефона** на `m.np.playstation.com`. Наш сервер токены Sony не видит.
 6. Язык названий и описаний трофеев — заголовок `Accept-Language` по языку приложения.

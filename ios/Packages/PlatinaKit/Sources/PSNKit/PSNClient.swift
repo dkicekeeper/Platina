@@ -48,7 +48,7 @@ public actor PSNClient {
         self.language = language
     }
 
-    /// Signs in with the code the sign-in web view intercepted.
+    /// Signs in with the code from Sony's redirect.
     public func signIn(authorizationCode code: String) async throws {
         try save(try await authenticator.tokens(fromAuthorizationCode: code))
     }
