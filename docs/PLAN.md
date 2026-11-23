@@ -332,7 +332,9 @@ Platina/
 сервера трофеев: приложение переключается на свой зашифрованный DNS (проверить на устройстве).
 Не проверено на устройстве: время в играх, сессии и Live Activity, виджеты, фоновое
 обновление, iCloud. Сервер Плати написан, но не развёрнут: нужен аккаунт Cloudflare и ключ
-Anthropic (server/assistant/README.md). Сборка на iPhone и TestFlight — docs/testflight.md.
+Anthropic (server/assistant/README.md). TestFlight работает из GitHub Actions: сборка 12
+загружена 2026-11-23 (с входом через Store и подсказками PlayStation); как собирать —
+docs/testflight.md.
 
 Дальше по порядку:
 1. Пройти на устройстве остальное (список «Что проверить» в docs/testflight.md).
@@ -340,7 +342,8 @@ Anthropic (server/assistant/README.md). Сборка на iPhone и TestFlight �
 3. Подсказки от PlayStation (Game Help, §5): на экране трофея (написано, проверить на
    устройстве). Потом — метка «есть подсказка» в списке трофеев и инструмент для Плати.
 4. Сервер Плати: развернуть, вписать хост, прогнать eval.
-5. TestFlight.
+5. TestFlight: настроен (сборки из Actions). Осталось выкатить схему CloudKit в продакшен для
+   iCloud в сборках TestFlight; к апрелю 2027 — собирать в Xcode 27.
 
 **Этап 0. Фундамент и проверка PSN.**
 Репозиторий, XcodeGen, DesignKit, CI на macOS, вход в Sony, токены в Keychain, сырой список
