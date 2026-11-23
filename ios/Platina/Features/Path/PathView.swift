@@ -13,28 +13,10 @@ struct PathView: View {
     @Environment(AppModel.self) private var app
     @Query(sort: \GameRecord.lastUpdated, order: .reverse) private var games: [GameRecord]
     @Query private var plans: [GamePlanRecord]
-    @Query(Self.recentTrophies) private var recentTrophies: [TrophyRecord]
-    @Query(Self.recentSessions) private var recentSessions: [PlaySessionRecord]
+    @Query(PathQueries.recentTrophies) private var recentTrophies: [TrophyRecord]
+    @Query(PathQueries.recentSessions) private var recentSessions: [PlaySessionRecord]
     @State private var runningGameId: String?
     @State private var openedGame: String?
-
-    private static var recentTrophies: FetchDescriptor<TrophyRecord> {
-        var descriptor = FetchDescriptor<TrophyRecord>(
-            predicate: #Predicate { $0.isEarned == true },
-            sortBy: [SortDescriptor(\.earnedAt, order: .reverse)]
-        )
-        descriptor.fetchLimit = 8
-        return descriptor
-    }
-
-    private static var recentSessions: FetchDescriptor<PlaySessionRecord> {
-        var descriptor = FetchDescriptor<PlaySessionRecord>(
-            predicate: #Predicate { $0.endedAt != nil },
-            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
-        )
-        descriptor.fetchLimit = 5
-        return descriptor
-    }
 
     private var chasing: [GameRecord] {
         let ids = Set(plans.filter { $0.status == .chasing }.map(\.gameId))
@@ -282,5 +264,27 @@ struct SessionRow: View {
             leading: .symbol("gamecontroller.fill"),
             titleLineLimit: 1
         )
+    }
+}
+
+/// The path's queries with a limit. Outside the view: a `@Query` that names a static member of
+/// its own view, by the property's own name, is a circular reference to newer compilers.
+private enum PathQueries {
+    static var recentTrophies: FetchDescriptor<TrophyRecord> {
+        var descriptor = FetchDescriptor<TrophyRecord>(
+            predicate: #Predicate { $0.isEarned == true },
+            sortBy: [SortDescriptor(\.earnedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 8
+        return descriptor
+    }
+
+    static var recentSessions: FetchDescriptor<PlaySessionRecord> {
+        var descriptor = FetchDescriptor<PlaySessionRecord>(
+            predicate: #Predicate { $0.endedAt != nil },
+            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 5
+        return descriptor
     }
 }
