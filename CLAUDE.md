@@ -123,6 +123,11 @@ PlatinaStore — на симуляторе в CI.
 
 - Акцент: `DesignKitTheme.accent = PlatinaColors.accent` в `PlatinaApp.init()`, тот же цвет в
   `AccentColor`.
+- Поверхности — серая заливка, не стекло: `DesignKitTheme.surface = .fill` там же (DesignKit
+  8.12.0, решение владельца 2026-11-23: меньше Liquid Glass). Карточки, секции, чипы, плитки и
+  плашки иконок — серые на белой странице; кнопки, таб-бар и поле чата остаются стеклом. Фон
+  экранов — `AppColors.Background.base` (белый): на сером фоне карточки сольются. Своя серая
+  фигура внутри карточки — `.surfaceNeutral1` / `.surfaceNeutral2`, не `Background.neutral1`.
 - Цвета металлов трофеев — `TrophyType.color` в `Support/PlatinaColors.swift` (кандидат в
   токены DesignKit).
 - DesignKit не несёт строк: после подъёма версии DesignKit запусти
