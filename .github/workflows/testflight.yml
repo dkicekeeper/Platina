@@ -60,7 +60,11 @@ jobs:
           PLATINA_ASSISTANT_HOST: ${{ vars.PLATINA_ASSISTANT_HOST }}
         run: |
           brew install xcodegen
-          printf 'PLATINA_ASSISTANT_HOST = %s\n' "$PLATINA_ASSISTANT_HOST" > Config/Local.xcconfig
+          # The repository variable, when set, overrides the host in Config/Platina.xcconfig;
+          # an empty one must not blank it.
+          if [ -n "$PLATINA_ASSISTANT_HOST" ]; then
+            printf 'PLATINA_ASSISTANT_HOST = %s\n' "$PLATINA_ASSISTANT_HOST" > Config/Local.xcconfig
+          fi
           xcodegen generate
 
       - name: Save App Store Connect API key
