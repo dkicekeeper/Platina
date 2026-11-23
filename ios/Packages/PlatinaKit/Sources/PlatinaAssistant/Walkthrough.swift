@@ -429,7 +429,7 @@ public struct WalkthroughPosition: Sendable, Equatable {
     ) -> Bool {
         if marks.checkedSteps.contains(WalkthroughMarks.stepKey(chapterId: chapterId, stepId: step.id)) { return true }
         if chapterState == .done { return true }
-        return !step.trophyIds.isEmpty && step.trophyIds.allSatisfy(earned.contains)
+        return !step.trophyIds.isEmpty && step.trophyIds.allSatisfy { earned.contains($0) }
     }
 
     /// The first step of a chapter not done yet.

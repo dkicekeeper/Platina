@@ -36,8 +36,8 @@ ios/
 ├── Platina/                    приложение
 │   ├── App/                    точка входа, AppModel (сессия PSN, синхронизация, сессии, Плати),
 │   │                           RootView и вкладки, фоновое обновление
-│   ├── Features/<Экран>/       Path, Library, Game (+ гайд), Trophy, Session, Plati, Profile,
-│   │                           Onboarding, Share, Widgets (снимок для виджетов)
+│   ├── Features/<Экран>/       Path, Library, Game (+ гайд), Walkthrough (прохождение по главам),
+│   │                           Trophy, Session, Plati, Profile, Onboarding, Share, Widgets
 │   ├── Support/                цвета приложения, тексты
 │   ├── Localizable.xcstrings   строки: русский (основной) и английский, плюс ключи DesignKit
 │   └── Platina.entitlements    App Group (виджеты), iCloud (данные человека), пуши CloudKit
@@ -47,10 +47,12 @@ ios/
     ├── PSNKit                  единственная дверь в PSN: вход, токены (Keychain), клиент, модели
     ├── PlatinaCore             логика без UI и SwiftData: план синхронизации, время в играх,
     │                           статистика, фильтры библиотеки
-    ├── PlatinaAssistant        клиент Плати: протокол, цикл разговора, сервер, App Attest, гайд
+    ├── PlatinaAssistant        клиент Плати: протокол, цикл разговора, сервер, App Attest, гайд,
+    │                           прохождение (модели, где человек — `WalkthroughPosition`)
     ├── PlatinaShared           общее с расширением: атрибуты Live Activity, снимок виджетов
     └── PlatinaStore            SwiftData (кэш PSN + данные человека), LibrarySync,
-                                SessionTracker, AssistantService, GuideService, AssistantToolkit
+                                SessionTracker, AssistantService, GuideService,
+                                WalkthroughService, AssistantToolkit
                                 (только Apple; на Linux файлы в `#if canImport(SwiftData)`)
 server/assistant/               сервер Плати: Cloudflare Worker (docs/assistant.md)
 scripts/designkit_strings.py    ключи строк DesignKit → каталог приложения
@@ -101,10 +103,12 @@ PlatinaStore — на симуляторе в CI.
 ## Данные
 
 - Два хранилища в одном `ModelContainer` (`LibraryStore.makeContainer`): **кэш** (игры, трофеи,
-  группы, профиль, связи «игра → список трофеев») — его можно пересобрать синхронизацией, и
-  версия, которая не может его открыть, создаёт его заново; **данные человека**
-  (`GamePlanRecord`, дальше заметки и сессии) — никогда не удаляются, готовы к iCloud: у всех
-  полей значения по умолчанию, нет `.unique`, на игры ссылаются по id.
+  группы, профиль, связи «игра → список трофеев», гайды, планы и главы прохождений) — его можно
+  пересобрать синхронизацией, и версия, которая не может его открыть, создаёт его заново;
+  **данные человека** (`GamePlanRecord`, сессии, заметки, разговоры с Плати,
+  `WalkthroughProgressRecord`) — никогда не удаляются, готовы к iCloud: у всех полей значения по
+  умолчанию, нет `.unique`, на игры ссылаются по id. Новая модель данных человека — новый тип
+  записи CloudKit: схему из Development нужно снова выкатить в продакшен (docs/testflight.md).
 - Экраны читают через `@Query`; пишет только `LibraryStore` (главный контекст).
 - `LibrarySync`: каждая синхронизация — профиль и список игр (3 запроса), трофеи только
   изменившихся игр в пределах бюджета (`SyncPlanner.defaultRequestBudget`), время в играх.
@@ -118,9 +122,12 @@ PlatinaStore — на симуляторе в CI.
 `server/assistant/src/tools.ts`: менять вместе). История разговора только дописывается.
 Без хоста сервера (`PLATINA_ASSISTANT_HOST`) Плати выключен, остальное работает.
 
-Дальше Плати ведёт «за руку» (docs/PLAN.md §5, «Прохождение по главам»; этапы 6–9): главы и
-шаги из PowerPyx, PSNProfiles и Stratege, прогресс в своих данных человека, карточки в чате
-через инструменты показа, Live Activity с ✓, «Где я?» по фото.
+Плати ведёт «за руку» (docs/PLAN.md §5, «Прохождение по главам»; docs/assistant.md §8): сервер
+собирает план игры по главам и шаги главы (`/v1/walkthrough`, поиск и чтение страниц PowerPyx,
+PSNProfiles, Stratege), телефон хранит их и прогресс человека (`WalkthroughProgressRecord`, в
+данных человека), Плати ведёт инструментами `get_walkthrough`, `get_chapter`,
+`set_walkthrough_progress`. Дальше (этапы 7–9): карточки в чате через инструменты показа, Live
+Activity с ✓, «Где я?» по фото.
 
 Сервер развёрнут (2026-11-23): `platina-assistant.dakacom.workers.dev`, хост — в
 `ios/Config/Platina.xcconfig`. Деплой — Actions → Assistant server → `deploy` (секреты

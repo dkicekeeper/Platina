@@ -639,7 +639,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
             if let step = WalkthroughPosition.nextStep(
                 in: steps, earned: earned, marks: walkthroughs.marks(gameId: game.id), chapterState: position?.state(of: current.id) ?? .current
             ) {
-                next = .init(chapter_id: current.id, id: step.id, text: step.text, spoiler: step.spoiler)
+                next = ProgressAnswer.NextStep(chapter_id: current.id, id: step.id, text: step.text, spoiler: step.spoiler)
             }
         }
         return ProgressAnswer(saved: true, current_chapter: current.map { ChapterRef(id: $0.id, title: $0.title) }, next_step: next)
