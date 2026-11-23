@@ -29,7 +29,7 @@ struct NPSSOSheet: View {
                 UniversalRow(
                     String(localized: "npsso.step1"),
                     icon: "1.circle",
-                    accessory: .action { openURL(URL(string: "https://www.playstation.com/")!) }
+                    accessory: .action { openURL(PSNAuth.webSignInURL) }
                 )
                 UniversalRow(
                     String(localized: "npsso.step2"),
