@@ -66,7 +66,10 @@ PlatinaStore — на симуляторе в CI.
   `ssocookie` отдаёт `npsso`: это рабочий путь (окно «Вход по токену»). На playstation.com
   Safari может не оставить `npsso`.
 - Где-то DNS подменяет адрес `m.np.playstation.com` (адреса не Akamai, TLS обрывается,
-  `URLError -1200`): у владельца на Wi-Fi, на сотовой сети всё работает.
+  `URLError -1200`): у владельца на Wi-Fi, на сотовой сети всё работает. Поэтому
+  `URLSessionTransport` при таком сбое переключает приложение на свой зашифрованный DNS
+  (`NameResolution`: DNS-over-HTTPS Google, для всего приложения) и повторяет запрос один раз;
+  сработавший режим запоминается.
 - Тесты `PSNKit` идут на JSON-фикстурах (`Tests/PSNKitTests/Fixtures`) через `MockTransport`;
   сеть в тестах не трогается. Фикстуры собраны по моделям psn-api и сверены с настоящими
   ответами из [andshrew/PlayStation-Trophies](https://github.com/andshrew/PlayStation-Trophies/blob/master/docs/APIv2.md)

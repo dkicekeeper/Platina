@@ -21,19 +21,42 @@ public struct URLSessionTransport: HTTPTransport {
         self.session = session
     }
 
+    /// Sends the request; when it fails the way a wrong DNS answer makes it fail, switches the
+    /// app's name resolution (`NameResolution`) and sends it once more.
     public func send(_ request: URLRequest, followRedirects: Bool) async throws -> (Data, HTTPURLResponse) {
-        let delegate: (any URLSessionTaskDelegate)? = followRedirects ? nil : NoRedirectDelegate()
-        let data: Data
-        let response: URLResponse
+        let resolution = NameResolution.shared
+        let turn = await resolution.turn
         do {
-            (data, response) = try await session.data(for: request, delegate: delegate)
+            let result = try await attempt(request, followRedirects: followRedirects)
+            await resolution.succeeded(inTurn: turn)
+            return result
+        } catch let error as URLError where NameResolution.isWrongAddressLike(error) {
+            PSNLog.failure("\(Self.target(of: request)): URLError \(error.code.rawValue), trying the other name resolution")
+            await resolution.failed(inTurn: turn)
+            let retryTurn = await resolution.turn
+            do {
+                let result = try await attempt(request, followRedirects: followRedirects)
+                await resolution.succeeded(inTurn: retryTurn)
+                return result
+            } catch let error as URLError {
+                throw Self.mapped(error, for: request)
+            }
         } catch let error as URLError {
             throw Self.mapped(error, for: request)
         }
+    }
+
+    private func attempt(_ request: URLRequest, followRedirects: Bool) async throws -> (Data, HTTPURLResponse) {
+        let delegate: (any URLSessionTaskDelegate)? = followRedirects ? nil : NoRedirectDelegate()
+        let (data, response) = try await session.data(for: request, delegate: delegate)
         guard let http = response as? HTTPURLResponse else {
             throw PSNError.transport("Not an HTTP response")
         }
         return (data, http)
+    }
+
+    private static func target(of request: URLRequest) -> String {
+        "\(request.httpMethod ?? "GET") \(request.url?.host ?? "")\(request.url?.path ?? "")"
     }
 
     /// A cancelled request is the caller's own doing, not a failure; no connection on the phone
@@ -42,13 +65,13 @@ public struct URLSessionTransport: HTTPTransport {
         if error.code == .cancelled {
             return CancellationError()
         }
-        let target = "\(request.httpMethod ?? "GET") \(request.url?.host ?? "")\(request.url?.path ?? "")"
-        PSNLog.failure("\(target): URLError \(error.code.rawValue) \(error.localizedDescription)")
+        let described = Self.target(of: request)
+        PSNLog.failure("\(described): URLError \(error.code.rawValue) \(error.localizedDescription)")
         switch error.code {
         case .notConnectedToInternet, .dataNotAllowed, .internationalRoamingOff, .callIsActive:
             return PSNError.offline
         default:
-            return PSNError.transport("\(target): URLError \(error.code.rawValue)")
+            return PSNError.transport("\(described): URLError \(error.code.rawValue)")
         }
     }
 }
