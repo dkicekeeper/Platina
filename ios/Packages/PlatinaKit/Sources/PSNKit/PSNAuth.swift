@@ -18,11 +18,12 @@ public enum PSNAuth {
     /// Where the person gets their NPSSO token by hand, after signing in on playstation.com.
     public static let ssoCookieURL = URL(string: "https://ca.account.sony.com/api/v1/ssocookie")!
 
-    /// Where the person signs in on playstation.com for the manual way. Not the bare
-    /// playstation.com: it redirects by the person's country, and a country without a region of
-    /// its own (Kazakhstan) lands on a 404. The US site opens everywhere, its "Sign In" leads to
-    /// the same account.
-    public static let webSignInURL = URL(string: "https://www.playstation.com/en-us/")!
+    /// Where the person signs in for the manual way: the PlayStation Store, as psn-api and
+    /// andshrew's API notes advise; after signing in on playstation.com Safari may hold no
+    /// `npsso` for the ssocookie page, after the store it does. The US store, not the bare
+    /// address: that redirects by country, and a country without a region of its own
+    /// (Kazakhstan) lands on a 404.
+    public static let webSignInURL = URL(string: "https://store.playstation.com/en-us/")!
 
     /// The page the sign-in opens in Safari's authentication sheet: Sony shows its sign-in
     /// form, then redirects to `com.scee.psxandroid.scecompcall://redirect/?code=…`, which the

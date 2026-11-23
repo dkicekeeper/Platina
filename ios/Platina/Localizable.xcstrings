@@ -3614,13 +3614,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in at playstation.com in Safari"
+            "value": "Sign in to the PlayStation Store in Safari"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Войдите на playstation.com в Safari"
+            "value": "Войдите в PlayStation Store в Safari"
           }
         }
       }
@@ -3631,13 +3631,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the token page and copy the npsso value"
+            "value": "Open the token page in the same Safari and copy the npsso value"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Откройте страницу токена и скопируйте значение npsso"
+            "value": "В том же Safari откройте страницу токена и скопируйте значение npsso"
           }
         }
       }
