@@ -113,6 +113,14 @@ struct ModelTests {
         #expect(links.titles.first?.trophyTitles.first?.npCommunicationId == "NPWR28536_00")
     }
 
+    @Test("The trophy level reads as a number, as PSN sends it, and as text, as psn-api has it")
+    func trophyLevelAsTextOrNumber() throws {
+        let text = #"{"accountId":"1","trophyLevel":"38","progress":5,"tier":1,"earnedTrophies":{"bronze":1,"silver":0,"gold":0,"platinum":0}}"#
+        #expect(try JSONDecoder.psn.decode(TrophySummary.self, from: Data(text.utf8)).level == 38)
+        let number = #"{"accountId":"1","trophyLevel":437,"progress":5,"tier":1,"earnedTrophies":{"bronze":1,"silver":0,"gold":0,"platinum":0}}"#
+        #expect(try JSONDecoder.psn.decode(TrophySummary.self, from: Data(number.utf8)).level == 437)
+    }
+
     @Test("Trophy types sort platinum first")
     func typeOrder() {
         #expect([TrophyType.bronze, .platinum, .silver, .gold].sorted() == [.platinum, .gold, .silver, .bronze])

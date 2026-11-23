@@ -312,24 +312,46 @@ public struct TitleProgress: Decodable, Sendable, Hashable {
 
 /// The person's trophy level and totals.
 public struct TrophySummary: Decodable, Sendable, Hashable {
-    public init(accountId: String, trophyLevel: String, progress: Int, tier: Int, earnedTrophies: TrophyCounts) {
+    public init(accountId: String, level: Int, progress: Int, tier: Int, earnedTrophies: TrophyCounts) {
         self.accountId = accountId
-        self.trophyLevel = trophyLevel
+        self.level = level
         self.progress = progress
         self.tier = tier
         self.earnedTrophies = earnedTrophies
     }
 
     public let accountId: String
-    /// The level as text (`"412"`), as PSN sends it.
-    public let trophyLevel: String
+    /// The trophy level: `trophyLevel` in PSN's answer.
+    public let level: Int
     /// Percent towards the next level.
     public let progress: Int
     /// 1–10: the colour of the level's badge.
     public let tier: Int
     public let earnedTrophies: TrophyCounts
 
-    public var level: Int { Int(trophyLevel) ?? 0 }
+    enum CodingKeys: String, CodingKey {
+        case accountId, trophyLevel, progress, tier, earnedTrophies
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        accountId = try container.decode(String.self, forKey: .accountId)
+        // A number (`437`) in PSN's answers; psn-api's model has it as text (`"437"`).
+        if let number = try? container.decode(Int.self, forKey: .trophyLevel) {
+            level = number
+        } else {
+            let text = try container.decode(String.self, forKey: .trophyLevel)
+            guard let number = Int(text) else {
+                throw DecodingError.dataCorruptedError(
+                    forKey: .trophyLevel, in: container, debugDescription: "Not a level: \(text)"
+                )
+            }
+            level = number
+        }
+        progress = try container.decode(Int.self, forKey: .progress)
+        tier = try container.decode(Int.self, forKey: .tier)
+        earnedTrophies = try container.decode(TrophyCounts.self, forKey: .earnedTrophies)
+    }
 }
 
 public struct PSNProfile: Decodable, Sendable, Hashable {
