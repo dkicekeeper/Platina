@@ -68,9 +68,29 @@ struct ClientTests {
             return try Fixture.reply("profile")
         }
         let client = PSNClient(store: InMemoryTokenStore(validTokens), transport: transport, language: "ru-RU", now: { fixedNow })
-        let profile = try await client.profile()
+        let profile = try await client.profile(accountId: "2984038888603282554")
         #expect(profile.onlineId == "trophy_hunter")
         #expect(transport.requestCount == 3)
+    }
+
+    @Test("Profile and presence ask by the account id, not by me")
+    func accountIdPaths() async throws {
+        let transport = MockTransport { request in
+            let path = request.url?.path ?? ""
+            #expect(!path.contains("/userProfile/v1/internal/users/me/"))
+            if path.hasSuffix("/trophySummary") { return try Fixture.reply("trophySummary") }
+            if path.hasSuffix("/profiles") { return try Fixture.reply("profile") }
+            return try Fixture.reply("presence")
+        }
+        let client = PSNClient(store: InMemoryTokenStore(validTokens), transport: transport, language: "ru-RU", now: { fixedNow })
+        _ = try await client.profile()
+        _ = try await client.presence()
+        let paths = transport.requests.compactMap { $0.url?.path }
+        #expect(paths == [
+            "/api/trophy/v1/users/me/trophySummary",
+            "/api/userProfile/v1/internal/users/2984038888603282554/profiles",
+            "/api/userProfile/v1/internal/users/2984038888603282554/basicPresences",
+        ])
     }
 
     @Test("A dead refresh token signs out")

@@ -15,6 +15,9 @@ public actor PSNClient {
     private let now: @Sendable () -> Date
     private var tokens: PSNTokens?
     private var refreshing: Task<PSNTokens, any Error>?
+    /// The person's account id, from the trophy summary: the profile and presence endpoints
+    /// answer 400 to `me`.
+    private var accountId: String?
 
     /// `ru-RU` or `en-US`: the language of trophy names and descriptions.
     public var language: String
@@ -50,11 +53,13 @@ public actor PSNClient {
 
     /// Signs in with the code from Sony's redirect.
     public func signIn(authorizationCode code: String) async throws {
+        accountId = nil
         try save(try await authenticator.tokens(fromAuthorizationCode: code))
     }
 
     /// Signs in with an NPSSO token.
     public func signIn(npsso: String) async throws {
+        accountId = nil
         try save(try await authenticator.tokens(fromNPSSO: npsso))
     }
 
@@ -62,6 +67,7 @@ public actor PSNClient {
         refreshing?.cancel()
         refreshing = nil
         tokens = nil
+        accountId = nil
         try store.clear()
     }
 
@@ -79,12 +85,27 @@ public actor PSNClient {
 
     /// The trophy level and totals.
     public func trophySummary() async throws -> TrophySummary {
-        try await get("trophy/v1/users/me/trophySummary")
+        let summary: TrophySummary = try await get("trophy/v1/users/me/trophySummary")
+        accountId = summary.accountId
+        return summary
     }
 
-    /// The online id and avatar.
-    public func profile(accountId: String = "me") async throws -> PSNProfile {
-        try await get("userProfile/v1/internal/users/\(accountId)/profiles")
+    /// The online id and avatar. Without an account id, the person's own (from the trophy
+    /// summary, asked first if no request brought it yet).
+    public func profile(accountId: String? = nil) async throws -> PSNProfile {
+        let id: String
+        if let accountId {
+            id = accountId
+        } else {
+            id = try await myAccountId()
+        }
+        return try await get("userProfile/v1/internal/users/\(id)/profiles")
+    }
+
+    /// The person's account id: the one the last trophy summary gave, or a summary's now.
+    private func myAccountId() async throws -> String {
+        if let accountId { return accountId }
+        return try await trophySummary().accountId
     }
 
     /// The base game and DLC groups of a trophy list.
@@ -162,8 +183,9 @@ public actor PSNClient {
 
     /// What is running on the console now.
     public func presence() async throws -> Presence {
+        let id = try await myAccountId()
         let response: PresenceResponse = try await get(
-            "userProfile/v1/internal/users/me/basicPresences",
+            "userProfile/v1/internal/users/\(id)/basicPresences",
             query: [URLQueryItem(name: "type", value: "primary")]
         )
         return response.presence
