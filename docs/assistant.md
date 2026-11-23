@@ -187,6 +187,7 @@ Markdown-текст, а не блоки `render_reply`.
 | `get_game` | `game_id` | игра: прогресс, группы (DLC), время, статус, сводка гайда, если есть |
 | `list_trophies` | `game_id`; `filter`: `unearned` \| `earned` \| `all`; `type`; `group_id`; `include_hidden_details`; `limit` | трофеи: id, название, описание (у скрытых — только если `include_hidden_details`), тип, %, прогресс, дата, заметка, пропускаемый ли |
 | `get_guide` | `game_id` | гайд (§4); если его нет — приложение собирает его через `/v1/guide` |
+| `get_game_help` | `game_id`; `trophy_ids`? (1–5) | подсказки PlayStation (Game Help), прямо из PSN: без `trophy_ids` — какие трофеи с подсказкой (id, название — у скрытых неполученных нет, скрытый ли, получен ли); с ними — шаги каждого (заголовок, текст, есть ли видео: оно на экране трофея в приложении) |
 | `get_sessions` | `game_id`; `limit` | прошлые сессии: даты, время, трофеи, итоги |
 | `get_current_session` | — | идущая сессия: игра, время, цели, трофеи за сессию |
 | `set_session_goals` | `game_id`; `trophy_ids`; `note` | ставит цели текущей (или следующей) сессии |
@@ -195,12 +196,15 @@ Markdown-текст, а не блоки `render_reply`.
 | `save_session_summary` | `session_id`; `summary`; `next_steps` | итог сессии в журнал |
 
 Типы входов: `game_id` — строка (npCommunicationId); `trophy_id` — целое (PSN trophyId);
-`trophy_ids` — массив целых, 1–6; `limit` — целое; `include_hidden_details` — bool; `session_id`,
+`trophy_ids` — массив целых, 1–6 (у `get_game_help` — 1–5); `limit` — целое; `include_hidden_details` — bool; `session_id`,
 `note`, `text`, `summary`, `next_steps` — строки (`next_steps` — короткий Markdown-список).
 Обязательны только `game_id` (кроме `list_games`, `get_sessions`), `trophy_ids`, `status`,
 `text`, `session_id`, `summary`, `next_steps`; остальные модель может не прислать:
 `filter` у `list_games` и `list_trophies` по умолчанию `all`, `include_hidden_details` — `false`,
 `get_sessions` без `game_id` — все игры. Лишних полей нет (`additionalProperties: false`).
+
+Новый инструмент совместим со старым приложением: неизвестное имя оно возвращает модели ошибкой
+(`Unknown tool …`), и разговор идёт дальше; `PROTOCOL_VERSION` не меняется.
 
 ## 6. Режимы
 

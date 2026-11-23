@@ -33,6 +33,11 @@ final class FakePSN: HTTPTransport, @unchecked Sendable {
         let status: Int
         let body: Data
         switch true {
+        case path.hasSuffix("/graphql/v1/op"):
+            // PlayStation's Game Help for the first game: the dice trophy (12) has a hint.
+            let operation = query.first { $0.name == "operationName" }?.value
+            status = 200
+            body = Data((operation == "metGetHintAvailability" ? Self.hints : Self.tips).utf8)
         case path.hasSuffix("/oauth/token"):
             if failsRefresh {
                 (status, body) = (400, Data(#"{"error":"invalid_grant"}"#.utf8))
@@ -64,6 +69,9 @@ final class FakePSN: HTTPTransport, @unchecked Sendable {
         }
         return (body, HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: [:])!)
     }
+
+    static let hints = #"{"data":{"hintAvailabilityRetrieve":{"trophies":[{"trophyId":"12","udsObjectId":"DICE","helpType":"HINT"}]}}}"#
+    static let tips = #"{"data":{"tipsRetrieve":{"hasAccess":true,"trophies":[{"trophyId":"12","groups":[{"tipContents":[{"tipId":"T1","displayName":"Knucklebones","description":"Win a game of knucklebones against Ratau. ","mediaType":"VIDEO","mediaUrl":"https://gms-ght.playstation-cloud.com/v.m3u8"}]}]}]}}}"#
 
     private func fixture(_ name: String) throws -> Data {
         let url = try #require(Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "Fixtures"))

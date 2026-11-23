@@ -76,6 +76,18 @@ export const PHONE_TOOLS: Tool[] = [
     input_schema: object({ game_id: gameId }, ["game_id"]),
   },
   {
+    name: "get_game_help",
+    description:
+      "PlayStation's own Game Help for a PS5 game's trophies: Sony's official hints, the ones the console and the PlayStation App show, in steps of words and usually a video. Without trophy_ids: which trophies of the game have help (id, name, hidden, earned). With trophy_ids (1 to 5 of those): each trophy's steps (title, text, has_video). The video plays on the trophy's screen in the app, so tell the person it is there instead of describing it. Call it when the person is stuck on a trophy or asks how to get one, together with the guide; say it is PlayStation's hint. A hidden trophy's help spoils it: ask for it only when the person asks about that trophy.",
+    input_schema: object(
+      {
+        game_id: gameId,
+        trophy_ids: { type: "array", items: trophyId, description: "1 to 5 trophy ids of this game that have help; leave out to list them" },
+      },
+      ["game_id"],
+    ),
+  },
+  {
     name: "get_sessions",
     description:
       "The person's past play sessions, newest first: id, game, date, length (by the timer and by PSN play time), trophies earned, the goals and whether they were met, and the summary and next steps saved at the end. Leave game_id out for every game. Call it to recall where they stopped last time.",

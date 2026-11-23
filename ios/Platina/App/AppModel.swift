@@ -53,12 +53,14 @@ final class AppModel {
         store = LibraryStore(container: container)
         sync = LibrarySync(client: client, store: store)
         sessions = SessionTracker(store: store, sync: sync)
-        gameHelp = GameHelpService(client: client)
+        let gameHelp = GameHelpService(client: client)
+        self.gameHelp = gameHelp
         assistant = AssistantService(
             store: store,
             sessions: sessions,
             transport: Self.assistantTransport(),
-            language: AppLanguage.code
+            language: AppLanguage.code,
+            gameHelp: gameHelp
         )
         sync.onError = { [weak self] error in
             self?.handle(error)

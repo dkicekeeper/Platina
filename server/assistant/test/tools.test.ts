@@ -11,13 +11,14 @@ const schema = (name: string) => PHONE_TOOLS.find((t) => t.name === name)!.input
 };
 
 describe("phone tools", () => {
-  it("are exactly the eleven of the contract, in a fixed order", () => {
+  it("are exactly the twelve of the contract, in a fixed order", () => {
     expect(PHONE_TOOLS.map((t) => t.name)).toEqual([
       "get_profile",
       "list_games",
       "get_game",
       "list_trophies",
       "get_guide",
+      "get_game_help",
       "get_sessions",
       "get_current_session",
       "set_session_goals",
@@ -25,7 +26,7 @@ describe("phone tools", () => {
       "save_note",
       "save_session_summary",
     ]);
-    expect(TOOL_NAMES.size).toBe(11);
+    expect(TOOL_NAMES.size).toBe(12);
   });
 
   it("have the contract's inputs", () => {
@@ -37,6 +38,9 @@ describe("phone tools", () => {
     expect(schema("list_trophies").properties.filter!.enum).toEqual(["unearned", "earned", "all"]);
     expect(schema("list_trophies").required).toEqual(["game_id"]);
     expect(schema("get_guide").required).toEqual(["game_id"]);
+    expect(schema("get_game_help").required).toEqual(["game_id"]);
+    expect(Object.keys(schema("get_game_help").properties)).toEqual(["game_id", "trophy_ids"]);
+    expect(schema("get_game_help").properties.trophy_ids!.items!.type).toBe("integer");
     expect(Object.keys(schema("get_sessions").properties)).toEqual(["game_id", "limit"]);
     expect(Object.keys(schema("get_current_session").properties)).toEqual([]);
     expect(schema("set_session_goals").required).toEqual(["game_id", "trophy_ids"]);
@@ -67,9 +71,9 @@ describe("web search", () => {
 
   it("joins the chat's tools, last, only when it is on", () => {
     const on = chatTools({ model: "claude-haiku-5-5", webSearch: true, webSearchMaxUses: 3 });
-    expect(on).toHaveLength(12);
+    expect(on).toHaveLength(13);
     expect(on.at(-1)).toMatchObject({ name: "web_search" });
-    expect(chatTools({ model: "claude-haiku-5-5", webSearch: false, webSearchMaxUses: 3 })).toHaveLength(11);
+    expect(chatTools({ model: "claude-haiku-5-5", webSearch: false, webSearchMaxUses: 3 })).toHaveLength(12);
   });
 });
 

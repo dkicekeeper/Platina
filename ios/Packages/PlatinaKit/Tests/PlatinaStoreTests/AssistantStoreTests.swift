@@ -76,6 +76,34 @@ private func makeAssistant(_ script: [[AssistantStreamEvent]]) async throws -> (
 @MainActor
 @Suite("Plati on the phone")
 struct AssistantStoreTests {
+    @Test("get_game_help lists the trophies with PlayStation's help, then gives a trophy's steps")
+    func gameHelp() async throws {
+        let store = LibraryStore(container: try LibraryStore.makeContainer(inMemory: true))
+        let psn = FakePSN()
+        let tokens = PSNTokens(accessToken: "a1", accessTokenExpiresAt: Date().addingTimeInterval(3600), refreshToken: "r1", refreshTokenExpiresAt: Date().addingTimeInterval(86_400))
+        let client = PSNClient(store: InMemoryTokenStore(tokens), transport: psn, language: "ru-RU")
+        let sync = LibrarySync(client: client, store: store)
+        await sync.sync()
+        let sessions = SessionTracker(store: store, sync: sync)
+        let assistant = AssistantService(store: store, sessions: sessions, transport: nil, language: "ru")
+        let toolkit = AssistantToolkit(store: store, sessions: sessions, guides: assistant.guides, gameHelp: GameHelpService(client: client))
+
+        let list = await toolkit.execute(name: "get_game_help", input: ["game_id": "NPWR28536_00"])
+        let helped = try #require(list.value?["trophies_with_help"]?.arrayValue)
+        #expect(helped.compactMap { $0["id"]?.numberValue } == [12])
+        #expect(helped.first?["name"]?.stringValue == "Улыбка фортуны")
+
+        let help = await toolkit.execute(name: "get_game_help", input: ["game_id": "NPWR28536_00", "trophy_ids": [12, 0]])
+        let first = try #require(help.value?["help"]?.arrayValue?.first)
+        #expect(first["trophy_id"]?.numberValue == 12)
+        #expect(first.value(atPath: "steps")?.arrayValue?.first?["text"]?.stringValue == "Win a game of knucklebones against Ratau.")
+        #expect(first.value(atPath: "steps")?.arrayValue?.first?["has_video"]?.boolValue == true)
+        #expect(help.value?["note"]?.stringValue?.contains("0") == true)
+
+        let without = AssistantToolkit(store: store, sessions: sessions, guides: assistant.guides)
+        #expect(await without.execute(name: "get_game_help", input: ["game_id": "NPWR28536_00"]).error != nil)
+    }
+
     @Test("Tools read the library and keep hidden trophies hidden")
     func reading() async throws {
         let (assistant, store, sessions, _) = try await makeAssistant([])

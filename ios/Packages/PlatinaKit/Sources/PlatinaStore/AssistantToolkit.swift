@@ -12,9 +12,17 @@ public final class AssistantToolkit: AssistantToolExecuting {
     private let store: LibraryStore
     private let sessions: SessionTracker
     private let guides: GuideService
+    private let gameHelp: GameHelpService?
     private let now: () -> Date
 
-    public init(store: LibraryStore, sessions: SessionTracker, guides: GuideService, now: @escaping () -> Date = { Date() }) {
+    public init(
+        store: LibraryStore,
+        sessions: SessionTracker,
+        guides: GuideService,
+        gameHelp: GameHelpService? = nil,
+        now: @escaping () -> Date = { Date() }
+    ) {
+        self.gameHelp = gameHelp
         self.store = store
         self.sessions = sessions
         self.guides = guides
@@ -32,6 +40,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
             case .getGame: return try encode(game(input))
             case .listTrophies: return try encode(listTrophies(input))
             case .getGuide: return try await getGuide(input)
+            case .getGameHelp: return try encode(try await getGameHelp(input))
             case .getSessions: return try encode(listSessions(input))
             case .getCurrentSession: return try encode(currentSession())
             case .setSessionGoals: return try encode(setGoals(input))
@@ -346,6 +355,76 @@ public final class AssistantToolkit: AssistantToolExecuting {
     }
 
     // MARK: Helpers
+
+    // MARK: PlayStation's Game Help
+
+    private struct GameHelpAnswer: Encodable {
+        struct Trophy: Encodable {
+            let id: Int
+            let name: String?
+            let hidden: Bool
+            let earned: Bool
+        }
+
+        struct Help: Encodable {
+            struct Step: Encodable {
+                let title: String?
+                let text: String?
+                let has_video: Bool
+            }
+
+            let trophy_id: Int
+            let name: String?
+            let steps: [Step]
+        }
+
+        /// Without trophy_ids: the trophies that have help.
+        let trophies_with_help: [Trophy]?
+        /// With trophy_ids: their help.
+        let help: [Help]?
+        let note: String?
+    }
+
+    /// PlayStation's own help: which trophies of a game have it, or the help of up to five.
+    private func getGameHelp(_ input: JSONValue) async throws -> GameHelpAnswer {
+        guard let gameHelp else { throw ToolError("PlayStation's Game Help is not available in this app.") }
+        let game = try requireGame(input)
+        let trophies = Dictionary(game.trophies.map { ($0.trophyId, $0) }, uniquingKeysWith: { first, _ in first })
+        let asked = (input["trophy_ids"]?.arrayValue ?? []).compactMap { $0.numberValue.map(Int.init) }
+        // A hidden trophy not earned yet keeps its name: list_trophies' rule.
+        func name(_ id: Int) -> String? {
+            guard let trophy = trophies[id] else { return nil }
+            return trophy.isHidden && !trophy.isEarned ? nil : trophy.name
+        }
+        guard !asked.isEmpty else {
+            let ids = await gameHelp.helpedTrophyIds(gameId: game.id).sorted()
+            return GameHelpAnswer(
+                trophies_with_help: ids.map { id in
+                    GameHelpAnswer.Trophy(
+                        id: id, name: name(id), hidden: trophies[id]?.isHidden ?? false, earned: trophies[id]?.isEarned ?? false
+                    )
+                },
+                help: nil,
+                note: ids.isEmpty ? "No trophy of this game has PlayStation's Game Help, or PSN did not answer." : nil
+            )
+        }
+        let ids = Array(asked.prefix(5))
+        let found = await gameHelp.helps(gameId: game.id, trophyIds: ids)
+        let help = ids.compactMap { id -> GameHelpAnswer.Help? in
+            guard let item = found[id] else { return nil }
+            return GameHelpAnswer.Help(
+                trophy_id: id,
+                name: name(id),
+                steps: item.tips.map { GameHelpAnswer.Help.Step(title: $0.title, text: $0.text, has_video: $0.videoURL != nil) }
+            )
+        }
+        let without = ids.filter { found[$0] == nil }
+        return GameHelpAnswer(
+            trophies_with_help: nil,
+            help: help,
+            note: without.isEmpty ? nil : "No Game Help for trophies \(without.map(String.init).joined(separator: ", "))."
+        )
+    }
 
     private struct ToolError: Error {
         let message: String

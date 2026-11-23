@@ -13,6 +13,7 @@ public enum AssistantProtocol {
         case getGame = "get_game"
         case listTrophies = "list_trophies"
         case getGuide = "get_guide"
+        case getGameHelp = "get_game_help"
         case getSessions = "get_sessions"
         case getCurrentSession = "get_current_session"
         case setSessionGoals = "set_session_goals"

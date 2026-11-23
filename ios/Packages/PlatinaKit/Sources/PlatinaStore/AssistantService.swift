@@ -203,6 +203,7 @@ public final class AssistantService {
         sessions: SessionTracker,
         transport: (any AssistantTransport)?,
         language: String,
+        gameHelp: GameHelpService? = nil,
         now: @escaping () -> Date = { Date() }
     ) {
         self.store = store
@@ -213,7 +214,7 @@ public final class AssistantService {
         isConfigured = transport != nil
         let guides = GuideService(store: store, transport: transport, language: language, now: now)
         self.guides = guides
-        toolkit = AssistantToolkit(store: store, sessions: sessions, guides: guides, now: now)
+        toolkit = AssistantToolkit(store: store, sessions: sessions, guides: guides, gameHelp: gameHelp, now: now)
     }
 
     /// The conversation about a game (nil: the general one).

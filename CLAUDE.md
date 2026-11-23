@@ -88,8 +88,9 @@ PlatinaStore — на симуляторе в CI.
   PSN и библиотеки расходятся.
 - Game Help (подсказки PlayStation к трофеям): `PSNGameHelp.swift`, GraphQL
   `graphql/v1/op` с сохранёнными хэшами приложения PlayStation и заголовком
-  `apollographql-client-name`; в приложении — `GameHelpService` (кэш на запуск) и
-  `GameHelpSection` на экране трофея. Ошибка (например, Sony сменила хэш) — раздел молча не
+  `apollographql-client-name`; `GameHelpService` в PlatinaStore (кэш на запуск) — для
+  `GameHelpSection` на экране трофея, метки в списке трофеев и инструмента Плати
+  `get_game_help`. Ошибка (например, Sony сменила хэш) — раздел молча не
   показывается.
 - Сбои запросов PSN и синхронизации пишутся в системный журнал (`PSNLog`, категория `PSN` и
   `Sync`): пути и коды ошибок, без токенов. Первым делом проси у владельца эти строки из

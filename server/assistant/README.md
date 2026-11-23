@@ -12,7 +12,7 @@ Cloudflare Worker между приложением Platina и Claude: хран�
 | `src/index.ts` | маршруты, App Attest или `DEV_TOKEN`, квоты, SSE |
 | `src/claude.ts` | запрос к модели для чата, события потока → SSE, `done`, ошибки |
 | `src/prompt.ts` | характер и правила Плати (`PROMPT_VERSION`) |
-| `src/tools.ts` | 11 инструментов на телефоне и серверный `web_search` |
+| `src/tools.ts` | 12 инструментов на телефоне и серверный `web_search` |
 | `src/guide.ts` | сборка гайда: вход для модели, `save_guide`, проверка, кэш |
 | `src/stratege.ts` | поиск и разбор страницы Stratege.ru без модели |
 | `src/quota.ts`, `src/validate.ts` | квоты в KV, проверка тел запросов |
