@@ -134,7 +134,7 @@ export const CASES: EvalCase[] = [
     prompt: "Веди меня по игре, что делать дальше?",
     checks: [
       { kind: "called", anyOf: ["get_chapter"] },
-      { kind: "textHas", groups: [["- [ ]"]], label: "gives the next steps as a checklist" },
+      { kind: "toolArgs", tool: "show_checklist", match: (i: Input) => i.chapter_id === "c2" && Array.isArray(i.step_ids) && !(i.step_ids as string[]).includes("s1"), label: "shows the next steps not done as a checklist" },
       // The dice game with Ratau is the step not to miss.
       { kind: "textHas", groups: [["ратау", "кост"]], label: "warns about the dice game" },
       { kind: "notCalled", tools: ["set_walkthrough_progress"] },
@@ -153,6 +153,7 @@ export const CASES: EvalCase[] = [
         label: "marks s2 and s3 done",
       },
       { kind: "textHas", groups: [["развилк", "торговц", "налево"]], label: "gives the next step" },
+      { kind: "called", anyOf: ["suggest_replies"] },
     ],
   },
   {

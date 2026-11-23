@@ -4490,6 +4490,23 @@
         }
       }
     },
+    "plati.card.warning %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        }
+      }
+    },
     "plati.error.attest": {
       "extractionState": "manual",
       "localizations": {
@@ -4779,6 +4796,23 @@
         }
       }
     },
+    "plati.step.cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Making the cards…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готовлю карточки…"
+          }
+        }
+      }
+    },
     "plati.step.games": {
       "extractionState": "manual",
       "localizations": {
@@ -4894,6 +4928,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Смотрю трофеи…"
+          }
+        }
+      }
+    },
+    "plati.step.walkthrough": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking the walkthrough…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Смотрю прохождение…"
           }
         }
       }

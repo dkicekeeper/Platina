@@ -23,6 +23,20 @@ public enum AssistantProtocol {
         case setGameStatus = "set_game_status"
         case saveNote = "save_note"
         case saveSessionSummary = "save_session_summary"
+        // Display tools: the app draws a card under the reply (docs/assistant.md §5).
+        case showChecklist = "show_checklist"
+        case showStep = "show_step"
+        case showTrophies = "show_trophies"
+        case showWarning = "show_warning"
+        case suggestReplies = "suggest_replies"
+
+        /// Draws a card in the chat instead of reading or changing data.
+        public var isDisplay: Bool {
+            switch self {
+            case .showChecklist, .showStep, .showTrophies, .showWarning, .suggestReplies: true
+            default: false
+            }
+        }
     }
 }
 

@@ -68,6 +68,19 @@ describe("the grader", () => {
     expect(universalChecks(record("Ок.", [{ name: "get_game", input: { game_id: "NPWR00000_00" } }]), "ru", false).find((c) => c.name === "known_ids")!.pass).toBe(false);
   });
 
+  it("reads the cards as part of what the person sees, hidden trophies kept hidden", () => {
+    const calls = [
+      { name: "show_warning", input: { kind: "missable", text: "Сыграй с Ратау в кости до босса." } },
+      { name: "show_checklist", input: { game_id: COTL, chapter_id: "c2", step_ids: ["s2", "s3"] } },
+      { name: "show_trophies", input: { game_id: COTL, trophy_ids: [49] } },
+    ];
+    const onlyCards = record("", calls);
+    expect(universalChecks(onlyCards, "ru", false).every((c) => c.pass)).toBe(true);
+    expect(caseCheck(onlyCards, { kind: "textHas", groups: [["ратау"], ["карта таро"]], label: "cards" }).pass).toBe(true);
+    expect(executeTool("show_checklist", { game_id: COTL, chapter_id: "c2", step_ids: ["s2"] }, state())).toEqual({ shown: true });
+    expect(() => executeTool("show_checklist", { game_id: COTL, chapter_id: "c2", step_ids: ["s9"] }, state())).toThrow(ToolInputError);
+  });
+
   it("prices web searches with the tokens", () => {
     expect(cost("claude-haiku-5-5", { ...emptyUsage(), input_tokens: 1_000_000, web_search_requests: 2 })).toBeCloseTo(0.12);
   });

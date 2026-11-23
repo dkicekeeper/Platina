@@ -17,13 +17,76 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
     public var text: String
     public let date: Date
     public var failed: Bool
+    /// What Plati showed under the text: checklists, steps, trophies, warnings, quick replies.
+    public var cards: [ChatCard]
 
-    public init(id: String = UUID().uuidString, role: Role, text: String, date: Date, failed: Bool = false) {
+    public init(id: String = UUID().uuidString, role: Role, text: String, date: Date, failed: Bool = false, cards: [ChatCard] = []) {
         self.id = id
         self.role = role
         self.text = text
         self.date = date
         self.failed = failed
+        self.cards = cards
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, role, text, date, failed, cards
+    }
+
+    /// Lenient: a message kept before cards existed has none.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        role = try container.decode(Role.self, forKey: .role)
+        text = try container.decode(String.self, forKey: .text)
+        date = try container.decode(Date.self, forKey: .date)
+        failed = try container.decodeIfPresent(Bool.self, forKey: .failed) ?? false
+        cards = (try? container.decodeIfPresent([ChatCard].self, forKey: .cards)) ?? []
+    }
+
+    /// The quick replies under the message, if Plati suggested any.
+    public var replies: [String] {
+        cards.flatMap { card -> [String] in
+            if case .replies(let replies) = card { return replies }
+            return []
+        }
+    }
+}
+
+/// A card Plati shows in the chat (a display tool, docs/assistant.md §5). It names what to show;
+/// the chat draws it from the app's data, so a checklist's ticks are the walkthrough's.
+public enum ChatCard: Codable, Equatable, Sendable {
+    case checklist(gameId: String, chapterId: String, stepIds: [String])
+    case step(gameId: String, chapterId: String, stepId: String)
+    case trophies(gameId: String, trophyIds: [Int])
+    /// `missable`, `choice`, `point_of_no_return`, `glitch`, `online`, `other`.
+    case warning(kind: String, title: String?, text: String)
+    case replies([String])
+}
+
+/// The thread's tools: display tools become the turn's cards, the rest go to Plati's toolkit.
+@MainActor
+final class ThreadToolkit: AssistantToolExecuting {
+    private let base: AssistantToolkit
+    /// The cards of the turn in progress.
+    var cards: [ChatCard] = []
+
+    init(base: AssistantToolkit) {
+        self.base = base
+    }
+
+    func execute(name: String, input: JSONValue) async -> AssistantToolOutput {
+        guard let tool = AssistantProtocol.Tool(rawValue: name), tool.isDisplay else {
+            return await base.execute(name: name, input: input)
+        }
+        let result = base.displayCard(tool, input: input)
+        guard let card = result.card else { return .failure(result.error ?? "Not shown.") }
+        if case .replies = card {
+            // One row of quick replies per reply: the last one stands.
+            cards.removeAll { if case .replies = $0 { return true } else { return false } }
+        }
+        cards.append(card)
+        return .success(["shown": true])
     }
 }
 
@@ -43,6 +106,7 @@ public final class ChatThread {
     public private(set) var failure: String?
 
     private let conversation: AssistantConversation?
+    private let threadToolkit: ThreadToolkit
     private let record: ConversationRecord
     private let store: LibraryStore
     private let context: () -> String
@@ -67,8 +131,10 @@ public final class ChatThread {
         self.now = now
         messages = (try? JSONDecoder().decode([ChatMessage].self, from: record.displayData)) ?? []
         let wire = (try? JSONDecoder().decode([AssistantWireMessage].self, from: record.messagesData)) ?? []
+        let threadToolkit = ThreadToolkit(base: toolkit)
+        self.threadToolkit = threadToolkit
         conversation = transport.map {
-            AssistantConversation(transport: $0, toolkit: toolkit, language: language, messages: wire)
+            AssistantConversation(transport: $0, toolkit: threadToolkit, language: language, messages: wire)
         }
     }
 
@@ -125,6 +191,7 @@ public final class ChatThread {
             streamingText = ""
         }
         if conversation.trimIfNeeded() { lastContext = nil }
+        threadToolkit.cards = []
         let current = context()
         let contextBlock = current == lastContext ? nil : current
         do {
@@ -137,7 +204,8 @@ public final class ChatThread {
                 }
             }
             lastContext = current
-            messages.append(ChatMessage(role: .assistant, text: reply.text, date: now()))
+            messages.append(ChatMessage(role: .assistant, text: reply.text, date: now(), cards: threadToolkit.cards))
+            threadToolkit.cards = []
             lastQuestion = nil
         } catch let error as AssistantConversationError {
             switch error {

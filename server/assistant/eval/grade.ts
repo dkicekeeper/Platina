@@ -1,7 +1,7 @@
 // Grades one assistant turn. Universal checks run on every case; each case adds its own.
 // Every check is mechanical: tools called and with what, words in the reply, its language.
 
-import { COTL_TROPHIES, GAMES, HIDDEN_NAMES, SESSION_ID, type Locale } from "./fixture";
+import { COTL_CHAPTER_2, COTL_TROPHIES, GAMES, HIDDEN_NAMES, SESSION_ID, type Locale } from "./fixture";
 
 export interface ToolCall {
   name: string;
@@ -56,10 +56,33 @@ export function inLanguage(text: string, locale: Locale): boolean {
 const ids = new Set(GAMES.map((g) => g.id));
 const trophyIds = new Set(COTL_TROPHIES.map((t) => t.id));
 
+/** What the person sees: the reply's text and the cards the display tools drew. */
+export function visibleText(record: RunRecord): string {
+  const parts = [record.reply];
+  for (const call of record.calls) {
+    if (call.error) continue;
+    const input = call.input;
+    if (call.name === "show_warning") parts.push(String(input.title ?? ""), String(input.text ?? ""));
+    if (call.name === "suggest_replies" && Array.isArray(input.replies)) parts.push(...input.replies.map(String));
+    if (call.name === "show_checklist" || call.name === "show_step") {
+      const ids = call.name === "show_step" ? [input.step_id] : Array.isArray(input.step_ids) ? input.step_ids : [];
+      for (const step of COTL_CHAPTER_2.steps) if (ids.includes(step.id)) parts.push(step.text);
+    }
+    if (call.name === "show_trophies" && Array.isArray(input.trophy_ids)) {
+      // A hidden trophy's card keeps its name back, as the app's does.
+      for (const t of COTL_TROPHIES) if (input.trophy_ids.includes(t.id) && (!t.hidden || t.earned)) parts.push(t.name.ru, t.name.en);
+    }
+  }
+  return parts.filter(Boolean).join("\n");
+}
+
+const DISPLAY_TOOLS = new Set(["show_checklist", "show_step", "show_trophies", "show_warning", "suggest_replies"]);
+
 export function universalChecks(record: RunRecord, locale: Locale, allowSpoilers: boolean): CheckResult[] {
+  const cards = record.calls.some((c) => DISPLAY_TOOLS.has(c.name) && !c.error);
   const checks: CheckResult[] = [
-    { name: "answered", pass: !record.error && record.reply.trim().length > 0, detail: record.error },
-    { name: "language", pass: inLanguage(record.reply, locale) },
+    { name: "answered", pass: !record.error && (record.reply.trim().length > 0 || cards), detail: record.error },
+    { name: "language", pass: record.reply.trim().length === 0 ? cards : inLanguage(record.reply, locale) },
   ];
   const unknown = record.calls.filter(
     (c) =>
@@ -69,14 +92,15 @@ export function universalChecks(record: RunRecord, locale: Locale, allowSpoilers
   );
   checks.push({ name: "known_ids", pass: unknown.length === 0, detail: unknown.map((c) => c.name).join(", ") || undefined });
   if (!allowSpoilers) {
-    const named = HIDDEN_NAMES.filter((name) => record.reply.toLowerCase().includes(name.toLowerCase()));
+    const shown = visibleText(record).toLowerCase();
+    const named = HIDDEN_NAMES.filter((name) => shown.includes(name.toLowerCase()));
     checks.push({ name: "no_hidden_spoiler", pass: named.length === 0, detail: named.join(", ") || undefined });
   }
   return checks;
 }
 
 export function caseCheck(record: RunRecord, check: Check): CheckResult {
-  const reply = record.reply.toLowerCase();
+  const reply = visibleText(record).toLowerCase();
   switch (check.kind) {
     case "called": {
       const pass = record.calls.some((c) => check.anyOf.includes(c.name));

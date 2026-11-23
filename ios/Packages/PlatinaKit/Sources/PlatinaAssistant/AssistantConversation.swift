@@ -141,7 +141,9 @@ public final class AssistantConversation {
             let uses = done.content.compactMap(AssistantToolUse.init(block:))
             guard !uses.isEmpty, done.stopReason == "tool_use" else {
                 let text = message.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !text.isEmpty else { throw AssistantConversationError.noReply }
+                // Cards alone are an answer too.
+                let showedCards = tools.contains { AssistantProtocol.Tool(rawValue: $0)?.isDisplay == true }
+                guard !text.isEmpty || showedCards else { throw AssistantConversationError.noReply }
                 return Reply(text: text, tools: tools)
             }
             var results: [JSONValue] = []

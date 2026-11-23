@@ -184,7 +184,74 @@ export const PHONE_TOOLS: Tool[] = [
       ["session_id", "summary", "next_steps"],
     ),
   },
+  // Display tools (docs/assistant.md §5): the app draws a card under the reply and answers
+  // {"shown": true}. An app that doesn't know one answers with an error: write it as text then.
+  {
+    name: "show_checklist",
+    description:
+      "Shows steps of a walkthrough chapter as a checklist card under your reply, each with a tick the person can tap in the chat; the ticks are their walkthrough progress. Use it instead of writing the steps out when you lead the person through a chapter: 1 to 8 step ids from get_chapter, in order, usually the next ones not done. Your text then says only what matters around them (the warning first).",
+    input_schema: object(
+      {
+        game_id: gameId,
+        chapter_id: { type: "string", description: "The chapter: c1, c2..." },
+        step_ids: { type: "array", items: { type: "string" }, description: "1 to 8 step ids of that chapter, from get_chapter" },
+      },
+      ["game_id", "chapter_id", "step_ids"],
+    ),
+  },
+  {
+    name: "show_step",
+    description:
+      "Shows one walkthrough step as a card with its picture of the spot and its video when it has them (has_image, has_video in get_chapter), and its source. Use it for the step where a picture or a video helps: a collectible's place, a turn that is easy to miss.",
+    input_schema: object(
+      {
+        game_id: gameId,
+        chapter_id: { type: "string", description: "The chapter: c1, c2..." },
+        step_id: { type: "string", description: "A step id of that chapter: s1, s2..." },
+      },
+      ["game_id", "chapter_id", "step_id"],
+    ),
+  },
+  {
+    name: "show_trophies",
+    description:
+      "Shows trophies of one game as cards under your reply: icon, name, description, type, rarity, earned or not, progress of a counter trophy. A hidden trophy the person has not earned stays hidden on its card. Use it when you talk about particular trophies (goals, what is left, what to go for next): 1 to 6 ids.",
+    input_schema: object(
+      {
+        game_id: gameId,
+        trophy_ids: { type: "array", items: trophyId, description: "1 to 6 trophy ids of this game" },
+      },
+      ["game_id", "trophy_ids"],
+    ),
+  },
+  {
+    name: "show_warning",
+    description:
+      "Shows a warning card under your reply, for what can be lost for good: a missable trophy or item, a choice that matters, a point of no return; or a glitched trophy, or one that needs online play. One or two short sentences: what to do, and before when. One card per warning; the most important things only.",
+    input_schema: object(
+      {
+        kind: { type: "string", enum: ["missable", "choice", "point_of_no_return", "glitch", "online", "other"] },
+        title: { type: "string", description: "A few words, like Point of no return; optional" },
+        text: { type: "string", description: "One or two short sentences, in the reply language" },
+      },
+      ["kind", "text"],
+    ),
+  },
+  {
+    name: "suggest_replies",
+    description:
+      "Shows 1 to 4 quick replies as buttons under your reply; a tap sends that text as the person's message. Short, in the reply language, what the person is likely to answer next: when you lead through a walkthrough, things like Done, Next step, I missed an item, Where am I?. Call it last, at most once per reply.",
+    input_schema: object(
+      {
+        replies: { type: "array", items: { type: "string" }, description: "1 to 4 replies, up to 40 characters each" },
+      },
+      ["replies"],
+    ),
+  },
 ];
+
+/** The display tools: the app draws them as cards. */
+export const DISPLAY_TOOL_NAMES: ReadonlySet<string> = new Set(["show_checklist", "show_step", "show_trophies", "show_warning", "suggest_replies"]);
 
 /** Every phone tool a history may hold. */
 export const TOOL_NAMES: ReadonlySet<string> = new Set(PHONE_TOOLS.map((t) => t.name));

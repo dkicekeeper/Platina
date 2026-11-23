@@ -194,6 +194,51 @@ struct WalkthroughStoreTests {
         #expect(game.value?.value(atPath: "walkthrough.current_chapter.id")?.stringValue == "c3")
     }
 
+    @Test("Display tools become checked cards; a wrong id is an error the model can fix")
+    func cards() async throws {
+        let (service, store, sync) = try await makeServiceAndSync(ScriptedWalkthroughs())
+        let base = AssistantToolkit(
+            store: store, sessions: SessionTracker(store: store, sync: sync),
+            guides: GuideService(store: store, transport: nil, language: "ru"), walkthroughs: service
+        )
+        let toolkit = ThreadToolkit(base: base)
+
+        let early = await toolkit.execute(name: "show_checklist", input: ["game_id": .string(gameId), "chapter_id": "c2", "step_ids": ["s1"]])
+        #expect(early.error?.contains("get_walkthrough") == true)
+
+        _ = await service.chapterBuildingIfNeeded(gameId: gameId, chapterId: "c2")
+        let shown = await toolkit.execute(name: "show_checklist", input: ["game_id": .string(gameId), "chapter_id": "c2", "step_ids": ["s1", "s2"]])
+        #expect(shown.value?["shown"]?.boolValue == true)
+        let wrong = await toolkit.execute(name: "show_step", input: ["game_id": .string(gameId), "chapter_id": "c2", "step_id": "s7"])
+        #expect(wrong.error?.contains("s7") == true)
+        _ = await toolkit.execute(name: "show_trophies", input: ["game_id": .string(gameId), "trophy_ids": [12, 40]])
+        _ = await toolkit.execute(name: "show_warning", input: ["kind": "point_of_no_return", "text": "Дальше не вернуться."])
+        _ = await toolkit.execute(name: "suggest_replies", input: ["replies": ["Готово"]])
+        _ = await toolkit.execute(name: "suggest_replies", input: ["replies": ["Готово", "Дальше"]])
+        let bad = await toolkit.execute(name: "show_trophies", input: ["game_id": .string(gameId), "trophy_ids": [999]])
+        #expect(bad.error != nil)
+
+        #expect(toolkit.cards == [
+            .checklist(gameId: gameId, chapterId: "c2", stepIds: ["s1", "s2"]),
+            .trophies(gameId: gameId, trophyIds: [12, 40]),
+            .warning(kind: "point_of_no_return", title: nil, text: "Дальше не вернуться."),
+            .replies(["Готово", "Дальше"]),
+        ])
+        // The other tools still reach the toolkit.
+        let game = await toolkit.execute(name: "get_game", input: ["game_id": .string(gameId)])
+        #expect(game.value?.value(atPath: "game.id")?.stringValue == gameId)
+        // Without a chat to draw in, a display tool says so.
+        #expect(await base.execute(name: "show_warning", input: ["kind": "other", "text": "x"]).error != nil)
+
+        // Kept with the message, and read back; a message kept before cards still reads.
+        let message = ChatMessage(role: .assistant, text: "", date: Date(timeIntervalSince1970: 0), cards: toolkit.cards)
+        let decoded = try JSONDecoder().decode(ChatMessage.self, from: JSONEncoder().encode(message))
+        #expect(decoded == message)
+        #expect(decoded.replies == ["Готово", "Дальше"])
+        let old = #"{"id":"m1","role":"assistant","text":"Привет","date":0,"failed":false}"#
+        #expect(try JSONDecoder().decode(ChatMessage.self, from: Data(old.utf8)).cards.isEmpty)
+    }
+
     @Test("Marks from two devices are read together and become one record")
     func duplicates() async throws {
         let (_, store) = try await makeService(ScriptedWalkthroughs())

@@ -145,6 +145,28 @@ struct ConversationTests {
         #expect(transport.requests.last?.messages.count == 3)
     }
 
+    @Test("Cards alone answer a turn; a turn with nothing at all does not")
+    func cardsOnly() async throws {
+        let transport = ScriptedTransport([
+            [toolUseTurn(id: "t1", name: "suggest_replies", input: ["replies": ["Дальше"]])],
+            [.done(AssistantTurnDone(content: [], stopReason: "end_turn"))],
+        ])
+        let conversation = AssistantConversation(transport: transport, toolkit: RecordingToolkit(), language: "ru")
+        let reply = try await conversation.send("Веди")
+        #expect(reply.text.isEmpty)
+        #expect(reply.tools == ["suggest_replies"])
+        #expect(AssistantProtocol.Tool.suggestReplies.isDisplay)
+        #expect(!AssistantProtocol.Tool.getChapter.isDisplay)
+
+        let empty = AssistantConversation(
+            transport: ScriptedTransport([[.done(AssistantTurnDone(content: [], stopReason: "end_turn"))]]),
+            toolkit: RecordingToolkit(), language: "ru"
+        )
+        await #expect(throws: AssistantConversationError.noReply) {
+            _ = try await empty.send("Привет")
+        }
+    }
+
     @Test("A failed turn leaves no trace in the history")
     func rollback() async throws {
         let transport = ScriptedTransport([[.error(code: "quota", retryable: false)]])

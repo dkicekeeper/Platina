@@ -336,6 +336,30 @@ export function executeTool(name: string, input: Record<string, unknown>, state:
       state.writes.push({ name, input });
       return { saved: true, current_chapter: COTL_WALKTHROUGH.current_chapter, next_step: { chapter_id: "c2", id: "s4", text: COTL_CHAPTER_2.steps[3]!.text } };
     }
+    case "show_checklist":
+    case "show_step": {
+      gameById(input.game_id);
+      if (input.chapter_id !== "c2") throw new ToolInputError("Only chapter c2 has steps in this fixture.");
+      const ids = name === "show_step" ? [input.step_id] : input.step_ids;
+      if (!Array.isArray(ids) || ids.length < 1 || ids.length > 8) throw new ToolInputError("step_ids: 1 to 8 step ids");
+      for (const id of ids) if (!COTL_CHAPTER_2.steps.some((x) => x.id === id)) throw new ToolInputError(`No step ${String(id)} in chapter c2`);
+      return { shown: true };
+    }
+    case "show_trophies": {
+      gameById(input.game_id);
+      const ids = input.trophy_ids;
+      if (!Array.isArray(ids) || ids.length < 1 || ids.length > 6) throw new ToolInputError("trophy_ids: 1 to 6 trophy ids");
+      for (const id of ids) if (!COTL_TROPHIES.some((x) => x.id === id)) throw new ToolInputError(`Unknown trophy id ${String(id)}`);
+      return { shown: true };
+    }
+    case "show_warning":
+      if (typeof input.text !== "string" || !input.text.trim()) throw new ToolInputError("text is required");
+      return { shown: true };
+    case "suggest_replies": {
+      const replies = input.replies;
+      if (!Array.isArray(replies) || replies.length < 1 || replies.length > 4) throw new ToolInputError("replies: 1 to 4");
+      return { shown: true };
+    }
     case "get_sessions": {
       const sessions = input.game_id ? SESSIONS.filter((s) => s.game_id === input.game_id) : SESSIONS;
       return { sessions };

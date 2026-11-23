@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { languageInstruction, PROMPT_VERSION, SYSTEM_PROMPT } from "../src/prompt";
-import { chatTools, PHONE_TOOLS, TOOL_NAMES, webFetchTool, webSearchTool } from "../src/tools";
+import { chatTools, DISPLAY_TOOL_NAMES, PHONE_TOOLS, TOOL_NAMES, webFetchTool, webSearchTool } from "../src/tools";
 
 // The phone tools are the contract with the app (docs/assistant.md §5).
 
@@ -11,7 +11,7 @@ const schema = (name: string) => PHONE_TOOLS.find((t) => t.name === name)!.input
 };
 
 describe("phone tools", () => {
-  it("are exactly the fifteen of the contract, in a fixed order", () => {
+  it("are exactly the twenty of the contract, in a fixed order", () => {
     expect(PHONE_TOOLS.map((t) => t.name)).toEqual([
       "get_profile",
       "list_games",
@@ -28,8 +28,14 @@ describe("phone tools", () => {
       "set_game_status",
       "save_note",
       "save_session_summary",
+      "show_checklist",
+      "show_step",
+      "show_trophies",
+      "show_warning",
+      "suggest_replies",
     ]);
-    expect(TOOL_NAMES.size).toBe(15);
+    expect(TOOL_NAMES.size).toBe(20);
+    expect([...DISPLAY_TOOL_NAMES].every((name) => TOOL_NAMES.has(name))).toBe(true);
   });
 
   it("have the contract's inputs", () => {
@@ -58,6 +64,12 @@ describe("phone tools", () => {
     expect(schema("save_note").required).toEqual(["game_id", "text"]);
     expect(Object.keys(schema("save_note").properties)).toEqual(["game_id", "trophy_id", "text"]);
     expect(schema("save_session_summary").required).toEqual(["session_id", "summary", "next_steps"]);
+    expect(schema("show_checklist").required).toEqual(["game_id", "chapter_id", "step_ids"]);
+    expect(schema("show_step").required).toEqual(["game_id", "chapter_id", "step_id"]);
+    expect(schema("show_trophies").properties.trophy_ids!.items!.type).toBe("integer");
+    expect(schema("show_warning").properties.kind!.enum).toEqual(["missable", "choice", "point_of_no_return", "glitch", "online", "other"]);
+    expect(schema("show_warning").required).toEqual(["kind", "text"]);
+    expect(schema("suggest_replies").required).toEqual(["replies"]);
   });
 
   it("take no field they don't describe, and require only fields they have", () => {
@@ -79,9 +91,9 @@ describe("web search", () => {
 
   it("joins the chat's tools, last, only when it is on", () => {
     const on = chatTools({ model: "claude-haiku-5-5", webSearch: true, webSearchMaxUses: 3 });
-    expect(on).toHaveLength(16);
+    expect(on).toHaveLength(21);
     expect(on.at(-1)).toMatchObject({ name: "web_search" });
-    expect(chatTools({ model: "claude-haiku-5-5", webSearch: false, webSearchMaxUses: 3 })).toHaveLength(15);
+    expect(chatTools({ model: "claude-haiku-5-5", webSearch: false, webSearchMaxUses: 3 })).toHaveLength(20);
   });
 });
 

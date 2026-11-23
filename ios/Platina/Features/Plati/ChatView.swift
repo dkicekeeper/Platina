@@ -78,8 +78,21 @@ struct ChatView: View {
                 }
             }
         case .assistant:
-            MessageBubble(markdown: message.text, role: .incoming, time: message.date)
-                .transition(.messageBubble(.incoming))
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                if !message.text.isEmpty {
+                    MessageBubble(markdown: message.text, role: .incoming, time: message.date)
+                }
+                ForEach(Array(message.cards.enumerated()), id: \.offset) { _, card in
+                    ChatCardView(card: card)
+                }
+                // Quick replies under the last reply only, while nothing else is going on.
+                if message.id == thread.messages.last?.id, !thread.isResponding, !message.replies.isEmpty {
+                    SuggestionChips(message.replies, systemImage: "arrowshape.turn.up.left") { reply in
+                        Task { await thread.send(reply) }
+                    }
+                }
+            }
+            .transition(.messageBubble(.incoming))
         }
     }
 
@@ -136,6 +149,8 @@ struct ChatView: View {
         case "get_game", "list_games": String(localized: "plati.step.games")
         case "get_sessions", "get_current_session": String(localized: "plati.step.sessions")
         case "set_session_goals": String(localized: "plati.step.goals")
+        case "get_walkthrough", "get_chapter": String(localized: "plati.step.walkthrough")
+        case "show_checklist", "show_step", "show_trophies", "show_warning", "suggest_replies": String(localized: "plati.step.cards")
         default: String(localized: "plati.step.working")
         }
     }

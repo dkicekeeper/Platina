@@ -47,6 +47,9 @@ public final class AssistantToolkit: AssistantToolExecuting {
             case .getWalkthrough: return try encode(try await getWalkthrough(input))
             case .getChapter: return try encode(try await getChapter(input))
             case .setWalkthroughProgress: return try encode(try setWalkthroughProgress(input))
+            case .showChecklist, .showStep, .showTrophies, .showWarning, .suggestReplies:
+                // A chat thread draws these (ThreadToolkit); anywhere else there is nowhere to.
+                return .failure("Cards can't be shown here: write it as text.")
             case .getSessions: return try encode(listSessions(input))
             case .getCurrentSession: return try encode(currentSession())
             case .setSessionGoals: return try encode(setGoals(input))
@@ -643,6 +646,74 @@ public final class AssistantToolkit: AssistantToolExecuting {
             }
         }
         return ProgressAnswer(saved: true, current_chapter: current.map { ChapterRef(id: $0.id, title: $0.title) }, next_step: next)
+    }
+
+    // MARK: Display tools
+
+    /// The card a display tool asks for, checked against the app's data, or why it can't be shown.
+    public func displayCard(_ tool: AssistantProtocol.Tool, input: JSONValue) -> (card: ChatCard?, error: String?) {
+        do {
+            return (try card(tool, input: input), nil)
+        } catch let error as ToolError {
+            return (nil, error.message)
+        } catch {
+            return (nil, "Not shown: \(error)")
+        }
+    }
+
+    private static let warningKinds: Set<String> = ["missable", "choice", "point_of_no_return", "glitch", "online", "other"]
+
+    private func card(_ tool: AssistantProtocol.Tool, input: JSONValue) throws -> ChatCard {
+        switch tool {
+        case .showChecklist, .showStep:
+            let game = try requireGame(input)
+            guard let walkthroughs, walkthroughs.walkthrough(for: game.id) != nil else {
+                throw ToolError("This game has no walkthrough yet: call get_walkthrough first.")
+            }
+            guard let chapterId = input["chapter_id"]?.stringValue,
+                  let steps = walkthroughs.chapter(gameId: game.id, chapterId: chapterId) else {
+                throw ToolError("No steps of that chapter yet: call get_chapter first.")
+            }
+            let known = Set(steps.steps.map(\.id))
+            let ids = tool == .showStep
+                ? [input["step_id"]?.stringValue].compactMap { $0 }
+                : (input["step_ids"]?.arrayValue ?? []).compactMap(\.stringValue)
+            guard (1...8).contains(ids.count) else { throw ToolError("Give 1 to 8 step ids of chapter \(chapterId).") }
+            let unknown = ids.filter { !known.contains($0) }
+            guard unknown.isEmpty else {
+                throw ToolError("No steps \(unknown.joined(separator: ", ")) in chapter \(chapterId); take ids from get_chapter.")
+            }
+            return tool == .showStep
+                ? .step(gameId: game.id, chapterId: chapterId, stepId: ids[0])
+                : .checklist(gameId: game.id, chapterId: chapterId, stepIds: ids)
+        case .showTrophies:
+            let game = try requireGame(input)
+            let ids = (input["trophy_ids"]?.arrayValue ?? []).compactMap { $0.numberValue.map(Int.init) }
+            guard (1...6).contains(ids.count) else { throw ToolError("Give 1 to 6 trophy ids.") }
+            let known = Set(game.trophies.map(\.trophyId))
+            let unknown = ids.filter { !known.contains($0) }
+            guard unknown.isEmpty else {
+                throw ToolError("No trophies \(unknown.map(String.init).joined(separator: ", ")) in this game; take ids from list_trophies.")
+            }
+            return .trophies(gameId: game.id, trophyIds: ids)
+        case .showWarning:
+            let kind = input["kind"]?.stringValue ?? "other"
+            guard Self.warningKinds.contains(kind) else { throw ToolError("kind must be one of \(Self.warningKinds.sorted().joined(separator: ", ")).") }
+            let text = (input["text"]?.stringValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard (1...400).contains(text.count) else { throw ToolError("text: one or two sentences, up to 400 characters.") }
+            let title = input["title"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .warning(kind: kind, title: title?.isEmpty == false ? String(title!.prefix(60)) : nil, text: text)
+        case .suggestReplies:
+            let replies = (input["replies"]?.arrayValue ?? [])
+                .compactMap { $0.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            guard (1...4).contains(replies.count), replies.allSatisfy({ $0.count <= 40 }) else {
+                throw ToolError("Give 1 to 4 replies, up to 40 characters each.")
+            }
+            return .replies(replies)
+        default:
+            throw ToolError("\(tool.rawValue) is not a display tool.")
+        }
     }
 
     private struct ToolError: Error {
