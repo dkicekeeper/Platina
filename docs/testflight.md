@@ -3,11 +3,14 @@
 ## Сборка на свой iPhone (Mac с Xcode 26+)
 
 ```bash
-brew install xcodegen          # один раз
+brew install xcodegen          # один раз (без Homebrew — xcodegen.zip со страницы релизов XcodeGen)
 cd ios
 xcodegen generate              # Platina.xcodeproj генерируется, в git его нет
 open Platina.xcodeproj
 ```
+
+После `git pull` запускайте `xcodegen generate` снова, если в проекте появились или пропали
+файлы; иначе хватает ⌘B.
 
 1. В Xcode у целей **Platina** и **PlatinaWidgets** (Signing & Capabilities) — ваша команда
    (`SY2L2VMQP7` уже стоит), «Automatically manage signing». Xcode сам зарегистрирует
@@ -22,11 +25,16 @@ open Platina.xcodeproj
 
 Что проверить в первую очередь:
 
-- вход в PSN через страницу Sony (если не пустит — «Войти с токеном NPSSO»);
+- вход в PSN через страницу Sony. Если она пишет «Время соединения с сервером истекло»:
+  «Войти по токену NPSSO» — войти в PlayStation Store в Safari, в том же Safari открыть
+  страницу токена, скопировать ответ целиком и вставить;
 - первая синхронизация: игры PS5 появляются, трофеи догружаются партиями;
 - сессия: старт из игры, Live Activity на экране блокировки, «Проверить трофеи»;
 - виджеты «Путь к платине» и «Последний трофей» на домашнем экране;
 - Плати: вопрос в чате, гайд на экране игры.
+
+Если что-то не грузится: в консоли Xcode (⇧⌘C) найдите строки `PSN`, `Sync failed` и
+`Name resolution` — в них запрос и код ошибки, без токенов.
 
 ## TestFlight из GitHub Actions
 
