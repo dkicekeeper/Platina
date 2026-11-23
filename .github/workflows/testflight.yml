@@ -23,7 +23,9 @@ env:
 jobs:
   upload:
     name: Archive and upload to TestFlight
-    runs-on: macos-26
+    # GitHub's Xcode 27 image (public preview): builds with the iOS 27 SDK, which App Store
+    # Connect requires from April 2027.
+    runs-on: xcode-27
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
@@ -45,7 +47,12 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: "27"
+
+      - name: Xcode and SDK
+        run: |
+          xcodebuild -version
+          echo "iOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
 
       - name: Generate Xcode project
         working-directory: ios

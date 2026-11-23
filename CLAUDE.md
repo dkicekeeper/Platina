@@ -10,7 +10,8 @@ iOS-приложение: трекер трофеев PlayStation (пока то
 # Тесты PSNKit — работают и на Linux (в облачном контейнере тоже, если поставлен Swift 6):
 cd ios/Packages/PlatinaKit && swift test
 
-# Приложение — только на macOS, Xcode 26+:
+# Приложение — только на macOS, Xcode 27 (CI и TestFlight собирают в Xcode 27, iOS 27 SDK;
+# минимальная iOS — 26):
 cd ios && xcodegen generate && open Platina.xcodeproj
 xcodebuild build -project ios/Platina.xcodeproj -scheme Platina \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO

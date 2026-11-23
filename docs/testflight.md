@@ -1,6 +1,6 @@
 # Сборка на iPhone и TestFlight
 
-## Сборка на свой iPhone (Mac с Xcode 26+)
+## Сборка на свой iPhone (Mac с Xcode 27)
 
 ```bash
 brew install xcodegen          # один раз (без Homebrew — xcodegen.zip со страницы релизов XcodeGen)
@@ -60,8 +60,9 @@ CI на `main` зелёный.
   ориентации iPad).
 - Отметка о шифровании (`ITSAppUsesNonExemptEncryption = NO`) в Info.plist: вопрос о
   шифровании в TestFlight не задаётся.
-- С апреля 2027 загружать можно только сборки из Xcode 27 (iOS 27 SDK); workflow берёт
-  `latest-stable` на `macos-26` — проверить, что там уже 27.
+- Сборки идут в Xcode 27 (iOS 27 SDK): образ GitHub `xcode-27` (public preview) и
+  `xcode-version: "27"` — последний стабильный 27.x. С апреля 2027 App Store Connect
+  принимает только такие.
 - iCloud в сборках TestFlight работает с продакшен-окружением CloudKit: схему из
   Development нужно один раз выкатить в CloudKit Console (Deploy Schema Changes), иначе свои
   данные не синхронизируются (приложение при этом работает).
