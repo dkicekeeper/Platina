@@ -21,6 +21,17 @@ if (!account || !token) {
   console.error("CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets are needed.");
   process.exit(1);
 }
+// A secret pasted with more than its value (Cloudflare's page shows a curl line next to a new
+// token) fails as "invalid header value"; say which secret, without printing it.
+if (/\s/.test(token)) {
+  const lines = token.split(/\r?\n/).filter((line) => line.trim()).length;
+  console.error(`CLOUDFLARE_API_TOKEN holds more than a token (${lines} lines, or spaces inside): paste only the token itself, one line of about 40 characters.`);
+  process.exit(1);
+}
+if (!/^[0-9a-f]{32}$/i.test(account)) {
+  console.error("CLOUDFLARE_ACCOUNT_ID is not an account id: 32 hex characters, from Workers & Pages (right column).");
+  process.exit(1);
+}
 
 async function api(path, init = {}) {
   const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${account}/storage/kv/namespaces${path}`, {
