@@ -55,9 +55,11 @@ CI на `main` зелёный.
 Что знать:
 
 - Номер сборки — `10 + номер запуска workflow`; версия — `MARKETING_VERSION` в `ios/project.yml`.
-- Только iPhone: `TARGETED_DEVICE_FAMILY: "1"` стоит у самой цели приложения. Пресет XcodeGen
-  для iOS ставит цели `"1,2"`, и тогда App Store Connect отказывает (90474: нужны все
-  ориентации iPad).
+- iPhone и iPad (этап 10): `TARGETED_DEVICE_FAMILY: "1,2"` у проекта, приложения и виджетов; у
+  iPad — все четыре ориентации (`UISupportedInterfaceOrientations~ipad` в Info.plist), иначе App
+  Store Connect отказывает (90474), и многозадачность без них не работает. На Mac с Apple silicon
+  приложение для iPad запускается как есть («Designed for iPad»; отключается в App Store Connect,
+  если понадобится).
 - Отметка о шифровании (`ITSAppUsesNonExemptEncryption = NO`) в Info.plist: вопрос о
   шифровании в TestFlight не задаётся.
 - Сборки идут в Xcode 27 (iOS 27 SDK): образ GitHub `xcode-27` (public preview) и

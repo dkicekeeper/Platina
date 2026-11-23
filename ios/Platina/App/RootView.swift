@@ -59,6 +59,8 @@ struct MainTabView: View {
                 ProfileView()
             }
         }
+        // A tab bar on iPhone, a sidebar on iPad and Mac.
+        .tabViewStyle(.sidebarAdaptable)
         .liveSessionAccessory(isEnabled: app.sessions.current != nil) {
             if let session = app.sessions.current {
                 LiveSessionBar(

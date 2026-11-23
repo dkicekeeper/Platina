@@ -15,7 +15,7 @@ settings:
     DEVELOPMENT_TEAM: SY2L2VMQP7
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "6.0"
-    TARGETED_DEVICE_FAMILY: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
 
@@ -65,9 +65,10 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES
-        # iPhone only. Here, not only in the project's base: XcodeGen's iOS preset sets "1,2" on
-        # the target, and App Store Connect then wants every iPad orientation (error 90474).
-        TARGETED_DEVICE_FAMILY: "1"
+        # iPhone and iPad (stage 10; on Apple silicon Macs the iPad app runs as it is). iPad
+        # takes every orientation (Info.plist, UISupportedInterfaceOrientations~ipad): App Store
+        # Connect refuses an iPad app without them (error 90474), and multitasking needs them.
+        TARGETED_DEVICE_FAMILY: "1,2"
 
   PlatinaWidgets:
     type: app-extension
@@ -88,7 +89,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dakacom.Platina.Widgets
         PRODUCT_NAME: PlatinaWidgets
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_FILE: PlatinaWidgets/Info.plist
         CODE_SIGN_ENTITLEMENTS: PlatinaWidgets/PlatinaWidgets.entitlements
