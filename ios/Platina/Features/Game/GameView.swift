@@ -87,6 +87,7 @@ struct GameView: View {
                                 }
                             }
                         )
+                        WalkthroughSection(game: game)
                         GuideSection(game: game)
                         SegmentedPicker(
                             title: String(localized: "game.filter.title"),

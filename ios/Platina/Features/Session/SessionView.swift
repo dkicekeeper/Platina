@@ -88,6 +88,8 @@ struct SessionView: View {
 
                 GoalsSection(session: session)
 
+                SessionChapterCard(gameId: session.gameId)
+
                 FormSection(header: String(localized: "session.note.header"), footer: String(localized: "session.note.footer")) {
                     FormTextField(
                         text: $note,
