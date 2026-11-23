@@ -25,9 +25,28 @@ public enum PSNAuth {
     /// (Kazakhstan) lands on a 404.
     public static let webSignInURL = URL(string: "https://store.playstation.com/en-us/")!
 
-    /// The page the sign-in opens in Safari's authentication sheet: Sony shows its sign-in
-    /// form, then redirects to `com.scee.psxandroid.scecompcall://redirect/?code=…`, which the
-    /// sheet catches.
+    /// The PlayStation Store's own sign-in, what its "Sign In" button opens: Sony's sign-in page
+    /// for the web client, which loads where the PlayStation App client's page does not (§2 of
+    /// docs/PLAN.md). Its session service takes only playstation.com addresses to return to.
+    public static let storeSignInURL = URL(
+        string: "https://web.np.playstation.com/api/session/v1/signin?redirect_uri=https%3A%2F%2Fstore.playstation.com%2Fen-us%2Fpages%2Flatest"
+    )!
+
+    /// Whether the store's sign-in is over: Sony sends the browser back to the session service
+    /// with a code for the web client (`web.np.playstation.com/api/session/v1/session?code=…`),
+    /// or on to the store. By then Sony's own session (the `npsso` cookie) is set.
+    public static func isStoreSignInFinished(_ url: URL) -> Bool {
+        guard let host = url.host?.lowercased() else { return false }
+        if host == "web.np.playstation.com" {
+            return url.path.hasSuffix("/session/v1/session")
+        }
+        return host == "store.playstation.com"
+    }
+
+    /// The PlayStation App client's authorization: with Sony's session (the `npsso` cookie) it
+    /// redirects straight to `com.scee.psxandroid.scecompcall://redirect/?code=…`, which is how an
+    /// NPSSO token becomes the app's code. Its sign-in page, shown without a session, does not
+    /// load for some people: the app signs in through the store (`storeSignInURL`) instead.
     public static var authorizeURL: URL {
         var components = URLComponents(url: oauthBase.appendingPathComponent("authorize"), resolvingAgainstBaseURL: false)!
         components.queryItems = [

@@ -154,11 +154,6 @@ final class AppModel {
         phase = await client.isSignedIn ? .signedIn : .signedOut
     }
 
-    func signIn(authorizationCode code: String) async throws {
-        try await client.signIn(authorizationCode: code)
-        didSignIn()
-    }
-
     func signIn(npsso: String) async throws {
         try await client.signIn(npsso: npsso)
         didSignIn()

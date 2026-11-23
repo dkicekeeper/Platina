@@ -55,16 +55,21 @@ PlatinaStore — на симуляторе в CI.
 ## PSN
 
 - API неофициальный (как у psn-api, PSNAWP); всё обращение к нему — только в `PSNKit`.
-- Вход: страница OAuth Sony в системном окне Safari (`webAuthenticationSession`, эфемерная
-  сессия), окно само ловит редирект `com.scee.psxandroid.scecompcall://redirect?code=…`;
-  запасной путь — токен NPSSO вручную. Этот URL-scheme приложение **не регистрирует**: это
-  схема PlayStation App.
+- Вход (`SonyLoginSheet`): вход PlayStation Store в `WKWebView` (`PSNAuth.storeSignInURL`,
+  веб-клиент Sony, UA Safari, данные не сохраняются). Когда Sony возвращает на
+  `web.np.playstation.com/api/session/v1/session`, приложение отменяет переход и берёт `npsso`
+  из cookie (или со страницы `ssocookie`), затем меняет его на код клиента PlayStation App
+  (`authorize` с cookie `npsso` → редирект `com.scee.psxandroid.scecompcall://redirect?code=…`)
+  и токены. Запасной путь — токен NPSSO вручную. URL-scheme PlayStation App приложение **не
+  регистрирует**.
 - Токены — в Keychain (`KeychainTokenStore`), на наш сервер они не уходят.
 - Страница входа клиента PlayStation App (`/sonyacct/signin` с нашим `client_id`) у части людей
   не грузится нигде, даже в Safari («Время соединения с сервером истекло»; у пользователей GOG
   Galaxy то же). Вход на store.playstation.com (веб-клиент) у них работает, и после него
-  `ssocookie` отдаёт `npsso`: это рабочий путь (окно «Вход по токену»). На playstation.com
-  Safari может не оставить `npsso`.
+  `ssocookie` отдаёт `npsso`: поэтому вход приложения идёт через Store. На playstation.com
+  Safari может не оставить `npsso`. Сервис входа Store возвращает только на playstation.com
+  (другой `redirect_uri` — `400`), поэтому системное окно Safari (`webAuthenticationSession`)
+  для него не годится: ему некуда вернуться.
 - Где-то DNS подменяет адрес `m.np.playstation.com` (адреса не Akamai, TLS обрывается,
   `URLError -1200`): у владельца на Wi-Fi, на сотовой сети всё работает. Поэтому
   `URLSessionTransport` при таком сбое переключает приложение на свой зашифрованный DNS

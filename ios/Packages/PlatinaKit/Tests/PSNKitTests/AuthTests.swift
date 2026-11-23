@@ -7,6 +7,26 @@ import Testing
 
 @Suite("Sign-in")
 struct AuthTests {
+    @Test("The store's sign-in ends at its session service or at the store, not on the way there")
+    func storeSignInFinished() throws {
+        #expect(PSNAuth.storeSignInURL.host == "web.np.playstation.com")
+        let finished = [
+            "https://web.np.playstation.com/api/session/v1/session?redirect_uri=https%3A%2F%2Fstore.playstation.com%2F&code=v3.abc",
+            "https://store.playstation.com/en-us/pages/latest",
+        ]
+        for string in finished {
+            #expect(PSNAuth.isStoreSignInFinished(try #require(URL(string: string))))
+        }
+        let onTheWay = [
+            PSNAuth.storeSignInURL.absoluteString,
+            "https://ca.account.sony.com/api/authz/v3/oauth/authorize?client_id=e4a62faf-4b87-4fea-8565-caaabb3ac918",
+            "https://my.account.sony.com/sonyacct/signin/?client_id=e4a62faf-4b87-4fea-8565-caaabb3ac918",
+        ]
+        for string in onTheWay {
+            #expect(!PSNAuth.isStoreSignInFinished(try #require(URL(string: string))))
+        }
+    }
+
     @Test("The authorize page asks for an offline code for the PlayStation App's client")
     func authorizeURL() throws {
         let components = try #require(URLComponents(url: PSNAuth.authorizeURL, resolvingAgainstBaseURL: false))

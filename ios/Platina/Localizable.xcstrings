@@ -6460,6 +6460,23 @@
         }
       }
     },
+    "signIn.sheet.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PSN Sign-In"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход в PSN"
+          }
+        }
+      }
+    },
     "signIn.subtitle": {
       "extractionState": "manual",
       "localizations": {
