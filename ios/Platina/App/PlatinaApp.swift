@@ -10,6 +10,9 @@ struct PlatinaApp: App {
     init() {
         // Brand first, before any view renders (DesignKit README, "Using it in an app").
         DesignKitTheme.accent = PlatinaColors.accent
+        // Cards and sections are a grey fill on the white page, not Liquid Glass (DesignKit
+        // 8.12.0, the owner's choice: less glass). Buttons and the tab bar stay glass.
+        DesignKitTheme.surface = .fill
         DesignKitFonts.registerIfNeeded()
 
         let container: ModelContainer
