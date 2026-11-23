@@ -7,6 +7,7 @@
 - Для разработки (и для Claude): [CLAUDE.md](CLAUDE.md)
 - Плати (приложение ↔ сервер): [docs/assistant.md](docs/assistant.md)
 - Сборка и TestFlight: [docs/testflight.md](docs/testflight.md)
+- App Store: черновики политики, App Privacy, заметок для ревью и писем — [docs/app-store.md](docs/app-store.md)
 
 Сейчас: этапы 0–4 и 6–9 сделаны, приложение работает на iPhone с настоящим аккаунтом PSN (вход
 через PlayStation Store, синхронизация, подсказки PlayStation), сервер Плати развёрнут, сборки
