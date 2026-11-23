@@ -12,14 +12,14 @@ Cloudflare Worker между приложением Platina и Claude: хран�
 | `src/index.ts` | маршруты, App Attest или `DEV_TOKEN`, квоты, SSE |
 | `src/claude.ts` | запрос к модели для чата, события потока → SSE, `done`, ошибки |
 | `src/prompt.ts` | характер и правила Плати (`PROMPT_VERSION`) |
-| `src/tools.ts` | 12 инструментов на телефоне, серверные `web_search` и `web_fetch` |
+| `src/tools.ts` | 15 инструментов на телефоне, серверные `web_search` и `web_fetch` |
 | `src/guide.ts` | сборка гайда: вход для модели, `save_guide`, проверка, кэш |
 | `src/walkthrough.ts` | прохождение по главам: план, шаги главы, `web_fetch`, проверка, кэш |
 | `src/stratege.ts` | поиск и разбор страницы Stratege.ru без модели |
 | `src/quota.ts`, `src/validate.ts` | квоты в KV, проверка тел запросов |
 | `src/appattest.ts`, `cbor.ts`, `der.ts`, `apple-root.ts` | App Attest (как в Tenra) |
 | `test/` | юнит-тесты (`npm test`), страницы Stratege в `test/fixtures/` |
-| `eval/` | eval на реальном API: синтетический игрок, 11 случаев (ручной запуск) |
+| `eval/` | eval на реальном API: синтетический игрок, 13 случаев (ручной запуск) |
 | `scripts/kv-namespaces.mjs` | создаёт KV-пространства и подставляет их id при деплое |
 
 ## Эндпоинты

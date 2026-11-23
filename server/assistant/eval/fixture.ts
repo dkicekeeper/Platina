@@ -159,6 +159,46 @@ export const COTL_GUIDE = {
   ],
 };
 
+/** The walkthrough as get_walkthrough gives it: chapter 1 done (its trophy is earned), chapter 2
+ * now, with a point of no return and the missable dice trophy. */
+export const COTL_WALKTHROUGH = {
+  overview: "Один проход: сюжет по четырём епископам, кости со всеми по пути, затем зачистка коллекций.",
+  playthroughs: 1,
+  current_chapter: { id: "c2", title: "Темнолесье" },
+  chapters: [
+    { id: "c1", title: "Начало культа", summary: "Обучение и первый последователь.", state: "done", missable: [], choices: [], collectibles: [], trophy_ids: [1], completion_trophy_id: 1, playthrough: 1 },
+    {
+      id: "c2",
+      title: "Темнолесье",
+      summary: "Первый епископ, Лешего, и первые таро.",
+      state: "current",
+      missable: [{ trophy_id: 36, trophy_name: "Улыбка фортуны", earned: false, note: "Сыграй в кости с Ратау до победы над епископом." }],
+      choices: [],
+      collectibles: [{ kind: "Карты таро", count: 4 }],
+      trophy_ids: [13, 36],
+      completion_trophy_id: 13,
+      playthrough: 1,
+    },
+    { id: "c3", title: "Грибные топи", summary: "Второй епископ, Хекет.", state: "ahead", missable: [], choices: [], collectibles: [], trophy_ids: [], completion_trophy_id: null, playthrough: 1 },
+  ],
+  cleanup: "После финала: облики в Шерстополе, рыбы и реликвии.",
+  sources: [{ id: "w1", title: "PowerPyx: walkthrough", url: "https://www.powerpyx.com/cult-of-the-lamb-walkthrough/" }],
+};
+
+export const COTL_CHAPTER_2 = {
+  chapter: { id: "c2", title: "Темнолесье", state: "current" },
+  steps: [
+    { id: "s1", kind: "path", text: "Из культа иди на карту и выбери **Темнолесье**.", done: true, spoiler: false, trophy_ids: [], collectible: null, has_image: false, has_video: false, source_id: "w1" },
+    { id: "s2", kind: "collectible", text: "Карта таро 1: в первой комнате с сундуком, справа.", done: false, spoiler: false, trophy_ids: [], collectible: { kind: "Карта таро", number: 1 }, has_image: true, has_video: false, source_id: "w1" },
+    { id: "s3", kind: "choice", text: "У Ратау сыграй в кости и **выиграй**: это для «Улыбки фортуны».", done: false, spoiler: false, trophy_ids: [36], collectible: null, has_image: false, has_video: false, source_id: "w1" },
+    { id: "s4", kind: "path", text: "Пройди три комнаты до развилки и иди налево, к торговцу.", done: false, spoiler: false, trophy_ids: [], collectible: null, has_image: false, has_video: true, source_id: "w1" },
+    { id: "s5", kind: "point_of_no_return", text: "Дверь к Лешему: дальше вернуться в главу нельзя, сначала добери таро.", done: false, spoiler: false, trophy_ids: [], collectible: null, has_image: false, has_video: false, source_id: "w1" },
+    { id: "s6", kind: "boss", text: "Леший: держись сбоку, бей после рывка.", done: false, spoiler: false, trophy_ids: [13], collectible: null, has_image: false, has_video: false, source_id: "w1" },
+  ],
+  next_step_id: "s2",
+  sources: [{ id: "w1", title: "PowerPyx: walkthrough", url: "https://www.powerpyx.com/cult-of-the-lamb-walkthrough/" }],
+};
+
 export const SESSIONS = [
   {
     id: "sess_41",
@@ -244,6 +284,7 @@ export function executeTool(name: string, input: Record<string, unknown>, state:
         status: g.status,
         last_session: g.id === COTL ? SESSIONS[0] : null,
         guide_summary: g.id === COTL ? COTL_GUIDE.summary : g.guide ?? null,
+        walkthrough: g.id === COTL ? { current_chapter: COTL_WALKTHROUGH.current_chapter } : null,
       };
     }
     case "list_trophies": {
@@ -277,6 +318,23 @@ export function executeTool(name: string, input: Record<string, unknown>, state:
     case "get_guide": {
       const g = gameById(input.game_id);
       return g.id === COTL ? COTL_GUIDE : { guide: null, note: "The guide for this game is being built; try again in a minute." };
+    }
+    case "get_walkthrough": {
+      const g = gameById(input.game_id);
+      return g.id === COTL ? COTL_WALKTHROUGH : { walkthrough: null, note: "No walkthrough could be built for this game right now." };
+    }
+    case "get_chapter": {
+      const g = gameById(input.game_id);
+      if (g.id !== COTL) throw new ToolInputError("No walkthrough for this game.");
+      const chapter = (input.chapter_id as string | undefined) ?? "c2";
+      if (chapter !== "c2") return { chapter: COTL_WALKTHROUGH.chapters.find((c) => c.id === chapter) ?? null, steps: [], note: "Not built in this fixture." };
+      return COTL_CHAPTER_2;
+    }
+    case "set_walkthrough_progress": {
+      gameById(input.game_id);
+      if (typeof input.chapter_id !== "string" || !/^c\d+$/.test(input.chapter_id)) throw new ToolInputError("chapter_id: a chapter id like c2");
+      state.writes.push({ name, input });
+      return { saved: true, current_chapter: COTL_WALKTHROUGH.current_chapter, next_step: { chapter_id: "c2", id: "s4", text: COTL_CHAPTER_2.steps[3]!.text } };
     }
     case "get_sessions": {
       const sessions = input.game_id ? SESSIONS.filter((s) => s.game_id === input.game_id) : SESSIONS;

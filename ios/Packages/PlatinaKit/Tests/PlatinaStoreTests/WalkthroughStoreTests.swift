@@ -72,12 +72,18 @@ final class ScriptedWalkthroughs: WalkthroughTransport, @unchecked Sendable {
 
 @MainActor
 private func makeService(_ server: ScriptedWalkthroughs) async throws -> (WalkthroughService, LibraryStore) {
+    let (service, store, _) = try await makeServiceAndSync(server)
+    return (service, store)
+}
+
+@MainActor
+private func makeServiceAndSync(_ server: ScriptedWalkthroughs) async throws -> (WalkthroughService, LibraryStore, LibrarySync) {
     let store = LibraryStore(container: try LibraryStore.makeContainer(inMemory: true))
     let tokens = PSNTokens(accessToken: "a1", accessTokenExpiresAt: Date().addingTimeInterval(3600), refreshToken: "r1", refreshTokenExpiresAt: Date().addingTimeInterval(86_400))
     let client = PSNClient(store: InMemoryTokenStore(tokens), transport: FakePSN(), language: "ru-RU")
     let sync = LibrarySync(client: client, store: store)
     await sync.sync()
-    return (WalkthroughService(store: store, transport: server, language: "ru"), store)
+    return (WalkthroughService(store: store, transport: server, language: "ru"), store, sync)
 }
 
 @MainActor
@@ -147,6 +153,45 @@ struct WalkthroughStoreTests {
         #expect(steps != nil)
         #expect(server.builds.plans == 2)
         #expect(server.builds.chapters == ["c1"])
+    }
+
+    @Test("Plati's tools: the plan with where the person is, a chapter's steps, marking what was done")
+    func tools() async throws {
+        let (service, store, sync) = try await makeServiceAndSync(ScriptedWalkthroughs())
+        let toolkit = AssistantToolkit(
+            store: store, sessions: SessionTracker(store: store, sync: sync),
+            guides: GuideService(store: store, transport: nil, language: "ru"), walkthroughs: service
+        )
+
+        let plan = await toolkit.execute(name: "get_walkthrough", input: ["game_id": .string(gameId)])
+        #expect(plan.value?.value(atPath: "current_chapter.id")?.stringValue == "c2")
+        let chapters = try #require(plan.value?["chapters"]?.arrayValue)
+        #expect(chapters.compactMap { $0["state"]?.stringValue } == ["done", "current", "ahead"])
+        #expect(chapters.first?["missable"]?.arrayValue?.first?["trophy_name"]?.stringValue == "Улыбка фортуны")
+
+        let chapter = await toolkit.execute(name: "get_chapter", input: ["game_id": .string(gameId)])
+        #expect(chapter.value?.value(atPath: "chapter.id")?.stringValue == "c2")
+        #expect(chapter.value?["next_step_id"]?.stringValue == "s1")
+        let steps = try #require(chapter.value?["steps"]?.arrayValue)
+        #expect(steps.compactMap { $0["done"]?.boolValue } == [false, false, true])
+        #expect(steps.last?["spoiler"]?.boolValue == true)
+
+        let marked = await toolkit.execute(
+            name: "set_walkthrough_progress",
+            input: ["game_id": .string(gameId), "chapter_id": "c2", "done_step_ids": ["s1", "s2"]]
+        )
+        #expect(marked.value?["saved"]?.boolValue == true)
+        // s3's trophy is earned: every step of the chapter is done, nothing is next in it.
+        #expect(marked.value?.value(atPath: "next_step.id")?.stringValue == nil)
+
+        let wrong = await toolkit.execute(name: "set_walkthrough_progress", input: ["game_id": .string(gameId), "chapter_id": "c2", "done_step_ids": ["s9"]])
+        #expect(wrong.error?.contains("s9") == true)
+
+        let finished = await toolkit.execute(name: "set_walkthrough_progress", input: ["game_id": .string(gameId), "chapter_id": "c2", "chapter_done": true])
+        #expect(finished.value?.value(atPath: "current_chapter.id")?.stringValue == "c3")
+
+        let game = await toolkit.execute(name: "get_game", input: ["game_id": .string(gameId)])
+        #expect(game.value?.value(atPath: "walkthrough.current_chapter.id")?.stringValue == "c3")
     }
 
     @Test("Marks from two devices are read together and become one record")

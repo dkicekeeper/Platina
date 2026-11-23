@@ -13,6 +13,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
     private let sessions: SessionTracker
     private let guides: GuideService
     private let gameHelp: GameHelpService?
+    private let walkthroughs: WalkthroughService?
     private let now: () -> Date
 
     public init(
@@ -20,9 +21,11 @@ public final class AssistantToolkit: AssistantToolExecuting {
         sessions: SessionTracker,
         guides: GuideService,
         gameHelp: GameHelpService? = nil,
+        walkthroughs: WalkthroughService? = nil,
         now: @escaping () -> Date = { Date() }
     ) {
         self.gameHelp = gameHelp
+        self.walkthroughs = walkthroughs
         self.store = store
         self.sessions = sessions
         self.guides = guides
@@ -41,6 +44,9 @@ public final class AssistantToolkit: AssistantToolExecuting {
             case .listTrophies: return try encode(listTrophies(input))
             case .getGuide: return try await getGuide(input)
             case .getGameHelp: return try encode(try await getGameHelp(input))
+            case .getWalkthrough: return try encode(try await getWalkthrough(input))
+            case .getChapter: return try encode(try await getChapter(input))
+            case .setWalkthroughProgress: return try encode(try setWalkthroughProgress(input))
             case .getSessions: return try encode(listSessions(input))
             case .getCurrentSession: return try encode(currentSession())
             case .setSessionGoals: return try encode(setGoals(input))
@@ -165,7 +171,18 @@ public final class AssistantToolkit: AssistantToolExecuting {
         let note: String?
         let has_guide: Bool
         let guide_summary: Guide.Summary?
+        let walkthrough: WalkthroughBrief?
         let sessions_count: Int
+    }
+
+    private struct WalkthroughBrief: Encodable {
+        let chapters: Int
+        let current_chapter: ChapterRef?
+    }
+
+    private struct ChapterRef: Encodable {
+        let id: String
+        let title: String
     }
 
     private func game(_ input: JSONValue) throws -> GameDetail {
@@ -180,6 +197,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
             note: try store.note(gameId: game.id, trophyId: nil)?.text,
             has_guide: guide != nil,
             guide_summary: guide?.summary,
+            walkthrough: walkthroughBrief(gameId: game.id),
             sessions_count: try store.sessions(gameId: game.id).count
         )
     }
@@ -424,6 +442,207 @@ public final class AssistantToolkit: AssistantToolExecuting {
             help: help,
             note: without.isEmpty ? nil : "No Game Help for trophies \(without.map(String.init).joined(separator: ", "))."
         )
+    }
+
+    // MARK: Walkthrough
+
+    private func walkthroughBrief(gameId: String) -> WalkthroughBrief? {
+        guard let walkthroughs, let plan = walkthroughs.walkthrough(for: gameId) else { return nil }
+        let current = walkthroughs.position(gameId: gameId)?.currentChapterId.flatMap { plan.chapter($0) }
+        return WalkthroughBrief(chapters: plan.chapters.count, current_chapter: current.map { ChapterRef(id: $0.id, title: $0.title) })
+    }
+
+    private struct WalkthroughAnswer: Encodable {
+        struct Missable: Encodable {
+            let trophy_id: Int?
+            /// nil for a hidden trophy not earned yet.
+            let trophy_name: String?
+            let earned: Bool?
+            let note: String
+        }
+
+        struct Collectibles: Encodable {
+            let kind: String
+            let count: Int
+        }
+
+        struct Chapter: Encodable {
+            let id: String
+            let title: String
+            let summary: String
+            let state: String
+            let missable: [Missable]
+            let choices: [String]
+            let collectibles: [Collectibles]
+            let trophy_ids: [Int]
+            let completion_trophy_id: Int?
+            let playthrough: Int
+        }
+
+        let overview: String
+        let playthroughs: Int?
+        let current_chapter: ChapterRef?
+        let chapters: [Chapter]
+        let cleanup: String
+        let sources: [Guide.Source]
+    }
+
+    private func requireWalkthroughs() throws -> WalkthroughService {
+        guard let walkthroughs, walkthroughs.isAvailable else { throw ToolError("Walkthroughs are not available in this app.") }
+        return walkthroughs
+    }
+
+    /// The game's walkthrough plan with where the person is; built first when there is none.
+    private func getWalkthrough(_ input: JSONValue) async throws -> WalkthroughAnswer {
+        let walkthroughs = try requireWalkthroughs()
+        let game = try requireGame(input)
+        guard let plan = await walkthroughs.walkthroughBuildingIfNeeded(gameId: game.id) else {
+            throw ToolError("No walkthrough could be built for this game right now.")
+        }
+        let position = walkthroughs.position(gameId: game.id)
+        let trophies = Dictionary(game.trophies.map { ($0.trophyId, $0) }, uniquingKeysWith: { first, _ in first })
+        return WalkthroughAnswer(
+            overview: plan.overview,
+            playthroughs: plan.playthroughs,
+            current_chapter: position?.currentChapterId.flatMap { plan.chapter($0) }.map { ChapterRef(id: $0.id, title: $0.title) },
+            chapters: plan.chapters.map { chapter in
+                WalkthroughAnswer.Chapter(
+                    id: chapter.id,
+                    title: chapter.title,
+                    summary: chapter.summary,
+                    state: (position?.state(of: chapter.id) ?? .ahead).rawValue,
+                    missable: chapter.missable.map { item in
+                        let trophy = item.trophyId.flatMap { trophies[$0] }
+                        return WalkthroughAnswer.Missable(
+                            trophy_id: item.trophyId,
+                            trophy_name: trophy.flatMap { $0.isHidden && !$0.isEarned ? nil : $0.name },
+                            earned: trophy?.isEarned,
+                            note: item.note
+                        )
+                    },
+                    choices: chapter.choices,
+                    collectibles: chapter.collectibles.map { .init(kind: $0.kind, count: $0.count) },
+                    trophy_ids: chapter.trophyIds,
+                    completion_trophy_id: chapter.completionTrophyId,
+                    playthrough: chapter.playthrough
+                )
+            },
+            cleanup: plan.cleanup,
+            sources: plan.sources
+        )
+    }
+
+    private struct ChapterAnswer: Encodable {
+        struct Header: Encodable {
+            let id: String
+            let title: String
+            let state: String
+        }
+
+        struct Step: Encodable {
+            let id: String
+            let kind: String
+            let text: String
+            let done: Bool
+            let spoiler: Bool
+            let trophy_ids: [Int]
+            let collectible: ChapterSteps.Step.Collectible?
+            let has_image: Bool
+            let has_video: Bool
+            let source_id: String?
+        }
+
+        let chapter: Header
+        let steps: [Step]
+        let next_step_id: String?
+        let sources: [Guide.Source]
+    }
+
+    /// A chapter's steps (the current chapter by default), with which are done.
+    private func getChapter(_ input: JSONValue) async throws -> ChapterAnswer {
+        let walkthroughs = try requireWalkthroughs()
+        let game = try requireGame(input)
+        guard let plan = await walkthroughs.walkthroughBuildingIfNeeded(gameId: game.id) else {
+            throw ToolError("No walkthrough could be built for this game right now.")
+        }
+        let position = walkthroughs.position(gameId: game.id)
+        let chapterId = input["chapter_id"]?.stringValue ?? position?.currentChapterId ?? plan.chapters.last?.id
+        guard let chapterId, let chapter = plan.chapter(chapterId) else {
+            throw ToolError("No chapter \(input["chapter_id"]?.stringValue ?? "") in this walkthrough; take an id from get_walkthrough.")
+        }
+        guard let steps = await walkthroughs.chapterBuildingIfNeeded(gameId: game.id, chapterId: chapter.id) else {
+            throw ToolError("The steps of this chapter could not be built right now.")
+        }
+        let state = position?.state(of: chapter.id) ?? .ahead
+        let earned = (try? store.earnedTrophyIds(gameId: game.id)) ?? []
+        let marks = walkthroughs.marks(gameId: game.id)
+        let lines = steps.steps.map { step in
+            ChapterAnswer.Step(
+                id: step.id,
+                kind: step.kind.rawValue,
+                text: step.text,
+                done: WalkthroughPosition.isStepDone(step, chapterId: chapter.id, earned: earned, marks: marks, chapterState: state),
+                spoiler: step.spoiler,
+                trophy_ids: step.trophyIds,
+                collectible: step.collectible,
+                has_image: step.image != nil,
+                has_video: step.video != nil,
+                source_id: step.sourceId
+            )
+        }
+        return ChapterAnswer(
+            chapter: .init(id: chapter.id, title: chapter.title, state: state.rawValue),
+            steps: lines,
+            next_step_id: lines.first { !$0.done }?.id,
+            sources: steps.sources
+        )
+    }
+
+    private struct ProgressAnswer: Encodable {
+        struct NextStep: Encodable {
+            let chapter_id: String
+            let id: String
+            let text: String
+            let spoiler: Bool
+        }
+
+        let saved: Bool
+        let current_chapter: ChapterRef?
+        let next_step: NextStep?
+    }
+
+    /// What the person said they did: steps, a chapter, or the chapter they are on.
+    private func setWalkthroughProgress(_ input: JSONValue) throws -> ProgressAnswer {
+        let walkthroughs = try requireWalkthroughs()
+        let game = try requireGame(input)
+        guard let plan = walkthroughs.walkthrough(for: game.id) else { throw ToolError("This game has no walkthrough yet: call get_walkthrough first.") }
+        guard let chapterId = input["chapter_id"]?.stringValue, plan.chapter(chapterId) != nil else {
+            throw ToolError("chapter_id must be a chapter of this walkthrough, from get_walkthrough.")
+        }
+        let known = Set(walkthroughs.chapter(gameId: game.id, chapterId: chapterId)?.steps.map(\.id) ?? [])
+        let done = (input["done_step_ids"]?.arrayValue ?? []).compactMap(\.stringValue)
+        let undone = (input["undone_step_ids"]?.arrayValue ?? []).compactMap(\.stringValue)
+        let unknown = (done + undone).filter { !known.contains($0) }
+        if !unknown.isEmpty {
+            throw ToolError("No steps \(unknown.joined(separator: ", ")) in chapter \(chapterId); take ids from get_chapter.")
+        }
+        for step in done { walkthroughs.setStep(step, done: true, gameId: game.id, chapterId: chapterId) }
+        for step in undone { walkthroughs.setStep(step, done: false, gameId: game.id, chapterId: chapterId) }
+        if input["current"]?.boolValue == true { walkthroughs.setCurrentChapter(chapterId, gameId: game.id) }
+        if let chapterDone = input["chapter_done"]?.boolValue { walkthroughs.setChapter(chapterId, done: chapterDone, gameId: game.id) }
+
+        let position = walkthroughs.position(gameId: game.id)
+        let current = position?.currentChapterId.flatMap { plan.chapter($0) }
+        var next: ProgressAnswer.NextStep?
+        if let current, let steps = walkthroughs.chapter(gameId: game.id, chapterId: current.id) {
+            let earned = (try? store.earnedTrophyIds(gameId: game.id)) ?? []
+            if let step = WalkthroughPosition.nextStep(
+                in: steps, earned: earned, marks: walkthroughs.marks(gameId: game.id), chapterState: position?.state(of: current.id) ?? .current
+            ) {
+                next = .init(chapter_id: current.id, id: step.id, text: step.text, spoiler: step.spoiler)
+            }
+        }
+        return ProgressAnswer(saved: true, current_chapter: current.map { ChapterRef(id: $0.id, title: $0.title) }, next_step: next)
     }
 
     private struct ToolError: Error {

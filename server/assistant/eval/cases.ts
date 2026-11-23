@@ -128,6 +128,34 @@ export const CASES: EvalCase[] = [
     ],
   },
   {
+    id: "ru-lead-me",
+    locale: "ru",
+    game: COTL,
+    prompt: "Веди меня по игре, что делать дальше?",
+    checks: [
+      { kind: "called", anyOf: ["get_chapter"] },
+      { kind: "textHas", groups: [["- [ ]"]], label: "gives the next steps as a checklist" },
+      // The dice game with Ratau is the step not to miss.
+      { kind: "textHas", groups: [["ратау", "кост"]], label: "warns about the dice game" },
+      { kind: "notCalled", tools: ["set_walkthrough_progress"] },
+    ],
+  },
+  {
+    id: "ru-step-done",
+    locale: "ru",
+    game: COTL,
+    prompt: "Нашёл первую карту таро и обыграл Ратау в кости. Дальше?",
+    checks: [
+      {
+        kind: "toolArgs",
+        tool: "set_walkthrough_progress",
+        match: (i: Input) => i.game_id === COTL && i.chapter_id === "c2" && Array.isArray(i.done_step_ids) && ["s2", "s3"].every((id) => (i.done_step_ids as string[]).includes(id)),
+        label: "marks s2 and s3 done",
+      },
+      { kind: "textHas", groups: [["развилк", "торговц", "налево"]], label: "gives the next step" },
+    ],
+  },
+  {
     id: "en-web-patch",
     locale: "en",
     prompt: "Did a patch fix the endgame crashes in Cult of the Lamb? Can I still get the platinum?",

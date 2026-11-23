@@ -50,7 +50,7 @@ export const PHONE_TOOLS: Tool[] = [
   {
     name: "get_game",
     description:
-      "One game: name, platform, progress %, trophies earned and in total by type, trophy groups (the base game and each DLC, with their counts), play time, first and last played, the person's status, the last session, and the guide's summary when a guide is built (difficulty, hours, playthroughs, online, missable and glitched trophies).",
+      "One game: name, platform, progress %, trophies earned and in total by type, trophy groups (the base game and each DLC, with their counts), play time, first and last played, the person's status, the last session, the guide's summary when a guide is built (difficulty, hours, playthroughs, online, missable and glitched trophies), and the walkthrough's current chapter when a walkthrough is built.",
     input_schema: object({ game_id: gameId }, ["game_id"]),
   },
   {
@@ -85,6 +85,40 @@ export const PHONE_TOOLS: Tool[] = [
         trophy_ids: { type: "array", items: trophyId, description: "1 to 5 trophy ids of this game that have help; leave out to list them" },
       },
       ["game_id"],
+    ),
+  },
+  {
+    name: "get_walkthrough",
+    description:
+      "The game's walkthrough plan, for leading the person through it chapter by chapter: an overview of the route to the platinum, the number of playthroughs, the chapters in order (id, title, a summary without spoilers, its state for this person: done, current or ahead, what can be missed there with the trophy and whether it is earned, choices that matter for trophies, collectibles with counts, the trophies earned there), the current chapter, what is left for the cleanup, and the sources. Where the person is comes from their trophies and their own marks. When the game has no walkthrough yet the app builds one first, which takes a minute or two: call it when the person wants to be led through the game, or at a session's start when a walkthrough exists or they agreed to one.",
+    input_schema: object({ game_id: gameId }, ["game_id"]),
+  },
+  {
+    name: "get_chapter",
+    description:
+      "One chapter's steps in the order of play, from the walkthrough: each step's id (s1, s2...), kind (path: where to go; collectible; choice: a decision that matters for a trophy; point_of_no_return; trophy; boss; tip), text, done or not (ticked, its trophies earned, or the chapter behind), the trophies it earns, the collectible's number, whether it has a picture or a video the app can show, and spoiler: true for a step that reveals the story or a hidden trophy (don't tell it unless the person asks). Also the chapter's next step not done. chapter_id defaults to the current chapter. The first time a chapter is asked for, the app builds its steps, which takes a minute.",
+    input_schema: object(
+      {
+        game_id: gameId,
+        chapter_id: { type: "string", description: "A chapter id from get_walkthrough: c1, c2...; the current chapter by default" },
+      },
+      ["game_id"],
+    ),
+  },
+  {
+    name: "set_walkthrough_progress",
+    description:
+      "Marks the person's progress in the walkthrough when they tell you: steps done (or not done after all), a chapter done, or the chapter they are on now (current: true; it also works for going back to replay one). Returns the new current chapter and its next step. Only for what the person said they did; the app works the rest out from trophies.",
+    input_schema: object(
+      {
+        game_id: gameId,
+        chapter_id: { type: "string", description: "The chapter these marks belong to: c1, c2..." },
+        done_step_ids: { type: "array", items: { type: "string" }, description: "Step ids of this chapter now done: s1, s2..." },
+        undone_step_ids: { type: "array", items: { type: "string" }, description: "Step ids to mark as not done" },
+        chapter_done: { type: "boolean", description: "true: the chapter is finished; false: it isn't after all" },
+        current: { type: "boolean", description: "true: the person is on this chapter now" },
+      },
+      ["game_id", "chapter_id"],
     ),
   },
   {

@@ -230,11 +230,13 @@ Store потребует (App Attest, квоты ассистента, вход 
 
 ### Инструменты
 
-Сейчас (docs/assistant.md §5, 12 инструментов на телефоне): `get_profile`, `list_games`,
+Сейчас (docs/assistant.md §5, 15 инструментов на телефоне): `get_profile`, `list_games`,
 `get_game`, `list_trophies`, `get_guide`, `get_game_help` (подсказки PlayStation),
+`get_walkthrough`, `get_chapter`, `set_walkthrough_progress` (прохождение по главам, этап 6),
 `get_sessions`, `get_current_session`, `set_session_goals`, `set_game_status`, `save_note`,
 `save_session_summary`. На сервере — `web_search` (встроенный у Claude); гайд собирает
-`/v1/guide`. Дальше — инструменты прохождения и показа (ниже, «Прохождение по главам»).
+`/v1/guide`, прохождение — `/v1/walkthrough` (поиск и чтение страниц `web_fetch`). Дальше —
+инструменты показа (ниже, «Прохождение по главам»).
 
 ### Источники гайдов и подсказок
 

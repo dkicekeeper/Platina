@@ -11,7 +11,7 @@ const schema = (name: string) => PHONE_TOOLS.find((t) => t.name === name)!.input
 };
 
 describe("phone tools", () => {
-  it("are exactly the twelve of the contract, in a fixed order", () => {
+  it("are exactly the fifteen of the contract, in a fixed order", () => {
     expect(PHONE_TOOLS.map((t) => t.name)).toEqual([
       "get_profile",
       "list_games",
@@ -19,6 +19,9 @@ describe("phone tools", () => {
       "list_trophies",
       "get_guide",
       "get_game_help",
+      "get_walkthrough",
+      "get_chapter",
+      "set_walkthrough_progress",
       "get_sessions",
       "get_current_session",
       "set_session_goals",
@@ -26,7 +29,7 @@ describe("phone tools", () => {
       "save_note",
       "save_session_summary",
     ]);
-    expect(TOOL_NAMES.size).toBe(12);
+    expect(TOOL_NAMES.size).toBe(15);
   });
 
   it("have the contract's inputs", () => {
@@ -41,6 +44,11 @@ describe("phone tools", () => {
     expect(schema("get_game_help").required).toEqual(["game_id"]);
     expect(Object.keys(schema("get_game_help").properties)).toEqual(["game_id", "trophy_ids"]);
     expect(schema("get_game_help").properties.trophy_ids!.items!.type).toBe("integer");
+    expect(schema("get_walkthrough").required).toEqual(["game_id"]);
+    expect(Object.keys(schema("get_chapter").properties)).toEqual(["game_id", "chapter_id"]);
+    expect(schema("get_chapter").required).toEqual(["game_id"]);
+    expect(Object.keys(schema("set_walkthrough_progress").properties)).toEqual(["game_id", "chapter_id", "done_step_ids", "undone_step_ids", "chapter_done", "current"]);
+    expect(schema("set_walkthrough_progress").required).toEqual(["game_id", "chapter_id"]);
     expect(Object.keys(schema("get_sessions").properties)).toEqual(["game_id", "limit"]);
     expect(Object.keys(schema("get_current_session").properties)).toEqual([]);
     expect(schema("set_session_goals").required).toEqual(["game_id", "trophy_ids"]);
@@ -71,9 +79,9 @@ describe("web search", () => {
 
   it("joins the chat's tools, last, only when it is on", () => {
     const on = chatTools({ model: "claude-haiku-5-5", webSearch: true, webSearchMaxUses: 3 });
-    expect(on).toHaveLength(13);
+    expect(on).toHaveLength(16);
     expect(on.at(-1)).toMatchObject({ name: "web_search" });
-    expect(chatTools({ model: "claude-haiku-5-5", webSearch: false, webSearchMaxUses: 3 })).toHaveLength(12);
+    expect(chatTools({ model: "claude-haiku-5-5", webSearch: false, webSearchMaxUses: 3 })).toHaveLength(15);
   });
 });
 

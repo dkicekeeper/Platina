@@ -189,6 +189,7 @@ public final class ChatThread {
 public final class AssistantService {
     public let isConfigured: Bool
     public let guides: GuideService
+    public let walkthroughs: WalkthroughService
 
     @ObservationIgnored private var threads: [String: ChatThread] = [:]
     private let store: LibraryStore
@@ -204,6 +205,7 @@ public final class AssistantService {
         transport: (any AssistantTransport)?,
         language: String,
         gameHelp: GameHelpService? = nil,
+        walkthroughTransport: (any WalkthroughTransport)? = nil,
         now: @escaping () -> Date = { Date() }
     ) {
         self.store = store
@@ -214,7 +216,13 @@ public final class AssistantService {
         isConfigured = transport != nil
         let guides = GuideService(store: store, transport: transport, language: language, now: now)
         self.guides = guides
-        toolkit = AssistantToolkit(store: store, sessions: sessions, guides: guides, gameHelp: gameHelp, now: now)
+        let walkthroughs = WalkthroughService(
+            store: store, transport: walkthroughTransport ?? (transport as? any WalkthroughTransport), language: language, now: now
+        )
+        self.walkthroughs = walkthroughs
+        toolkit = AssistantToolkit(
+            store: store, sessions: sessions, guides: guides, gameHelp: gameHelp, walkthroughs: walkthroughs, now: now
+        )
     }
 
     /// The conversation about a game (nil: the general one).

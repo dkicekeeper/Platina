@@ -187,10 +187,13 @@ Markdown-текст, а не блоки `render_reply`.
 |---|---|---|
 | `get_profile` | — | ник, уровень, платины, трофеи по типам, часы |
 | `list_games` | `filter`: `in_progress` \| `chasing` \| `platinum` \| `not_started` \| `shelved` \| `all`; `limit` | игры: id, название, прогресс, трофеи, часы, статус |
-| `get_game` | `game_id` | игра: прогресс, группы (DLC), время, статус, сводка гайда, если есть |
+| `get_game` | `game_id` | игра: прогресс, группы (DLC), время, статус, сводка гайда и текущая глава прохождения, если есть |
 | `list_trophies` | `game_id`; `filter`: `unearned` \| `earned` \| `all`; `type`; `group_id`; `include_hidden_details`; `limit` | трофеи: id, название, описание (у скрытых — только если `include_hidden_details`), тип, %, прогресс, дата, заметка, пропускаемый ли |
 | `get_guide` | `game_id` | гайд (§4); если его нет — приложение собирает его через `/v1/guide` |
 | `get_game_help` | `game_id`; `trophy_ids`? (1–5) | подсказки PlayStation (Game Help), прямо из PSN: без `trophy_ids` — какие трофеи с подсказкой (id, название — у скрытых неполученных нет, скрытый ли, получен ли); с ними — шаги каждого (заголовок, текст, есть ли видео: оно на экране трофея в приложении) |
+| `get_walkthrough` | `game_id` | план прохождения (§8) с тем, где человек: обзор, прохождения, главы (id, название, описание, `state`: `done` \| `current` \| `ahead`, пропускаемое с названием трофея — у скрытых неполученных нет — и получен ли он, выборы, коллекционки, трофеи), текущая глава, зачистка, источники; если плана нет — приложение собирает его |
+| `get_chapter` | `game_id`; `chapter_id`? (по умолчанию текущая) | шаги главы: id, вид, текст, `done`, `spoiler`, трофеи, номер коллекционки, есть ли картинка и видео, источник; `next_step_id`; если шагов нет — приложение собирает их |
+| `set_walkthrough_progress` | `game_id`; `chapter_id`; `done_step_ids`?; `undone_step_ids`?; `chapter_done`?; `current`? | отмечает сделанное человеком; возвращает текущую главу и её следующий шаг |
 | `get_sessions` | `game_id`; `limit` | прошлые сессии: даты, время, трофеи, итоги |
 | `get_current_session` | — | идущая сессия: игра, время, цели, трофеи за сессию |
 | `set_session_goals` | `game_id`; `trophy_ids`; `note` | ставит цели текущей (или следующей) сессии |
@@ -202,7 +205,7 @@ Markdown-текст, а не блоки `render_reply`.
 `trophy_ids` — массив целых, 1–6 (у `get_game_help` — 1–5); `limit` — целое; `include_hidden_details` — bool; `session_id`,
 `note`, `text`, `summary`, `next_steps` — строки (`next_steps` — короткий Markdown-список).
 Обязательны только `game_id` (кроме `list_games`, `get_sessions`), `trophy_ids`, `status`,
-`text`, `session_id`, `summary`, `next_steps`; остальные модель может не прислать:
+`text`, `session_id`, `summary`, `next_steps`, `chapter_id` у `set_walkthrough_progress`; остальные модель может не прислать:
 `filter` у `list_games` и `list_trophies` по умолчанию `all`, `include_hidden_details` — `false`,
 `get_sessions` без `game_id` — все игры. Лишних полей нет (`additionalProperties: false`).
 
@@ -319,9 +322,11 @@ PlayStationTrophies), читает одну-две страницы `web_fetch` 
 
 ### Дальше (этапы 6–9)
 
-- **Инструменты на телефоне**: `get_walkthrough`, `get_chapter`, `set_walkthrough_progress`
-  (прогресс — свои данные человека в приложении, на сервер не уходит, кроме того, что модель
-  попросила).
+- **Инструменты на телефоне** (§5): `get_walkthrough`, `get_chapter`, `set_walkthrough_progress`.
+  Прогресс — свои данные человека (`WalkthroughProgressRecord`: отмеченные шаги `c2/s5`, главы,
+  текущая глава; iCloud), на сервер не уходит, кроме ответа инструмента. Где человек, приложение
+  считает само (`WalkthroughPosition`): глава позади, если отмечена или получен её трофей за
+  главу (и все главы до неё); шаг сделан, если отмечен, получены его трофеи или глава позади.
 - **Инструменты показа** (этап 7): `show_checklist`, `show_step`, `show_trophies`,
   `show_warning`, `suggest_replies` — приложение рисует карточки и отвечает модели «показано».
   Старое приложение на незнакомый инструмент ответит ошибкой; модель тогда пишет текстом.
