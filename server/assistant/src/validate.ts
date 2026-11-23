@@ -9,7 +9,12 @@ import { SERVER_TOOL_NAMES, TOOL_NAMES } from "./tools";
 export const PROTOCOL_VERSION = 1;
 
 export const LIMITS = {
-  bodyBytes: 256 * 1024,
+  // Text turns stay far under it; a photo of the screen ("where am I?") is up to imageBase64Chars.
+  bodyBytes: 2 * 1024 * 1024,
+  // A photo, base64: the app sends a JPEG of at most 1280 px, about 150–400 KB.
+  imageBase64Chars: 700 * 1024,
+  // Photos in one request: the app keeps at most two in a conversation's history.
+  images: 3,
   messages: 80,
   // The <app_context> block and a question fit well under it; the body limit bounds the cost.
   userTextChars: 16 * 1024,
@@ -60,7 +65,8 @@ export function resolveLanguage(value: unknown): Language | undefined {
 
 // MARK: - POST /v1/turn
 
-const USER_BLOCKS = new Set(["text", "tool_result"]);
+const USER_BLOCKS = new Set(["text", "tool_result", "image"]);
+const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 // What Claude's own turns hold, as the app stores done.content: text (with citations from web
 // search), thinking, the phone's tool calls, web search's calls and results (with the code its
 // newer version runs to filter them), and the marker of a server-side fallback.
@@ -83,6 +89,15 @@ function hasCacheControl(block: Json): boolean {
 }
 
 function checkUserBlock(block: Json): void {
+  if (block.type === "image") {
+    // A photo the person took, inline: no URLs (the server fetches nothing for the person).
+    const source = block.source;
+    if (!isObject(source) || source.type !== "base64" || !IMAGE_TYPES.has(source.media_type as string)) throw new ValidationError("image");
+    if (typeof source.data !== "string" || source.data.length === 0 || source.data.length > LIMITS.imageBase64Chars || !/^[A-Za-z0-9+/=]+$/.test(source.data)) {
+      throw new ValidationError("image_data");
+    }
+    return;
+  }
   if (block.type === "text") {
     if (typeof block.text !== "string" || block.text.length > LIMITS.userTextChars) throw new ValidationError("user_text");
     // Citations belong to Claude's own text; on a user turn the API refuses them.
@@ -137,6 +152,9 @@ export function parseTurnRequest(raw: string): TurnRequest {
       else checkAssistantBlock(block);
     }
   });
+
+  const images = messages.reduce((n: number, message: Json) => n + (Array.isArray(message.content) ? message.content.filter((b: Json) => isObject(b) && b.type === "image").length : 0), 0);
+  if (images > LIMITS.images) throw new ValidationError("images");
 
   const last = messages[messages.length - 1] as Json;
   if (last.role !== "user") throw new ValidationError("last_role");

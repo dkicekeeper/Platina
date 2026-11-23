@@ -1,8 +1,10 @@
 import SwiftUI
+import PhotosUI
 import DesignTokens
 import DesignSupport
 import DesignComponents
 import PlatinaStore
+import PlatinaAssistant
 
 /// A conversation with Plati (docs/PLAN.md §3.6): the messages, the "thinking" line while a tool
 /// runs, the reply as it streams, suggestions on an empty chat, the field.
@@ -11,6 +13,7 @@ struct ChatView: View {
     var suggestions: [String] = []
 
     @State private var draft = ""
+    @State private var photoItem: PhotosPickerItem?
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -43,17 +46,36 @@ struct ChatView: View {
                 text: $draft,
                 placeholder: thread.isAvailable ? String(localized: "plati.placeholder") : String(localized: "plati.offline.placeholder"),
                 isSending: thread.isResponding,
-                focus: $isFocused
-            ) {
-                let text = draft
-                draft = ""
-                Task { await thread.send(text) }
-            }
+                focus: $isFocused,
+                leading: {
+                    // "Where am I?": a photo of the TV or a PS5 screenshot.
+                    PhotosPicker(selection: $photoItem, matching: .images) {
+                        MessageComposerAccessory(systemImage: "camera.viewfinder")
+                    }
+                    .accessibilityLabel(Text("plati.photo.attach"))
+                },
+                onSend: {
+                    let text = draft
+                    draft = ""
+                    Task { await thread.send(text) }
+                }
+            )
             .disabled(!thread.isAvailable)
             .screenPadding()
             .padding(.bottom, AppSpacing.sm)
         }
         .background(AppColors.Background.base)
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            photoItem = nil
+            let typed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+            draft = ""
+            Task {
+                guard let data = try? await item.loadTransferable(type: Data.self),
+                      let photo = ChatPhoto.prepare(data) else { return }
+                await thread.send(typed.isEmpty ? String(localized: "plati.photo.whereAmI") : typed, photo: photo)
+            }
+        }
     }
 
     // MARK: Rows
@@ -62,13 +84,20 @@ struct ChatView: View {
     private func row(_ message: ChatMessage) -> some View {
         switch message.role {
         case .user:
-            MessageBubble(
-                message.text,
-                role: .outgoing,
-                time: message.date,
-                failure: message.failed ? failureText : nil,
-                onRetry: message.failed ? { Task { await thread.retry() } } : nil
-            )
+            VStack(alignment: .trailing, spacing: AppSpacing.xs) {
+                if let data = message.photo, let image = UIImage(data: data) {
+                    PhotoTile(image: image)
+                        .accessibilityLabel(Text("plati.photo.sent"))
+                }
+                MessageBubble(
+                    message.text,
+                    role: .outgoing,
+                    time: message.date,
+                    failure: message.failed ? failureText : nil,
+                    onRetry: message.failed ? { Task { await thread.retry() } } : nil
+                )
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
             .transition(.messageBubble(.outgoing))
         case .event:
             VStack(spacing: AppSpacing.xs) {
@@ -185,6 +214,28 @@ struct ChatView: View {
             withAnimation(AppAnimation.gentleSpring) { proxy.scrollTo(target, anchor: .bottom) }
         } else {
             proxy.scrollTo(target, anchor: .bottom)
+        }
+    }
+}
+
+/// A photo for Plati: at most 1280 px on the long side as a JPEG (what Claude reads well, a few
+/// hundred kilobytes), and a small thumbnail the chat keeps.
+enum ChatPhoto {
+    static func prepare(_ data: Data) -> (image: AssistantImage, thumbnail: Data)? {
+        guard let original = UIImage(data: data),
+              let full = resized(original, longSide: 1280).jpegData(compressionQuality: 0.6),
+              let thumbnail = resized(original, longSide: 360).jpegData(compressionQuality: 0.6) else { return nil }
+        return (AssistantImage(data: full, mediaType: "image/jpeg"), thumbnail)
+    }
+
+    private static func resized(_ image: UIImage, longSide: CGFloat) -> UIImage {
+        let size = image.size
+        let scale = min(1, longSide / max(size.width, size.height, 1))
+        let target = CGSize(width: (size.width * scale).rounded(), height: (size.height * scale).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: target, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: target))
         }
     }
 }

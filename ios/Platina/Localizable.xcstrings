@@ -5034,6 +5034,57 @@
         }
       }
     },
+    "plati.photo.attach": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A photo of the screen: where am I?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фото экрана: где я?"
+          }
+        }
+      }
+    },
+    "plati.photo.sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A photo of the screen"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фото экрана"
+          }
+        }
+      }
+    },
+    "plati.photo.whereAmI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where am I? What’s next?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Где я? Что дальше?"
+          }
+        }
+      }
+    },
     "plati.placeholder": {
       "extractionState": "manual",
       "localizations": {

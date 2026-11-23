@@ -167,6 +167,28 @@ struct ConversationTests {
         }
     }
 
+    @Test("A photo goes inline before the text; the history keeps two at most")
+    func photos() async throws {
+        let replies = (0..<4).map { _ in [textTurn("Ты в Темнолесье.")] }
+        let transport = ScriptedTransport(replies)
+        let conversation = AssistantConversation(transport: transport, toolkit: RecordingToolkit(), language: "ru")
+        let photo = AssistantImage(data: Data([0xFF, 0xD8, 0xFF]))
+        _ = try await conversation.send("Где я?", image: photo)
+        let first = try #require(conversation.messages.first)
+        #expect(first.content.first?["type"] == "image")
+        #expect(first.content.first?.value(atPath: "source.media_type") == "image/jpeg")
+        #expect(first.content.first?.value(atPath: "source.data")?.stringValue == Data([0xFF, 0xD8, 0xFF]).base64EncodedString())
+        #expect(first.text == "Где я?")
+
+        for _ in 0..<3 {
+            _ = conversation.trimIfNeeded()
+            _ = try await conversation.send("А теперь?", image: photo)
+        }
+        let kept = conversation.messages.flatMap(\.content).filter { $0["type"] == "image" }.count
+        #expect(kept <= AssistantConversation.maxKeptImages + 1)
+        #expect(conversation.messages.first?.role == .user)
+    }
+
     @Test("A failed turn leaves no trace in the history")
     func rollback() async throws {
         let transport = ScriptedTransport([[.error(code: "quota", retryable: false)]])

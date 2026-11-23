@@ -19,18 +19,24 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
     public var failed: Bool
     /// What Plati showed under the text: checklists, steps, trophies, warnings, quick replies.
     public var cards: [ChatCard]
+    /// The photo the person sent with it, small (a JPEG thumbnail).
+    public var photo: Data?
 
-    public init(id: String = UUID().uuidString, role: Role, text: String, date: Date, failed: Bool = false, cards: [ChatCard] = []) {
+    public init(
+        id: String = UUID().uuidString, role: Role, text: String, date: Date, failed: Bool = false,
+        cards: [ChatCard] = [], photo: Data? = nil
+    ) {
         self.id = id
         self.role = role
         self.text = text
         self.date = date
         self.failed = failed
         self.cards = cards
+        self.photo = photo
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, role, text, date, failed, cards
+        case id, role, text, date, failed, cards, photo
     }
 
     /// Lenient: a message kept before cards existed has none.
@@ -42,6 +48,7 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
         date = try container.decode(Date.self, forKey: .date)
         failed = try container.decodeIfPresent(Bool.self, forKey: .failed) ?? false
         cards = (try? container.decodeIfPresent([ChatCard].self, forKey: .cards)) ?? []
+        photo = try container.decodeIfPresent(Data.self, forKey: .photo)
     }
 
     /// The quick replies under the message, if Plati suggested any.
@@ -111,7 +118,7 @@ public final class ChatThread {
     private let store: LibraryStore
     private let context: () -> String
     @ObservationIgnored private var lastContext: String?
-    @ObservationIgnored private var lastQuestion: (text: String, role: ChatMessage.Role)?
+    @ObservationIgnored private var lastQuestion: (text: String, role: ChatMessage.Role, image: AssistantImage?)?
     private let now: () -> Date
 
     init(
@@ -143,11 +150,13 @@ public final class ChatThread {
     /// Sends a message and waits for Plati's answer.
     /// - Parameter role: `.event` for what the app says on the person's behalf ("the session
     ///   started"): the chat shows it as a divider, the model reads it as a message.
-    public func send(_ text: String, as role: ChatMessage.Role = .user) async {
+    /// - Parameter photo: a photo of the screen ("where am I?"): the image Plati sees and the
+    ///   thumbnail the chat keeps.
+    public func send(_ text: String, as role: ChatMessage.Role = .user, photo: (image: AssistantImage, thumbnail: Data)? = nil) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isResponding else { return }
-        messages.append(ChatMessage(role: role, text: trimmed, date: now()))
-        await respond(to: trimmed, role: role)
+        messages.append(ChatMessage(role: role, text: trimmed, date: now(), photo: photo?.thumbnail))
+        await respond(to: trimmed, role: role, image: photo?.image)
     }
 
     /// Sends the failed question again.
@@ -156,7 +165,7 @@ public final class ChatThread {
         if let index = messages.lastIndex(where: { $0.role == lastQuestion.role && $0.text == lastQuestion.text }) {
             messages[index].failed = false
         }
-        await respond(to: lastQuestion.text, role: lastQuestion.role)
+        await respond(to: lastQuestion.text, role: lastQuestion.role, image: lastQuestion.image)
     }
 
     /// Starts the thread over.
@@ -174,7 +183,7 @@ public final class ChatThread {
 
     @ObservationIgnored var conversationReset: (() -> Void)?
 
-    private func respond(to text: String, role: ChatMessage.Role) async {
+    private func respond(to text: String, role: ChatMessage.Role, image: AssistantImage? = nil) async {
         guard let conversation else {
             failure = "not_configured"
             markFailed(text)
@@ -184,7 +193,7 @@ public final class ChatThread {
         failure = nil
         streamingText = ""
         step = nil
-        lastQuestion = (text, role)
+        lastQuestion = (text, role, image)
         defer {
             isResponding = false
             step = nil
@@ -195,7 +204,7 @@ public final class ChatThread {
         let current = context()
         let contextBlock = current == lastContext ? nil : current
         do {
-            let reply = try await conversation.send(text, context: contextBlock) { [weak self] progress in
+            let reply = try await conversation.send(text, image: image, context: contextBlock) { [weak self] progress in
                 guard let self else { return }
                 switch progress {
                 case .tool(let name): step = name

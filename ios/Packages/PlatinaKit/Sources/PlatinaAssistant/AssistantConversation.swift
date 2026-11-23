@@ -21,6 +21,24 @@ public struct AssistantToolOutput: Sendable, Equatable {
     public static func failure(_ message: String) -> AssistantToolOutput { AssistantToolOutput(value: nil, error: message) }
 }
 
+/// A photo sent with a message ("where am I?"): a JPEG, PNG or WebP, inline.
+public struct AssistantImage: Sendable, Equatable {
+    public let data: Data
+    public let mediaType: String
+
+    public init(data: Data, mediaType: String = "image/jpeg") {
+        self.data = data
+        self.mediaType = mediaType
+    }
+
+    var block: JSONValue {
+        [
+            "type": "image",
+            "source": ["type": "base64", "media_type": .string(mediaType), "data": .string(data.base64EncodedString())],
+        ]
+    }
+}
+
 public enum AssistantConversationError: Error, Equatable {
     /// The turn ended without any text.
     case noReply
@@ -73,17 +91,33 @@ public final class AssistantConversation {
     /// The server takes at most 80 messages and 256 KB; one turn adds up to 1 + 2 × maxSteps.
     public static let maxKeptMessages = 50
     public static let maxKeptBytes = 128 * 1024
+    /// Photos kept in the history; with the one being sent, the server's limit of three.
+    public static let maxKeptImages = 2
+
+    private static func imageBlocks(_ message: AssistantWireMessage) -> [JSONValue] {
+        message.content.filter { $0["type"]?.stringValue == "image" }
+    }
+
+    private static func imageCount(_ message: AssistantWireMessage) -> Int { imageBlocks(message).count }
+
+    private static func imageChars(_ message: AssistantWireMessage) -> Int {
+        imageBlocks(message).reduce(0) { $0 + ($1.value(atPath: "source.data")?.stringValue?.count ?? 0) }
+    }
 
     /// Over the limits, the oldest questions go, whole: the history then starts at a question.
     /// Returns whether anything went (the `<app_context>` went with it, so it is sent again).
     @discardableResult
     public func trimIfNeeded() -> Bool {
         let encoder = JSONEncoder()
-        let sizes = messages.map { (try? encoder.encode($0).count) ?? 0 }
+        // Photos count by number, not bytes: at most maxKeptImages stay.
+        let sizes = messages.map { max(0, ((try? encoder.encode($0).count) ?? 0) - Self.imageChars($0)) }
+        let images = messages.map(Self.imageCount)
         var earliest = max(0, messages.count - Self.maxKeptMessages)
         var keptBytes = sizes[earliest...].reduce(0, +)
-        while keptBytes > Self.maxKeptBytes, earliest < messages.count - 1 {
+        var keptImages = images[earliest...].reduce(0, +)
+        while (keptBytes > Self.maxKeptBytes || keptImages > Self.maxKeptImages), earliest < messages.count - 1 {
             keptBytes -= sizes[earliest]
+            keptImages -= images[earliest]
             earliest += 1
         }
         guard earliest > 0 else { return false }
@@ -99,10 +133,16 @@ public final class AssistantConversation {
     /// Sends one message and runs the loop to the reply.
     /// - Parameter context: the `<app_context>` block, on the thread's first message and
     ///   whenever it changes.
-    public func send(_ text: String, context: String? = nil, onProgress: ((Progress) -> Void)? = nil) async throws -> Reply {
+    public func send(
+        _ text: String,
+        image: AssistantImage? = nil,
+        context: String? = nil,
+        onProgress: ((Progress) -> Void)? = nil
+    ) async throws -> Reply {
         let checkpoint = messages.count
         var content: [JSONValue] = []
         if let context { content.append(AssistantWireMessage.textBlock(context)) }
+        if let image { content.append(image.block) }
         content.append(AssistantWireMessage.textBlock(text))
         messages.append(AssistantWireMessage(role: .user, content: content))
         do {
