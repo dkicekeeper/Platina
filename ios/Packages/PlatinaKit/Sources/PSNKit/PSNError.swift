@@ -16,7 +16,10 @@ public enum PSNError: Error, Sendable, Equatable {
     case rateLimited(retryAfter: TimeInterval?)
     /// The answer could not be read: PSN changed its format, or a field we rely on is missing.
     case decoding(String)
-    /// No connection, a timeout.
+    /// The phone has no connection to the internet.
+    case offline
+    /// PSN did not answer: a timeout, no way to its server, a broken secure connection. The text
+    /// says which request and why, for the log.
     case transport(String)
 }
 

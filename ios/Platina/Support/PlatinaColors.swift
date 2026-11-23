@@ -48,8 +48,10 @@ extension PSNError {
             String(localized: "error.signInFailed")
         case .rateLimited:
             String(localized: "error.rateLimited")
-        case .transport:
+        case .offline:
             String(localized: "error.offline")
+        case .transport:
+            String(localized: "error.psnUnreachable")
         case .http, .decoding:
             String(localized: "error.psnUnavailable")
         }

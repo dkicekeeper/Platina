@@ -28,12 +28,28 @@ public struct URLSessionTransport: HTTPTransport {
         do {
             (data, response) = try await session.data(for: request, delegate: delegate)
         } catch let error as URLError {
-            throw PSNError.transport(error.localizedDescription)
+            throw Self.mapped(error, for: request)
         }
         guard let http = response as? HTTPURLResponse else {
             throw PSNError.transport("Not an HTTP response")
         }
         return (data, http)
+    }
+
+    /// A cancelled request is the caller's own doing, not a failure; no connection on the phone
+    /// is told apart from PSN not answering.
+    static func mapped(_ error: URLError, for request: URLRequest) -> any Error {
+        if error.code == .cancelled {
+            return CancellationError()
+        }
+        let target = "\(request.httpMethod ?? "GET") \(request.url?.host ?? "")\(request.url?.path ?? "")"
+        PSNLog.failure("\(target): URLError \(error.code.rawValue) \(error.localizedDescription)")
+        switch error.code {
+        case .notConnectedToInternet, .dataNotAllowed, .internationalRoamingOff, .callIsActive:
+            return PSNError.offline
+        default:
+            return PSNError.transport("\(target): URLError \(error.code.rawValue)")
+        }
     }
 }
 

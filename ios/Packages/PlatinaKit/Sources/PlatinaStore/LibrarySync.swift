@@ -1,6 +1,7 @@
 #if canImport(SwiftData)
 import Foundation
 import Observation
+import os
 import PSNKit
 import PlatinaCore
 
@@ -33,6 +34,8 @@ public final class LibrarySync {
     @ObservationIgnored public var onNewTrophies: (([TrophyRecord]) -> Void)?
     /// After every finished sync: the widgets' snapshot follows.
     @ObservationIgnored public var onSynced: (() -> Void)?
+
+    private static let log = Logger(subsystem: "dakacom.Platina", category: "Sync")
 
     public var isSyncing: Bool {
         if case .syncing = status { return true }
@@ -216,6 +219,12 @@ public final class LibrarySync {
     }
 
     private func fail(_ error: any Error) {
+        // A view that started the sync went away: nothing failed, the next sync picks it up.
+        if error is CancellationError {
+            if isSyncing { status = .idle }
+            return
+        }
+        Self.log.error("Sync failed: \(String(describing: error), privacy: .public)")
         let psnError = (error as? PSNError) ?? .decoding(String(describing: error))
         status = .failed(psnError)
         onError?(psnError)

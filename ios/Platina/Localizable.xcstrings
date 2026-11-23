@@ -1400,6 +1400,23 @@
         }
       }
     },
+    "error.psnUnreachable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PlayStation Network isn’t answering. Try again a little later."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PlayStation Network не отвечает. Попробуйте чуть позже."
+          }
+        }
+      }
+    },
     "error.rateLimited": {
       "extractionState": "manual",
       "localizations": {

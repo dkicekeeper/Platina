@@ -199,6 +199,7 @@ public actor PSNClient {
         do {
             return try JSONDecoder.psn.decode(T.self, from: data)
         } catch {
+            PSNLog.failure("GET \(path): could not read the answer: \(error)")
             throw PSNError.decoding("\(path): \(error)")
         }
     }
@@ -227,6 +228,7 @@ public actor PSNClient {
             throw PSNError.rateLimited(retryAfter: retryAfter)
         default:
             let body = try? JSONDecoder().decode(PSNErrorBody.self, from: data)
+            PSNLog.failure("GET \(path): HTTP \(response.statusCode) \(body?.error.code.map(String.init) ?? "") \(body?.error.message ?? "")")
             throw PSNError.http(status: response.statusCode, code: body?.error.code, message: body?.error.message)
         }
     }
