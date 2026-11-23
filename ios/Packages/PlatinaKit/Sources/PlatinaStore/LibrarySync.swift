@@ -108,6 +108,16 @@ public final class LibrarySync {
         }
     }
 
+    /// Forgets the last sync, for a sign-out: the store's cache is gone with it, so the next
+    /// sign-in syncs at once instead of waiting out `minimumInterval` with nothing on screen.
+    public func reset() {
+        status = .idle
+        pendingGames = 0
+        lastSyncedAt = nil
+        presenceCheckedAt = nil
+        presenceGameId = nil
+    }
+
     /// The trophies of one game now, when its screen opens and they are missing or behind.
     public func refreshGame(_ gameId: String) async {
         guard let game = try? store.game(gameId), !game.hasCurrentDetails else { return }

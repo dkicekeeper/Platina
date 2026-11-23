@@ -166,6 +166,7 @@ final class AppModel {
         await sessions.end()
         try? await client.signOut()
         try? store.eraseCache()
+        sync.reset()
         phase = .signedOut
     }
 

@@ -149,6 +149,20 @@ struct StoreTests {
         #expect(psn.requestedPaths.isEmpty)
     }
 
+    @Test("After a sign-out's reset and the cache erased, the next sync runs at once")
+    func resetAfterSignOut() async throws {
+        let (sync, store, psn) = try makeSync()
+        await sync.sync()
+        try store.eraseCache()
+        sync.reset()
+        #expect(sync.lastSyncedAt == nil)
+        psn.resetLog()
+
+        await sync.sync()
+        #expect(psn.requestedPaths.contains { $0.hasSuffix("/trophySummary") })
+        #expect(try !store.games().isEmpty)
+    }
+
     @Test("A small budget leaves games for the next sync, which takes them even without force")
     func budget() async throws {
         let (sync, store, psn) = try makeSync(budget: 2)
