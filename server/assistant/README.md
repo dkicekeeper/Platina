@@ -20,6 +20,7 @@ Cloudflare Worker между приложением Platina и Claude: хран�
 | `src/appattest.ts`, `cbor.ts`, `der.ts`, `apple-root.ts` | App Attest (как в Tenra) |
 | `test/` | юнит-тесты (`npm test`), страницы Stratege в `test/fixtures/` |
 | `eval/` | eval на реальном API: синтетический игрок, 13 случаев (ручной запуск) |
+| `scripts/smoke-walkthrough.ts` | одна настоящая сборка прохождения (план и глава) с таймингами и ошибками API: Actions → `smoke` |
 | `scripts/kv-namespaces.mjs` | создаёт KV-пространства и подставляет их id при деплое |
 
 ## Эндпоинты
