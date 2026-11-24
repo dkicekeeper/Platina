@@ -109,8 +109,12 @@ PlatinaStore — на симуляторе в CI.
 - Арт игры: список сыгранного (`gamelist/v2`) несёт `concept.media.images` — картинки магазина
   с типом: `GAMEHUB_COVER_ART` (16:9, обложка страницы игры на PS5, без названия),
   `BACKGROUND_LAYER_ART`/`BACKGROUND`, `PORTRAIT_BANNER` (2:3 постер, название обычно на нём),
-  `LOGO` (название, прозрачный PNG), `MASTER`, скриншоты. `PlayedGame.keyArtURL` (обложка хаба,
-  фон, постер) и `logoURL` → `GameRecord.artURL`/`logoURL`: шапка экрана игры.
+  `LOGO` (название, прозрачный PNG), `MASTER`, скриншоты, у многих игр PS5 — `HERO_CHARACTER`
+  (персонаж, прозрачный квадрат: консоль рисует его во всю высоту поверх `BACKGROUND_LAYER_ART`,
+  так получается обложка хаба). `PlayedGame.keyArtURL` (обложка хаба, фон, постер) и `logoURL` →
+  `GameRecord.artURL`/`logoURL`; `heroLayers` (фон и персонаж, только парой из одного издания) →
+  `GameRecord.backdropURL`/`characterURL`: шапка экрана игры из двух слоёв, где они есть
+  (персонаж целиком под панелью, а не плечо из обрезанной обложки), иначе обложка.
 - Картинки (арт, логотипы, иконки трофеев, аватары) грузит `RemotePhoto` DesignKit через
   `PhotoCache` (`DesignKitPhotoLoader`, настроен в `PlatinaApp`): память, пока приложение
   открыто, и диск (Caches, до 300 МБ) между запусками; каждая качается один раз и уменьшается до

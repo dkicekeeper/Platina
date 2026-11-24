@@ -75,9 +75,15 @@ struct PlayTimeTests {
                        PSNGameArt(url: "https://img/eu-poster.jpg", type: PSNGameArt.portraitBanner),
                        PSNGameArt(url: "https://img/eu-hub.jpg", type: PSNGameArt.gameHubCoverArt),
                        PSNGameArt(url: "https://img/eu-logo.png", type: PSNGameArt.logo),
+                       PSNGameArt(url: "https://img/eu-backdrop.jpg", type: PSNGameArt.backgroundLayerArt),
+                       PSNGameArt(url: "https://img/eu-hero.png", type: PSNGameArt.heroCharacter),
                    ]))),
         PlayedGame(titleId: "PPSA2", name: "Game US", imageUrl: "https://img/us.png", playCount: 1,
-                   firstPlayedDateTime: date("2026-03-01T00:00:00Z"), lastPlayedDateTime: date("2026-03-02T00:00:00Z"), playDuration: "PT30M"),
+                   firstPlayedDateTime: date("2026-03-01T00:00:00Z"), lastPlayedDateTime: date("2026-03-02T00:00:00Z"), playDuration: "PT30M",
+                   // A character with no backdrop: not the hub's layers, nor key art.
+                   concept: .init(media: .init(images: [
+                       PSNGameArt(url: "https://img/us-hero.png", type: PSNGameArt.heroCharacter),
+                   ]))),
         PlayedGame(titleId: "PPSA3", name: "No trophies", lastPlayedDateTime: date("2026-04-01T00:00:00Z"), playDuration: "PT1H"),
     ]
 
@@ -97,9 +103,12 @@ struct PlayTimeTests {
         #expect(game.lastPlayed == date("2026-03-02T00:00:00Z"))
         #expect(game.imageURL?.absoluteString == "https://img/us.png")
         #expect(game.titleIds == ["PPSA1", "PPSA2"])
-        // The latest title has no store art: the older region's, the game hub's cover first.
+        // The latest title has only a character: the older region's key art, the game hub's
+        // cover first, and its layers, both from it.
         #expect(game.artURL?.absoluteString == "https://img/eu-hub.jpg")
         #expect(game.logoURL?.absoluteString == "https://img/eu-logo.png")
+        #expect(game.heroLayers?.backdrop.absoluteString == "https://img/eu-backdrop.jpg")
+        #expect(game.heroLayers?.character.absoluteString == "https://img/eu-hero.png")
         #expect(time.count == 1)
     }
 }

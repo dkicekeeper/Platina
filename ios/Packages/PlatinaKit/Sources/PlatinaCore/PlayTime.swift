@@ -14,10 +14,12 @@ public struct PlayTime: Sendable, Hashable {
     /// The store's key art (the PS5 game hub's cover, a background, the poster) and title logo.
     public let artURL: URL?
     public let logoURL: URL?
+    /// The game hub's cover in two layers, a backdrop and the hero character, from one title.
+    public let heroLayers: PSNGameArt.HeroLayers?
 
     public init(
         seconds: TimeInterval, firstPlayed: Date?, lastPlayed: Date?, playCount: Int, imageURL: URL?,
-        titleIds: [String], artURL: URL? = nil, logoURL: URL? = nil
+        titleIds: [String], artURL: URL? = nil, logoURL: URL? = nil, heroLayers: PSNGameArt.HeroLayers? = nil
     ) {
         self.seconds = seconds
         self.firstPlayed = firstPlayed
@@ -27,6 +29,7 @@ public struct PlayTime: Sendable, Hashable {
         self.titleIds = titleIds
         self.artURL = artURL
         self.logoURL = logoURL
+        self.heroLayers = heroLayers
     }
 }
 
@@ -68,7 +71,10 @@ public enum PlayTimeLinker {
                 imageURL: latest?.imageURL,
                 titleIds: games.map(\.titleId).sorted(),
                 artURL: byRecency.lazy.compactMap(\.keyArtURL).first,
-                logoURL: byRecency.lazy.compactMap(\.logoURL).first
+                logoURL: byRecency.lazy.compactMap(\.logoURL).first,
+                // Both layers from the same title: one region's backdrop under another's figure
+                // may not line up.
+                heroLayers: byRecency.lazy.compactMap(\.heroLayers).first
             )
         }
     }

@@ -14,6 +14,7 @@
         { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/master.png", "format": "UNKNOWN", "type": "MASTER" },
         { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/background.jpg", "format": "UNKNOWN", "type": "BACKGROUND_LAYER_ART" },
         { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/gamehub.jpg", "format": "UNKNOWN", "type": "GAMEHUB_COVER_ART" },
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/hero.png", "format": "UNKNOWN", "type": "HERO_CHARACTER" },
         { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/logo.png", "format": "UNKNOWN", "type": "LOGO" },
         { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/portrait.jpg", "format": "UNKNOWN", "type": "PORTRAIT_BANNER" },
         { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/shot1.jpg", "format": "UNKNOWN", "type": "SCREENSHOT" }

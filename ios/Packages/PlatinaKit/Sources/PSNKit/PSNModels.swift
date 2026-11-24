@@ -450,6 +450,9 @@ public struct PlayedGame: Decodable, Sendable, Hashable, Identifiable {
     public var keyArtURL: URL? { PSNGameArt.url(in: art, PSNGameArt.keyArtTypes) }
     /// The game's title as a picture (transparent PNG), for over the key art.
     public var logoURL: URL? { PSNGameArt.url(in: art, [PSNGameArt.logo]) }
+    /// The game hub's cover in its two layers, when the store has both: its backdrop and the
+    /// hero character standing in front of it.
+    public var heroLayers: PSNGameArt.HeroLayers? { PSNGameArt.heroLayers(in: art) }
 }
 
 /// A picture of a game from the PlayStation Store (a concept's media), by its type.
@@ -474,6 +477,9 @@ public struct PSNGameArt: Decodable, Sendable, Hashable {
     public static let portraitBanner = "PORTRAIT_BANNER"
     /// The title, transparent PNG.
     public static let logo = "LOGO"
+    /// The game hub's hero character: a transparent 1:1 picture. The console draws it over
+    /// `BACKGROUND_LAYER_ART` at the screen's full height, which makes `GAMEHUB_COVER_ART`.
+    public static let heroCharacter = "HERO_CHARACTER"
     /// The key art for a header, best first.
     public static let keyArtTypes = [gameHubCoverArt, backgroundLayerArt, background, portraitBanner]
 
@@ -483,6 +489,27 @@ public struct PSNGameArt: Decodable, Sendable, Hashable {
             if let url = art.lazy.filter({ $0.type == type }).compactMap(\.imageURL).first { return url }
         }
         return nil
+    }
+
+    /// The game hub's cover in its two layers: the backdrop (`BACKGROUND_LAYER_ART`, no title and
+    /// no character) and the hero character in front of it (`HERO_CHARACTER`). The app stands
+    /// the character whole under the bars, where the cover cropped to a phone's width cut it.
+    public struct HeroLayers: Sendable, Hashable {
+        public let backdrop: URL
+        public let character: URL
+
+        public init(backdrop: URL, character: URL) {
+            self.backdrop = backdrop
+            self.character = character
+        }
+    }
+
+    /// Both layers of the game hub's cover, or nil when the game lacks either.
+    public static func heroLayers(in art: [PSNGameArt]) -> HeroLayers? {
+        guard let backdrop = url(in: art, [backgroundLayerArt]), let character = url(in: art, [heroCharacter]) else {
+            return nil
+        }
+        return HeroLayers(backdrop: backdrop, character: character)
     }
 }
 

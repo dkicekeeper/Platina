@@ -233,6 +233,8 @@ public final class LibraryStore {
             game.coverURLString = time.imageURL?.absoluteString
             game.artURLString = time.artURL?.absoluteString
             game.logoURLString = time.logoURL?.absoluteString
+            game.backdropURLString = time.heroLayers?.backdrop.absoluteString
+            game.characterURLString = time.heroLayers?.character.absoluteString
         }
         try context.save()
     }

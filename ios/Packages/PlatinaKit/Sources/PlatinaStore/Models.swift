@@ -26,6 +26,11 @@ public final class GameRecord {
     /// from the game list: the top of the game's screen.
     public var artURLString: String?
     public var logoURLString: String?
+    /// The game hub's cover in two layers, when the store has both: its backdrop and the hero
+    /// character in front of it (a transparent square). The top of the game's screen stands the
+    /// character whole under the bars; without them, the key art.
+    public var backdropURLString: String?
+    public var characterURLString: String?
     public var platform: String
     public var serviceName: String
     public var trophySetVersion: String
@@ -108,6 +113,8 @@ public final class GameRecord {
     public var coverURL: URL? { PSNImageURL.from(coverURLString) }
     public var artURL: URL? { PSNImageURL.from(artURLString) }
     public var logoURL: URL? { PSNImageURL.from(logoURLString) }
+    public var backdropURL: URL? { PSNImageURL.from(backdropURLString) }
+    public var characterURL: URL? { PSNImageURL.from(characterURLString) }
     public var isPlatinumEarned: Bool { definedPlatinum > 0 && earnedPlatinum > 0 }
     public var isCompleted: Bool { defined.total > 0 && earned.total >= defined.total }
 

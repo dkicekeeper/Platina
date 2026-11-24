@@ -105,9 +105,12 @@ struct ModelTests {
         #expect(lamb.timePlayed == TimeInterval(137_525))  // 38 h 12 min 5 s
         #expect(lamb.imageURL?.absoluteString.hasSuffix("cotl-ru.png") == true)
         // The store's art: the game hub's cover over a background or the poster, and the logo.
-        #expect(lamb.art.count == 7)
+        #expect(lamb.art.count == 8)
         #expect(lamb.keyArtURL?.absoluteString.hasSuffix("gamehub.jpg") == true)
         #expect(lamb.logoURL?.absoluteString.hasSuffix("logo.png") == true)
+        // The hub's cover in two layers: the backdrop and the hero character in front of it.
+        #expect(lamb.heroLayers?.backdrop.absoluteString.hasSuffix("background.jpg") == true)
+        #expect(lamb.heroLayers?.character.absoluteString.hasSuffix("hero.png") == true)
 
         let presence = try JSONDecoder.psn.decode(PresenceResponse.self, from: Fixture.data("presence")).presence
         #expect(presence.onlineStatus == "online")
@@ -130,6 +133,12 @@ struct ModelTests {
         let game = try JSONDecoder.psn.decode(PlayedGame.self, from: Data(json.utf8))
         #expect(game.keyArtURL?.absoluteString.hasSuffix("bg.jpg") == true)
         #expect(game.logoURL == nil)
+        // No layers without both of them: a backdrop alone is not one.
+        #expect(game.heroLayers == nil)
+        let backdropOnly = [PSNGameArt(url: "https://image.api.playstation.com/b.jpg", type: PSNGameArt.backgroundLayerArt)]
+        #expect(PSNGameArt.heroLayers(in: backdropOnly) == nil)
+        let characterOnly = [PSNGameArt(url: "https://image.api.playstation.com/h.png", type: PSNGameArt.heroCharacter)]
+        #expect(PSNGameArt.heroLayers(in: characterOnly) == nil)
 
         let posterOnly = PSNGameArt.url(in: [PSNGameArt(url: "https://image.api.playstation.com/p.jpg", type: "PORTRAIT_BANNER")], PSNGameArt.keyArtTypes)
         #expect(posterOnly?.absoluteString.hasSuffix("p.jpg") == true)
