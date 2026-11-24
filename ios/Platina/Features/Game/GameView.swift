@@ -36,8 +36,32 @@ enum TrophySort: String, CaseIterable, Hashable {
     }
 }
 
-/// A game: its progress, time played, the person's plan and every trophy (docs/PLAN.md §3.3).
-/// The guide and the road map come with Plati (stage 3).
+/// The parts of a game's screen under its header, picked by the chips.
+enum GameSection: String, CaseIterable, Hashable {
+    case trophies, guide, walkthrough, sessions
+
+    var title: String {
+        switch self {
+        case .trophies: String(localized: "game.section.trophies")
+        case .guide: String(localized: "game.section.guide")
+        case .walkthrough: String(localized: "game.section.walkthrough")
+        case .sessions: String(localized: "game.section.sessions")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .trophies: "trophy"
+        case .guide: "map"
+        case .walkthrough: "point.bottomleft.forward.to.point.topright.scurvepath"
+        case .sessions: "clock.arrow.circlepath"
+        }
+    }
+}
+
+/// A game (docs/PLAN.md §3.3): its header on the game's cover (progress, trophy counts, time
+/// played, the session button and the person's plan), then chips for its parts: the trophies,
+/// the guide, the walkthrough and the sessions.
 struct GameView: View {
     let gameId: String
 
@@ -54,6 +78,9 @@ struct GameView: View {
     @State private var isLoadingTrophies = false
     @State private var isShowingChat = false
     @State private var isShowingShare = false
+    @State private var section: GameSection = .trophies
+    /// The header shows the game's name; the bar's title stays empty until it scrolls away.
+    @State private var isHeroUnderBar = true
 
     init(gameId: String) {
         self.gameId = gameId
@@ -87,28 +114,34 @@ struct GameView: View {
                                 }
                             }
                         )
-                        WalkthroughSection(game: game)
-                        GuideSection(game: game)
-                        SegmentedPicker(
-                            title: String(localized: "game.filter.title"),
-                            selection: $filter,
-                            options: TrophyFilter.allCases.map { (label: $0.title, value: $0) }
-                        )
-                        trophies(of: game)
-                        if !sessions.isEmpty {
-                            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                                SectionHeader(String(localized: "game.sessions.header"), systemImage: "list.bullet.rectangle")
-                                CardList(Array(sessions.prefix(10)), layout: .section, onOpen: { app.endedSession = $0 }) { (session: PlaySessionRecord) in
-                                    SessionRow(session: session)
-                                }
+                        .heroBackground(clearHeight: GameHeader.room) {
+                            // The store's key art (the PS5 game hub's cover, without the title,
+                            // as the console lays the logo over it), else the game list's cover,
+                            // else the trophy list's icon, until the game list has been read.
+                            if let art = game.artURL {
+                                RemotePhoto(key: "game-art-\(game.id)", url: art)
+                            } else if let cover = game.coverURL {
+                                RemotePhoto(key: "game-cover-\(game.id)", url: cover)
+                            } else {
+                                RemotePhoto(key: "game-\(game.id)", url: game.iconURL)
                             }
                         }
+
+                        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                            ChipPicker(
+                                options: GameSection.allCases,
+                                selection: Binding<GameSection?>(get: { section }, set: { if let new = $0 { section = new } }),
+                                systemImage: { $0.systemImage }
+                            ) { $0.title }
+                            sectionContent(game)
+                        }
+                        .screenPadding()
+                        .readableWidth()
+                        .padding(.bottom, AppSpacing.xxl)
                     }
-                    .screenPadding()
-                    .readableWidth()
-                    .padding(.bottom, AppSpacing.xxl)
                 }
-                .navigationTitle(Text(verbatim: game.name))
+                .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
+                .navigationTitle(Text(verbatim: isHeroUnderBar ? "" : game.name))
                 .sheet(isPresented: $isShowingChat) {
                     GameChatSheet(gameId: game.id, gameName: game.name)
                 }
@@ -132,14 +165,16 @@ struct GameView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Picker(selection: $sort) {
-                        ForEach(TrophySort.allCases, id: \.self) { sort in
-                            Text(sort.title).tag(sort)
+                    if section == .trophies {
+                        Picker(selection: $sort) {
+                            ForEach(TrophySort.allCases, id: \.self) { sort in
+                                Text(sort.title).tag(sort)
+                            }
+                        } label: {
+                            Text("library.sort")
                         }
-                    } label: {
-                        Text("library.sort")
+                        Divider()
                     }
-                    Divider()
                     Button {
                         isShowingShare = true
                     } label: {
@@ -163,6 +198,36 @@ struct GameView: View {
         }
         .task(id: gameId) {
             helpedTrophies = await app.gameHelp.helpedTrophyIds(gameId: gameId)
+        }
+    }
+
+    /// The part the chips picked.
+    @ViewBuilder
+    private func sectionContent(_ game: GameRecord) -> some View {
+        switch section {
+        case .trophies:
+            SegmentedPicker(
+                title: String(localized: "game.filter.title"),
+                selection: $filter,
+                options: TrophyFilter.allCases.map { (label: $0.title, value: $0) }
+            )
+            trophies(of: game)
+        case .guide:
+            GuideSection(game: game)
+        case .walkthrough:
+            WalkthroughSection(game: game)
+        case .sessions:
+            if sessions.isEmpty {
+                EmptyState(
+                    icon: "clock.arrow.circlepath",
+                    title: String(localized: "game.sessions.empty.title"),
+                    description: String(localized: "game.sessions.empty.message")
+                )
+            } else {
+                CardList(sessions, layout: .section, onOpen: { app.endedSession = $0 }) { (session: PlaySessionRecord) in
+                    SessionRow(session: session)
+                }
+            }
         }
     }
 
@@ -250,7 +315,10 @@ struct TrophySection: Identifiable {
     let trophies: [TrophyRecord]
 }
 
-/// The game's cover, progress, counts, time played and the person's plan.
+/// The top of a game's screen, as a film's page in the TV app (`.heroBackground(picture:)`):
+/// the game's art from the top of the screen with its title logo (the name where it has none) at
+/// the foot of the art's room, then centred on the art's own darkened colours: the trophy counts,
+/// the session button and the plan, the progress and time played.
 private struct GameHeader: View {
     let game: GameRecord
     let status: GamePlanStatus
@@ -258,70 +326,106 @@ private struct GameHeader: View {
     let onPlan: (GamePlanStatus) -> Void
     let onSession: () -> Void
 
+    /// The art's own room below the bars, sharp with nothing over it but the logo at its foot.
+    static let room = AppSpacing.xxxl * 8
+
+    private var progressColor: Color { game.isPlatinumEarned ? TrophyType.platinum.color : AppColors.accent }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            HStack(alignment: .center, spacing: AppSpacing.lg) {
-                RemotePhoto(key: "game-\(game.id)", url: game.iconURL)
-                    .frame(width: 96, height: 96)
-                    .clipShape(.rect(cornerRadius: AppRadius.lg))
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text(verbatim: "\(game.progress)%")
-                        .font(AppTypography.h2)
-                        .monospacedDigit()
-                        .foregroundStyle(game.isPlatinumEarned ? TrophyType.platinum.color : AppColors.Text.primary)
-                    LinearProgressBar(
-                        value: Double(game.progress) / 100,
-                        color: game.isPlatinumEarned ? TrophyType.platinum.color : AppColors.accent
-                    )
-                    TrophyCountsLine(earned: game.earned, defined: game.defined)
-                        .font(AppTypography.caption)
-                        .foregroundStyle(AppColors.Text.secondary)
-                }
-            }
-            .accessibilityElement(children: .combine)
+        VStack(spacing: AppSpacing.lg) {
+            GameTitleLogo(game: game)
+                .frame(maxWidth: .infinity, minHeight: Self.room - AppSpacing.lg, alignment: .bottom)
 
-            if let seconds = game.playSeconds, seconds > 0 {
-                StatsStrip(items: playItems(seconds: seconds))
-            }
+            TrophyCountsLine(earned: game.earned, defined: game.defined)
+                .font(AppTypography.bodySmall)
+                .foregroundStyle(AppColors.Text.secondary)
 
-            DSButton(
-                isSessionRunning ? String(localized: "game.session.open") : String(localized: "game.session.start"),
-                systemImage: isSessionRunning ? "record.circle" : "play.fill",
-                fullWidth: true,
-                action: onSession
-            )
-
-            UniversalFilterButton(
-                title: status.title,
-                isSelected: status != .none,
-                icon: { Icon(status.systemImage, size: AppIconSize.sm) },
-                menuContent: {
-                    ForEach(GamePlanStatus.allCases, id: \.self) { option in
-                        Button {
-                            onPlan(option)
-                        } label: {
-                            Label(option.title, systemImage: option.systemImage)
+            VStack(spacing: AppSpacing.md) {
+                DSButton(
+                    isSessionRunning ? String(localized: "game.session.open") : String(localized: "game.session.start"),
+                    systemImage: isSessionRunning ? "record.circle" : "play.fill",
+                    fullWidth: true,
+                    action: onSession
+                )
+                UniversalFilterButton(
+                    title: status.title,
+                    isSelected: status != .none,
+                    icon: { Icon(status.systemImage, size: AppIconSize.sm) },
+                    menuContent: {
+                        ForEach(GamePlanStatus.allCases, id: \.self) { option in
+                            Button {
+                                onPlan(option)
+                            } label: {
+                                Label(option.title, systemImage: option.systemImage)
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
+
+            VStack(spacing: AppSpacing.sm) {
+                LinearProgressBar(value: Double(game.progress) / 100, color: progressColor)
+                Text(verbatim: facts)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.Text.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .accessibilityElement(children: .combine)
         }
-        .padding(AppSpacing.lg)
-        .cardStyle()
+        .screenPadding()
+        .readableWidth()
+        .padding(.bottom, AppSpacing.xl)
     }
 
-    private func playItems(seconds: TimeInterval) -> [StatsStrip.Item] {
-        var items: [StatsStrip.Item] = [
-            .init(value: PlayTimeText.duration(seconds), title: String(localized: "game.played")),
-        ]
+    /// "Пройдено на 64% · 42 ч в игре · играли вчера · 37 запусков".
+    private var facts: String {
+        var parts = [String(localized: "game.progress \(game.progress)")]
+        if let seconds = game.playSeconds, seconds > 0 {
+            parts.append(String(localized: "game.hero.played \(PlayTimeText.duration(seconds))"))
+        }
         if let lastPlayed = game.lastPlayed {
-            items.append(.init(value: Formatting.relativeTime(lastPlayed), title: String(localized: "game.lastPlayed")))
+            parts.append(String(localized: "game.hero.lastPlayed \(Formatting.relativeTime(lastPlayed))"))
         }
         if let count = game.playCount, count > 0 {
-            items.append(.init(value: count.formatted(), title: String(localized: "game.launches")))
+            parts.append(String(localized: "game.hero.launches \(count)"))
         }
-        return items
+        return parts.joined(separator: " \u{00B7} ")
+    }
+}
+
+/// The game's title over its art: the store's logo (a transparent picture) once it has loaded,
+/// the name until then and where the game has none, so the hero never shows an empty box.
+private struct GameTitleLogo: View {
+    let game: GameRecord
+    @State private var logo: UIImage?
+
+    private var key: String { "game-logo-\(game.id)" }
+
+    var body: some View {
+        Group {
+            if let image = logo ?? DesignKitPhotoLoader.cached?(key) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: AppIconSize.Tile.xxxl * 4, maxHeight: AppIconSize.Tile.xxxl * 1.5)
+                    .transition(.opacity)
+            } else {
+                Text(verbatim: game.name)
+                    .font(AppTypography.h1)
+                    .foregroundStyle(AppColors.Text.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: game.name))
+        .accessibilityAddTraits(.isHeader)
+        .animation(AppAnimation.gentleSpring, value: logo != nil)
+        .task(id: game.logoURL) {
+            guard logo == nil, DesignKitPhotoLoader.cached?(key) == nil, let url = game.logoURL else { return }
+            logo = await DesignKitPhotoLoader.load(key: key, url: url)
+        }
     }
 }
 

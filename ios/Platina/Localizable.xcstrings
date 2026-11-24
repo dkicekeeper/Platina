@@ -1604,36 +1604,53 @@
         }
       }
     },
-    "game.lastPlayed": {
+    "game.hero.lastPlayed %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "last played"
+            "value": "last played %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "последний раз"
+            "value": "играли %@"
           }
         }
       }
     },
-    "game.launches": {
+    "game.hero.launches %lld": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "launches"
+            "value": "%lld launches"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "запусков"
+            "value": "запусков: %lld"
+          }
+        }
+      }
+    },
+    "game.hero.played %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ played"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ в игре"
           }
         }
       }
@@ -1672,23 +1689,6 @@
         }
       }
     },
-    "game.played": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "played"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "в игре"
-          }
-        }
-      }
-    },
     "game.progress %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -1702,6 +1702,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пройдено на %lld%%"
+          }
+        }
+      }
+    },
+    "game.section.guide": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guide"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гайд"
+          }
+        }
+      }
+    },
+    "game.section.sessions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сессии"
+          }
+        }
+      }
+    },
+    "game.section.trophies": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trophies"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Трофеи"
+          }
+        }
+      }
+    },
+    "game.section.walkthrough": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walkthrough"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прохождение"
           }
         }
       }
@@ -1740,19 +1808,36 @@
         }
       }
     },
-    "game.sessions.header": {
+    "game.sessions.empty.message": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessions"
+            "value": "Start a session when you sit down to play: Platina keeps the time, the trophies and the walkthrough's steps."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сессии"
+            "value": "Начните сессию, когда сядете играть: Платина запишет время, трофеи и шаги прохождения."
+          }
+        }
+      }
+    },
+    "game.sessions.empty.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sessions yet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сессий пока нет"
           }
         }
       }

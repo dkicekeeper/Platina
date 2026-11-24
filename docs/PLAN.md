@@ -109,7 +109,11 @@ Store потребует (App Attest, квоты ассистента, вход 
 
 ### 3.3 Экран игры
 
-- Верх: обложка, прогресс %, кольца по типам трофеев, время в игре, последняя сессия.
+- Верх — как страница фильма в Apple TV (DesignKit 8.14.0, `.heroBackground(clearHeight:picture:)`):
+  арт игры из магазина PSN от верха экрана (обложка хаба PS5 без названия), логотип-название
+  внизу его чистой части (название текстом, пока логотипа нет), ниже на размытых тёмных цветах
+  арта — счётчики трофеев, «Начать сессию», статус, прогресс %, время в игре, когда играли,
+  запуски. Под шапкой — чипсы разделов: Трофеи, Гайд, Прохождение, Сессии.
 - **Сводка гайда** (от ИИ, с источниками): сложность из 10, часы до платины, сколько
   прохождений, пропускаемые, онлайн-трофеи, трофеи за сложность, известные глюки.
 - **Дорожная карта**: шаги («1. Сюжет, не пропуская X и Y», «2. Зачистка», «3. Сложность»,
@@ -189,7 +193,7 @@ Store потребует (App Attest, квоты ассистента, вход 
 | Библиотека игр | `CardList`, `ThumbnailCard`, `RemotePhoto`, `ChipPicker`, `UniversalFilterButton`, `.dsSearchSuggestions` |
 | Прогресс | `ProgressRing`, `LinearProgressBar`, `ProgressRingTileGrid`, `ProportionBar` (доли типов трофеев) |
 | Трофеи | `AchievementMedal`, `AchievementTile`, `AchievementProgressRow`, `.holographic` + `.interactiveTilt` для платины |
-| Экран игры | `.heroBackground`, `HeroSection`, `StatsStrip`, `StatTile`, `ScoreCard` (сложность), `InfoTip` (откуда цифра) |
+| Экран игры | `.heroBackground(clearHeight:picture:)` + `.heroScrollEdge(isHeroUnderBar:)`, `ChipPicker` (разделы), `ScoreCard` (сложность), `InfoTip` (откуда цифра) |
 | Дорожная карта | `StepTracker`, `ChecklistRow`, `ChecklistSummaryRow` |
 | Подсказки и гайды | `ArticleBody`, `ExpandableText`, `StatusBanner` (пропускаемый), `RecommendationBox` |
 | Сессия | `LiveSessionBar` (+ `.liveSessionAccessory`), `RelativeTime(.clock)`, `ChecklistRow`, `.completionMoment`, `.celebration`, `.sparkleBurst` |
