@@ -8114,6 +8114,23 @@
         }
       }
     },
+    "walkthrough.build.pictures": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picking pictures from the guide…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подбирает картинки из гайда…"
+          }
+        }
+      }
+    },
     "walkthrough.build.reading": {
       "extractionState": "manual",
       "localizations": {

@@ -4,6 +4,7 @@ import type { Config } from "./config";
 import { normalizeUrl, readGuide, searchResultUrls, type Guide, type ModelCall } from "./guide";
 import type { KVLike } from "./kv";
 import type { Language } from "./prompt";
+import { fetchPageMedia, type PageMedia } from "./pagemedia";
 import { webFetchTool, webSearchTool } from "./tools";
 import type { GuideGame, GuideTrophy } from "./validate";
 
@@ -17,7 +18,7 @@ import type { GuideGame, GuideTrophy } from "./validate";
 // server checks ids against the trophy list, pages against what the search and the fetch really
 // returned, pictures against IMAGE_SOURCES, and hides hidden trophies' names.
 
-export const WALKTHROUGH_PROMPT_VERSION = "2026-11-23.1";
+export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.1";
 export const WALKTHROUGH_TTL = 30 * 24 * 3600;
 
 export const walkthroughKey = (gameId: string, language: Language) => `walk:${gameId}:${language}`;
@@ -305,9 +306,11 @@ export interface Seen {
   urls: Set<string>;
   images: Set<string>;
   videos: Set<string>;
+  /** The pages the build read with web_fetch, in order: where the pictures are. */
+  fetched: string[];
 }
 
-export const emptySeen = (): Seen => ({ urls: new Set(), images: new Set(), videos: new Set() });
+export const emptySeen = (): Seen => ({ urls: new Set(), images: new Set(), videos: new Set(), fetched: [] });
 
 const IMAGE_URL = /https?:\/\/[^\s"'<>()[\]]+?\.(?:jpe?g|png|webp|gif)(?:\?[^\s"'<>()[\]]*)?/gi;
 const YOUTUBE_ID = /(?:youtube\.com\/(?:watch\?(?:[^\s"'<>]*&)?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/g;
@@ -347,6 +350,7 @@ export function addSeen(seen: Seen, content: Anthropic.Beta.BetaContentBlock[]):
   for (const page of fetchedPages(content)) {
     const normalized = normalizeUrl(page.url);
     if (normalized) seen.urls.add(normalized);
+    if (!seen.fetched.includes(page.url)) seen.fetched.push(page.url);
   }
   for (const block of content) if (block.type.endsWith("_tool_result")) resultStrings(block, texts);
   for (const text of texts) {
@@ -574,7 +578,7 @@ export function checkChapter(input: unknown, context: ChapterCheckContext): { pr
 
 // MARK: - Building
 
-export type WalkthroughProgress = "search" | "reading" | "writing";
+export type WalkthroughProgress = "search" | "reading" | "writing" | "pictures";
 
 export class WalkthroughError extends Error {
   constructor(
@@ -589,6 +593,9 @@ export interface WalkthroughBuildOptions {
   config: Config;
   call: ModelCall;
   kv: KVLike;
+  /** Reads guide pages for their pictures (pagemedia.ts); without it, steps go without pictures
+   * beyond what the model found. */
+  fetch?: typeof fetch;
   now?: Date;
   onProgress: (step: WalkthroughProgress) => Promise<void> | void;
   onModelStarted?: () => void;
@@ -758,11 +765,151 @@ export async function buildChapter(
     (input) => checkChapter(input, { trophies: game.trophies, seen, language, imageSites }),
     (d) => d.steps.length > 0,
   );
+  // The pictures and videos of the pages it came from, matched to the steps.
+  let steps = draft;
+  let allCalls = calls;
+  if (imageSites.length > 0 && options.fetch) {
+    const attached = await attachPageMedia(draft, seen, options, game).catch((error) => {
+      console.log(`walkthrough: pictures skipped (${error instanceof Error ? error.message : String(error)})`);
+      return undefined;
+    });
+    if (attached) {
+      steps = attached.draft;
+      allCalls += attached.calls;
+      addUsage(usage, attached.usage);
+    }
+  }
   return {
-    chapter: { gameId: game.npCommunicationId, language, chapterId, walkthroughGeneratedAt: walkthrough.generatedAt, generatedAt: timestamp(now), ...draft },
+    chapter: { gameId: game.npCommunicationId, language, chapterId, walkthroughGeneratedAt: walkthrough.generatedAt, generatedAt: timestamp(now), ...steps },
     usage,
-    calls,
+    calls: allCalls,
   };
+}
+
+// MARK: - Pictures
+
+export const ATTACH_MEDIA = "attach_media";
+
+export const ATTACH_MEDIA_TOOL: Anthropic.Beta.BetaTool = {
+  name: ATTACH_MEDIA,
+  description: "Attaches pictures and videos from the guide's pages to the chapter's steps, once.",
+  strict: true,
+  input_schema: strictObject({
+    matches: {
+      type: "array",
+      items: strictObject({
+        stepId: { type: "string", description: "s1, s2..." },
+        image: nullable({ type: "integer", description: "The number of a picture in <pictures>" }),
+        video: nullable({ type: "integer", description: "The number of a video in <videos>" }),
+      }),
+    },
+  }) as Anthropic.Beta.BetaTool["input_schema"],
+};
+
+export const ATTACH_MEDIA_PROMPT = `You match a guide's pictures and videos to the steps of a game walkthrough chapter. Each picture comes with the text right before it on the guide's page (its heading or paragraph) and its alt text.
+- Attach a picture to a step only when that text clearly describes the same spot as the step: the same collectible and number, the same place, the same choice. A map or a screenshot of a collectible's location is the best match for its collectible step.
+- At most one picture per step, each picture at most once. Pictures of other chapters, of the story, of menus or of trophy lists stay unmatched.
+- A video goes to the step it clearly shows (a boss fight, a collectible run), or to none.
+- Leave out the steps with nothing that clearly fits. Then call attach_media once.`;
+
+const MAX_PAGES = 2;
+const MAX_PICTURES = 60;
+
+/** The pages to read for pictures: the ones the build read, then the ones it cited, on the
+ * sites whose pictures the app may show. */
+function picturePages(draft: ChapterDraft, seen: Seen, sites: string[]): string[] {
+  const pages: string[] = [];
+  for (const url of [...seen.fetched, ...draft.sources.map((s) => s.url)]) {
+    const normalized = normalizeUrl(url);
+    if (!normalized || pages.some((p) => normalizeUrl(p) === normalized) || !hostMatches(url, sites)) continue;
+    pages.push(url);
+    if (pages.length >= MAX_PAGES) break;
+  }
+  return pages;
+}
+
+async function attachPageMedia(
+  draft: ChapterDraft,
+  seen: Seen,
+  options: WalkthroughBuildOptions,
+  game: GuideGame,
+): Promise<{ draft: ChapterDraft; usage: Anthropic.Beta.BetaUsage; calls: number } | undefined> {
+  const sites = options.config.imageSources;
+  const pages = picturePages(draft, seen, sites);
+  if (pages.length === 0) return undefined;
+  const media = (await Promise.all(pages.map((url) => fetchPageMedia(url, sites, options.fetch!)))).filter((m): m is PageMedia => Boolean(m));
+  const pictures = media.flatMap((page) => page.images.map((image) => ({ ...image, page }))).slice(0, MAX_PICTURES);
+  const videos = media.flatMap((page) => page.videos.map((video) => ({ ...video, page })));
+  if (pictures.length === 0 && videos.length === 0) return undefined;
+  void Promise.resolve(options.onProgress("pictures")).catch(() => undefined);
+
+  const hidden = new Set(game.trophies.filter((t) => t.hidden).map((t) => t.id));
+  const lines = ["<steps>"];
+  for (const step of draft.steps) {
+    // A spoiler step is matched by its kind and number only: its text stays out of this call.
+    const text = step.spoiler || step.trophyIds.some((id) => hidden.has(id)) ? `(${step.kind})` : step.text.replace(/\s+/g, " ").slice(0, 300);
+    const collectible = step.collectible ? ` [${step.collectible.kind} ${step.collectible.number}]` : "";
+    lines.push(`${step.id} ${step.kind}${collectible}: ${text}`);
+  }
+  lines.push("</steps>", "", "<pictures>");
+  pictures.forEach((picture, index) => lines.push(`${index}: ${picture.context || "(no text)"}`));
+  lines.push("</pictures>", "", "<videos>");
+  videos.forEach((video, index) => lines.push(`${index}: ${video.context || "(no text)"}`));
+  lines.push("</videos>");
+
+  const model = options.config.model;
+  const extras = modelExtras(model);
+  const message = await options.call(
+    {
+      model,
+      max_tokens: 4000,
+      system: [{ type: "text", text: ATTACH_MEDIA_PROMPT }],
+      tools: [ATTACH_MEDIA_TOOL],
+      tool_choice: { type: "auto" },
+      messages: [{ role: "user", content: lines.join("\n") }],
+      stream: true,
+      ...(extras.fallbacks ? { betas: extras.betas!.filter((b) => b !== THINKING_BINDING_BETA), fallbacks: extras.fallbacks } : {}),
+    },
+    () => undefined,
+  );
+  const usage = message.usage;
+  const use = message.content.find((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use" && b.name === ATTACH_MEDIA);
+  if (!use) return { draft, usage, calls: 1 };
+
+  const sources = [...draft.sources];
+  const sourceId = (page: PageMedia) => {
+    const normalized = normalizeUrl(page.pageUrl);
+    const existing = sources.find((s) => normalizeUrl(s.url) === normalized);
+    if (existing) return existing.id;
+    const id = `p${sources.filter((s) => s.id.startsWith("p")).length + 1}`;
+    sources.push({ id, title: page.title || new URL(page.pageUrl).hostname, url: page.pageUrl });
+    return id;
+  };
+  const usedPictures = new Set<number>();
+  const usedVideos = new Set<number>();
+  const byStep = new Map<string, { image: number | null; video: number | null }>();
+  for (const raw of asArray(record(use.input).matches)) {
+    const m = record(raw);
+    if (typeof m.stepId !== "string") continue;
+    byStep.set(m.stepId, { image: typeof m.image === "number" ? m.image : null, video: typeof m.video === "number" ? m.video : null });
+  }
+  const steps = draft.steps.map((step) => {
+    const match = byStep.get(step.id);
+    if (!match) return step;
+    let image = step.image;
+    let video = step.video;
+    if (!image && match.image !== null && pictures[match.image] && !usedPictures.has(match.image)) {
+      usedPictures.add(match.image);
+      const picture = pictures[match.image]!;
+      image = { url: picture.url, sourceId: sourceId(picture.page) };
+    }
+    if (!video && match.video !== null && videos[match.video] && !usedVideos.has(match.video)) {
+      usedVideos.add(match.video);
+      video = { youtubeId: videos[match.video]!.youtubeId, startSeconds: 0 };
+    }
+    return image === step.image && video === step.video ? step : { ...step, image, video };
+  });
+  return { draft: { steps, sources }, usage, calls: 1 };
 }
 
 // MARK: - Cache

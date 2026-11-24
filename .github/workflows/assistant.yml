@@ -41,6 +41,9 @@ on:
       cases:
         description: "eval: comma-separated case ids, or all"
         default: "all"
+      game:
+        description: "smoke: a game by name (empty: Cult of the Lamb with its real trophy list)"
+        default: ""
 
 concurrency:
   group: assistant-${{ github.ref }}-${{ inputs.action || 'push' }}
@@ -190,7 +193,7 @@ jobs:
       - name: One walkthrough build (spends API credits)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_EVAL_API_KEY || secrets.ANTHROPIC_API_KEY }}
-        run: npx tsx scripts/smoke-walkthrough.ts ru
+        run: npx tsx scripts/smoke-walkthrough.ts ru "${{ inputs.game }}"
 
   probe:
     if: github.event_name == 'workflow_dispatch' && inputs.action == 'probe'

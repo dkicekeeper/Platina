@@ -6,6 +6,7 @@ import { normalizeUrl, type ModelCall } from "../src/guide";
 import type { GuideGame, GuideTrophy } from "../src/validate";
 import {
   addSeen,
+  ATTACH_MEDIA,
   blockedDomains,
   buildChapter,
   buildWalkthrough,
@@ -351,6 +352,49 @@ describe("buildChapter", () => {
     await storeWalkthrough(kv, { ...stored(), generatedAt: "2026-11-24T10:00:00Z" });
     expect(await readChapter(kv, "NPWR12345_00", "ru", "c1")).toBeUndefined();
     expect(kv.store.has(walkthroughKey("NPWR12345_00", "ru"))).toBe(true);
+  });
+
+  it("reads the chapter's page for its pictures and matches them to the steps", async () => {
+    const kv = new MemoryKV();
+    await storeWalkthrough(kv, stored());
+    const page = `<html><head><title>PowerPyx: Test Game Chapter 1</title></head><body><article>
+      <h3>Relic #1</h3><p>Behind the barrels.</p><img src="https://www.powerpyx.com/wp-content/uploads/relic-1.jpg" alt="Relic 1">
+      <iframe src="https://www.youtube.com/embed/aaaaaaaaaaa"></iframe></article></body></html>`;
+    const fetched: string[] = [];
+    const fetcher = (async (input: RequestInfo | URL) => {
+      fetched.push(String(input));
+      return new Response(page);
+    }) as typeof fetch;
+    const noPictures = chapterDraft();
+    noPictures.steps[1]!.imageUrl = null;
+    noPictures.steps[1]!.video = null;
+    const { call, params } = scripted(
+      message([fetchUse("srv_1", CHAPTER_URL), fetchResult("srv_1", CHAPTER_URL, "Relic 1 behind the barrels"), toolUse("toolu_1", SAVE_CHAPTER, noPictures)], "tool_use"),
+      message([toolUse("toolu_2", ATTACH_MEDIA, { matches: [{ stepId: "s2", image: 0, video: 0 }, { stepId: "s9", image: 0, video: null }] })], "tool_use"),
+    );
+    const steps: string[] = [];
+    const { chapter, calls } = await buildChapter(game, "ru", "c1", { config: readConfig({}), call, kv, fetch: fetcher, onProgress: (s) => void steps.push(s) });
+    expect(fetched).toEqual([CHAPTER_URL]);
+    expect(calls).toBe(2);
+    expect(steps).toContain("pictures");
+    expect(chapter.steps[1]!.image).toEqual({ url: "https://www.powerpyx.com/wp-content/uploads/relic-1.jpg", sourceId: "w1" });
+    expect(chapter.steps[1]!.video).toEqual({ youtubeId: "aaaaaaaaaaa", startSeconds: 0 });
+    expect(chapter.steps[0]!.image).toBeNull();
+    // The matching call runs on the chat's model and sees each picture's text.
+    expect(params[1]!.model).toBe("claude-haiku-5-5");
+    expect(params[1]!.messages[0]!.content as string).toContain("0: Relic #1 Behind the barrels.");
+  });
+
+  it("goes on without pictures when the page doesn't load", async () => {
+    const kv = new MemoryKV();
+    await storeWalkthrough(kv, stored());
+    const { call } = scripted(
+      message([fetchUse("srv_1", CHAPTER_URL), fetchResult("srv_1", CHAPTER_URL, "text"), toolUse("toolu_1", SAVE_CHAPTER, chapterDraft())], "tool_use"),
+    );
+    const fetcher = (async () => new Response("blocked", { status: 403 })) as typeof fetch;
+    const { chapter, calls } = await buildChapter(game, "ru", "c1", { config: readConfig({}), call, kv, fetch: fetcher, onProgress: () => {} });
+    expect(calls).toBe(1);
+    expect(chapter.steps).toHaveLength(3);
   });
 
   it("asks for pictures only from IMAGE_SOURCES, and none when it is empty", async () => {

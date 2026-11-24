@@ -368,6 +368,7 @@ async function walkthroughBuild<Body extends { refresh: boolean }, T>(
           config,
           call,
           kv: env.GUIDES,
+          fetch: (input, init) => fetch(input, init),
           onProgress: (step) => sse.send("progress", { step }),
           onModelStarted: () => {
             started = true;

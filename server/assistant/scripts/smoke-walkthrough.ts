@@ -27,10 +27,12 @@ class MemoryKV {
 }
 
 const language = process.argv[2] === "en" ? "en" : "ru";
+// Another game by name: a one-trophy list stands in for its own (enough for chapters and steps).
+const otherGame = process.argv[3];
 const url = "https://stratege.ru/ps5/games/cult_of_the_lamb/trophies/spisok";
 const page = parseStrategePage(readFileSync(new URL("../test/fixtures/stratege-cult-of-the-lamb.html", import.meta.url), "utf8"), url, "NPWR28536_00");
 const hidden = new Set([18, 49, 53, 56]);
-const game: GuideGame = {
+const cultOfTheLamb: GuideGame = {
   npCommunicationId: "NPWR28536_00",
   name: "Cult of the Lamb",
   platform: "PS5",
@@ -43,6 +45,15 @@ const game: GuideGame = {
     groupId: t.number! >= 37 ? "001" : "default",
   })),
 };
+
+const game: GuideGame = otherGame
+  ? {
+      npCommunicationId: "NPWR99999_00",
+      name: otherGame,
+      platform: "PS5",
+      trophies: [{ id: 0, name: "Platinum", detail: "Earn every trophy.", type: "platinum", hidden: false, groupId: "default" }],
+    }
+  : cultOfTheLamb;
 
 const config = readConfig({});
 const client = new Anthropic({ maxRetries: 1 });
@@ -79,7 +90,7 @@ function report(error: unknown): void {
 }
 
 const kv = new MemoryKV();
-const options = { config, call, kv, onProgress: (step: string) => console.log(`[${at()}] progress ${step}`) };
+const options = { config, call, kv, fetch: globalThis.fetch, onProgress: (step: string) => console.log(`[${at()}] progress ${step}`) };
 let ok = true;
 try {
   const { walkthrough, usage } = await buildWalkthrough(game, language, options);
@@ -91,6 +102,8 @@ try {
   const { chapter } = await buildChapter(game, language, first, options);
   console.log(`[${at()}] CHAPTER ${first}: ${chapter.steps.length} steps, images ${chapter.steps.filter((s) => s.image).length}, videos ${chapter.steps.filter((s) => s.video).length}`);
   for (const s of chapter.steps.slice(0, 8)) console.log(`  ${s.id} [${s.kind}] ${s.text.slice(0, 120)}`);
+  for (const s of chapter.steps.filter((x) => x.image || x.video)) console.log(`  ${s.id} picture ${s.image?.url ?? "-"} video ${s.video?.youtubeId ?? "-"}`);
+  for (const s of chapter.sources) console.log(`  source ${s.id}: ${s.url}`);
 } catch (error) {
   ok = false;
   report(error);

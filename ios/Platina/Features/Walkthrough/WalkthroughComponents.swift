@@ -86,6 +86,7 @@ enum WalkthroughText {
         case "search": String(localized: "walkthrough.build.search")
         case "reading": String(localized: "walkthrough.build.reading")
         case "writing": String(localized: "walkthrough.build.writing")
+        case "pictures": String(localized: "walkthrough.build.pictures")
         default: String(localized: "walkthrough.build.start")
         }
     }
@@ -111,6 +112,7 @@ enum WalkthroughText {
         case "search": 0.3
         case "reading": 0.55
         case "writing": 0.8
+        case "pictures": 0.92
         default: 0.1
         }
     }
