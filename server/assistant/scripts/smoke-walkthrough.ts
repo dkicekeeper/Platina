@@ -73,8 +73,10 @@ const call: ModelCall = async (params: Params, onEvent) => {
     longestSilence = Math.max(longestSilence, now - last);
     last = now;
     if (event.type === "content_block_start") {
-      const block = event.content_block as { type: string; name?: string; input?: unknown };
-      if (block.type !== "text" && block.type !== "thinking") console.log(`[${at()}]   block ${block.type}${block.name ? ` ${block.name}` : ""}`);
+      const block = event.content_block as { type: string; name?: string; input?: unknown; content?: { type?: string; url?: string; error_code?: string } };
+      // What a fetch read, or why it couldn't.
+      const fetched = block.type === "web_fetch_tool_result" ? ` ${block.content?.error_code ? `ERROR ${block.content.error_code}` : block.content?.url ?? ""}` : "";
+      if (block.type !== "text" && block.type !== "thinking") console.log(`[${at()}]   block ${block.type}${block.name ? ` ${block.name}` : ""}${fetched}`);
     }
     onEvent(event);
   }

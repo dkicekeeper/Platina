@@ -18,7 +18,7 @@ import type { GuideGame, GuideTrophy } from "./validate";
 // server checks ids against the trophy list, pages against what the search and the fetch really
 // returned, pictures against IMAGE_SOURCES, and hides hidden trophies' names.
 
-export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.4";
+export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.5";
 export const WALKTHROUGH_TTL = 30 * 24 * 3600;
 
 export const walkthroughKey = (gameId: string, language: Language) => `walk:${gameId}:${language}`;
@@ -230,7 +230,8 @@ export function chapterSystemPrompt(imageSites: string[]): string {
 - video: search once for a YouTube video of this chapter's collectibles or walkthrough (like "<game> <chapter> all collectibles video"); attach it to the steps it shows, {youtubeId, startSeconds}, with the second the step starts where the video's description or the guide gives timestamps, else 0. Only ids from your search results or pages; null when there is none.
 - Every collectible of the chapter gets its own step, numbered as the guide numbers it, in the order of play. Every missable thing and choice listed for this chapter gets its step, and a point_of_no_return step comes before every point of no return.
 - sources: the pages you used, ids w1, w2...
-3. ${COMMON_RULES}`;
+3. The steps are for the player, about the game: never about your tools, searches or pages (no "I couldn't open the guide"). When no page about this chapter could be read, write the steps the pages you have support, fewer and plainer, and nothing you are unsure of.
+4. ${COMMON_RULES}`;
 }
 
 // MARK: - The model's input
