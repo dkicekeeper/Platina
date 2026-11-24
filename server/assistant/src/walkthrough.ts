@@ -18,7 +18,7 @@ import type { GuideGame, GuideTrophy } from "./validate";
 // server checks ids against the trophy list, pages against what the search and the fetch really
 // returned, pictures against IMAGE_SOURCES, and hides hidden trophies' names.
 
-export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.1";
+export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.2";
 export const WALKTHROUGH_TTL = 30 * 24 * 3600;
 
 export const walkthroughKey = (gameId: string, language: Language) => `walk:${gameId}:${language}`;
@@ -223,12 +223,12 @@ export function chapterSystemPrompt(imageSites: string[]): string {
     : "imageUrl: always null.";
   return `You write one chapter of a walkthrough for Platina, an iPhone app whose assistant leads a PlayStation player through a game step by step, with the controller in their hands. You get the game's trophy list, the walkthrough's chapters with this one marked, and the pages the walkthrough came from. You have web_search and web_fetch.
 
-1. Find this chapter in those pages (PowerPyx's walkthrough or collectible guide first) and read it with web_fetch; search when the pages don't cover it.
+1. Find the page about this chapter itself and read it with web_fetch: PowerPyx's chapter walkthrough or its collectible locations for this chapter first (search "<game> <chapter> collectible locations powerpyx" or "… walkthrough"), then PSNProfiles or Stratege. A trophy roadmap or a whole-game overview is not enough for steps: use it only when no page about the chapter exists.
 2. Then call save_chapter once with the chapter's steps in the order of play, in the language the request names, in your own words; never copy a page.
 - steps: 5 to 60 steps a player can follow while playing. kind: path (where to go), collectible (one collectible and exactly where; collectible {kind, number} as the guide numbers it), choice (a decision that matters for a trophy: which option and why), point_of_no_return (past it you can't come back this playthrough: what to finish first), trophy (a trophy earned here and how), boss (a fight worth a tip), tip (anything else worth knowing). text: Markdown, 1 to 3 short imperative sentences, concrete (left after the bridge, the room with the red door). trophyIds: the trophies the step earns or feeds. spoiler: true when it reveals the story or a hidden trophy; the app hides it until tapped. sourceId: the page it comes from, or null.
 - ${pictures}
 - video: a YouTube video from your search results that shows this step, {youtubeId, startSeconds}, or null.
-- Every missable thing and choice listed for this chapter gets its step, and a point_of_no_return step comes before every point of no return.
+- Every collectible of the chapter gets its own step, numbered as the guide numbers it, in the order of play. Every missable thing and choice listed for this chapter gets its step, and a point_of_no_return step comes before every point of no return.
 - sources: the pages you used, ids w1, w2...
 3. ${COMMON_RULES}`;
 }
@@ -840,6 +840,7 @@ async function attachPageMedia(
   const media = (await Promise.all(pages.map((url) => fetchPageMedia(url, sites, options.fetch!)))).filter((m): m is PageMedia => Boolean(m));
   const pictures = media.flatMap((page) => page.images.map((image) => ({ ...image, page }))).slice(0, MAX_PICTURES);
   const videos = media.flatMap((page) => page.videos.map((video) => ({ ...video, page })));
+  console.log(`walkthrough pictures: pages ${pages.length}, read ${media.length}, pictures ${pictures.length}, videos ${videos.length}`);
   if (pictures.length === 0 && videos.length === 0) return undefined;
   void Promise.resolve(options.onProgress("pictures")).catch(() => undefined);
 
@@ -909,6 +910,7 @@ async function attachPageMedia(
     }
     return image === step.image && video === step.video ? step : { ...step, image, video };
   });
+  console.log(`walkthrough pictures: matched ${usedPictures.size} pictures, ${usedVideos.size} videos`);
   return { draft: { steps, sources }, usage, calls: 1 };
 }
 
