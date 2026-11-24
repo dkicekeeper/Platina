@@ -1,0 +1,3 @@
+#!/bin/sh
+# After `git pull` and `git merge`: regenerate the Xcode project if it changed.
+exec "$(git rev-parse --show-toplevel)/scripts/xcodegen-if-needed.sh" ORIG_HEAD HEAD

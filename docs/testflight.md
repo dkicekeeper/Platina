@@ -3,14 +3,17 @@
 ## Сборка на свой iPhone (Mac с Xcode 27)
 
 ```bash
-brew install xcodegen          # один раз (без Homebrew — xcodegen.zip со страницы релизов XcodeGen)
-cd ios
-xcodegen generate              # Platina.xcodeproj генерируется, в git его нет
-open Platina.xcodeproj
+scripts/setup.sh               # один раз: ставит XcodeGen (Homebrew), включает git-хуки, генерирует проект
+open ios/Platina.xcodeproj
 ```
 
-После `git pull` запускайте `xcodegen generate` снова, если в проекте появились или пропали
-файлы; иначе хватает ⌘B.
+`Platina.xcodeproj` генерируется из `ios/project.yml` и в git его нет. После `setup.sh` git сам
+пересобирает его после `pull`, `merge`, `rebase` и смены ветки, если изменился `project.yml`
+(версия DesignKit, настройки) или появились и пропали файлы (`.githooks`,
+`scripts/xcodegen-if-needed.sh`); Xcode подхватывает новый проект сам. Проект, сгенерированный до
+смены версии DesignKit, не соберётся: сборка остановится с ошибкой «…pins DesignKit X…» и
+подскажет, что запустить. Вручную: `cd ios && xcodegen generate`; если Xcode всё равно показывает
+старую версию DesignKit — File → Packages → Reset Package Caches.
 
 1. В Xcode у целей **Platina** и **PlatinaWidgets** (Signing & Capabilities) — ваша команда
    (`SY2L2VMQP7` уже стоит), «Automatically manage signing». Xcode сам зарегистрирует

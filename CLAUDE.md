@@ -13,7 +13,9 @@ cd ios/Packages/PlatinaKit && swift test
 
 # Приложение — только на macOS, Xcode 27 (CI и TestFlight собирают в Xcode 27, iOS 27 SDK;
 # минимальная iOS — 26):
-cd ios && xcodegen generate && open Platina.xcodeproj
+scripts/setup.sh    # один раз на Mac: XcodeGen, git-хуки (.githooks: проект пересобирается после
+                    # pull и смены ветки, если изменился project.yml или список файлов), проект
+open ios/Platina.xcodeproj
 xcodebuild build -project ios/Platina.xcodeproj -scheme Platina \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
 ```
@@ -60,6 +62,9 @@ ios/
                                 (только Apple; на Linux файлы в `#if canImport(SwiftData)`)
 server/assistant/               сервер Плати: Cloudflare Worker (docs/assistant.md)
 scripts/designkit_strings.py    ключи строк DesignKit → каталог приложения
+scripts/setup.sh                один раз на Mac: XcodeGen, git-хуки, проект
+scripts/xcodegen-if-needed.sh   из .githooks: проект заново после pull, если изменился project.yml
+                                или список файлов (проект не в git)
 ```
 
 PSNKit, PlatinaCore, PlatinaAssistant и PlatinaShared тестируются и на Linux (`swift test`);

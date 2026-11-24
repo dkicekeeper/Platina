@@ -1,0 +1,5 @@
+#!/bin/sh
+# After a branch switch, a clone and a rebase's checkout: regenerate the Xcode project if it
+# changed. $3 is 1 for a branch, 0 for files checked out from the index.
+[ "$3" = "1" ] || exit 0
+exec "$(git rev-parse --show-toplevel)/scripts/xcodegen-if-needed.sh" "$1" "$2"

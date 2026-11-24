@@ -56,6 +56,21 @@ targets:
       - package: PlatinaKit
         product: PlatinaAssistant
       - target: PlatinaWidgets
+    preBuildScripts:
+      # This project is generated from project.yml and is not in git: one generated before a pull
+      # keeps the old DesignKit (Xcode showed 8.11.0 with 8.12.0 pinned). The git hooks regenerate
+      # it (scripts/setup.sh, once); a build of a stale project stops here with what to run.
+      - name: Check the project is current
+        basedOnDependencyAnalysis: false
+        inputFiles:
+          - $(SRCROOT)/project.yml
+          - $(PROJECT_FILE_PATH)/project.pbxproj
+        script: |
+          pin=$(sed -n 's/^ *exactVersion: *"\([^"]*\)".*/\1/p' "$SRCROOT/project.yml" | head -n 1)
+          if [ -n "$pin" ] && ! grep -Eq "version = \"?$pin\"?;" "$PROJECT_FILE_PATH/project.pbxproj"; then
+            echo "error: ios/project.yml pins DesignKit $pin, but this Xcode project was generated before that. Run: cd ios && xcodegen generate (or scripts/setup.sh once, and git regenerates it after every pull)."
+            exit 1
+          fi
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dakacom.Platina
