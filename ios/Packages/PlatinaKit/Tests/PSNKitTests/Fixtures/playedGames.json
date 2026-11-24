@@ -9,7 +9,15 @@
       "category": "ps5_native_game",
       "service": "none_purchased",
       "playCount": 41,
-      "concept": { "id": 10002691, "titleIds": ["PPSA03224_00", "CUSA29470_00"], "name": "Cult of the Lamb", "media": { "audios": [], "videos": [], "images": [] } },
+      "concept": { "id": 10002691, "titleIds": ["PPSA03224_00", "CUSA29470_00"], "name": "Cult of the Lamb", "media": { "audios": [], "videos": [], "images": [
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/banner43.jpg", "format": "UNKNOWN", "type": "FOUR_BY_THREE_BANNER" },
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/master.png", "format": "UNKNOWN", "type": "MASTER" },
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/background.jpg", "format": "UNKNOWN", "type": "BACKGROUND_LAYER_ART" },
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/gamehub.jpg", "format": "UNKNOWN", "type": "GAMEHUB_COVER_ART" },
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/logo.png", "format": "UNKNOWN", "type": "LOGO" },
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/portrait.jpg", "format": "UNKNOWN", "type": "PORTRAIT_BANNER" },
+        { "url": "https://image.api.playstation.com/vulcan/ap/rnd/cotl/shot1.jpg", "format": "UNKNOWN", "type": "SCREENSHOT" }
+      ] } },
       "media": {},
       "firstPlayedDateTime": "2026-10-02T17:33:10.39Z",
       "lastPlayedDateTime": "2026-11-18T22:01:09.12Z",

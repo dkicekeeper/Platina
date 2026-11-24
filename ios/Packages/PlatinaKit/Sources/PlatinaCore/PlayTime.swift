@@ -11,14 +11,22 @@ public struct PlayTime: Sendable, Hashable {
     public let imageURL: URL?
     /// The game titles (`PPSA…_00`) counted in it.
     public let titleIds: [String]
+    /// The store's key art (the PS5 game hub's cover, a background, the poster) and title logo.
+    public let artURL: URL?
+    public let logoURL: URL?
 
-    public init(seconds: TimeInterval, firstPlayed: Date?, lastPlayed: Date?, playCount: Int, imageURL: URL?, titleIds: [String]) {
+    public init(
+        seconds: TimeInterval, firstPlayed: Date?, lastPlayed: Date?, playCount: Int, imageURL: URL?,
+        titleIds: [String], artURL: URL? = nil, logoURL: URL? = nil
+    ) {
         self.seconds = seconds
         self.firstPlayed = firstPlayed
         self.lastPlayed = lastPlayed
         self.playCount = playCount
         self.imageURL = imageURL
         self.titleIds = titleIds
+        self.artURL = artURL
+        self.logoURL = logoURL
     }
 }
 
@@ -50,13 +58,17 @@ public enum PlayTimeLinker {
         }
         return byList.mapValues { games in
             let latest = games.max { ($0.lastPlayedDateTime ?? .distantPast) < ($1.lastPlayedDateTime ?? .distantPast) }
+            // The art of the latest title that has it (an older region's title may have none).
+            let byRecency = games.sorted { ($0.lastPlayedDateTime ?? .distantPast) > ($1.lastPlayedDateTime ?? .distantPast) }
             return PlayTime(
                 seconds: games.reduce(0) { $0 + ($1.timePlayed ?? 0) },
                 firstPlayed: games.compactMap(\.firstPlayedDateTime).min(),
                 lastPlayed: games.compactMap(\.lastPlayedDateTime).max(),
                 playCount: games.reduce(0) { $0 + ($1.playCount ?? 0) },
                 imageURL: latest?.imageURL,
-                titleIds: games.map(\.titleId).sorted()
+                titleIds: games.map(\.titleId).sorted(),
+                artURL: byRecency.lazy.compactMap(\.keyArtURL).first,
+                logoURL: byRecency.lazy.compactMap(\.logoURL).first
             )
         }
     }

@@ -22,6 +22,10 @@ public final class GameRecord {
     public var iconURLString: String?
     /// The cover from the game list, when the game has time played.
     public var coverURLString: String?
+    /// The store's key art (the PS5 game hub's cover, a background, the poster) and title logo,
+    /// from the game list: the top of the game's screen.
+    public var artURLString: String?
+    public var logoURLString: String?
     public var platform: String
     public var serviceName: String
     public var trophySetVersion: String
@@ -102,6 +106,8 @@ public final class GameRecord {
 
     public var iconURL: URL? { PSNImageURL.from(iconURLString) }
     public var coverURL: URL? { PSNImageURL.from(coverURLString) }
+    public var artURL: URL? { PSNImageURL.from(artURLString) }
+    public var logoURL: URL? { PSNImageURL.from(logoURLString) }
     public var isPlatinumEarned: Bool { definedPlatinum > 0 && earnedPlatinum > 0 }
     public var isCompleted: Bool { defined.total > 0 && earned.total >= defined.total }
 

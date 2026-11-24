@@ -231,6 +231,8 @@ public final class LibraryStore {
             game.lastPlayed = time.lastPlayed
             game.playCount = time.playCount
             game.coverURLString = time.imageURL?.absoluteString
+            game.artURLString = time.artURL?.absoluteString
+            game.logoURLString = time.logoURL?.absoluteString
         }
         try context.save()
     }

@@ -391,7 +391,8 @@ public struct PlayedGame: Decodable, Sendable, Hashable, Identifiable {
         playCount: Int? = nil,
         firstPlayedDateTime: Date? = nil,
         lastPlayedDateTime: Date? = nil,
-        playDuration: String? = nil
+        playDuration: String? = nil,
+        concept: Concept? = nil
     ) {
         self.titleId = titleId
         self.name = name
@@ -403,6 +404,24 @@ public struct PlayedGame: Decodable, Sendable, Hashable, Identifiable {
         self.firstPlayedDateTime = firstPlayedDateTime
         self.lastPlayedDateTime = lastPlayedDateTime
         self.playDuration = playDuration
+        self.concept = concept
+    }
+
+    /// The game as the PlayStation Store knows it, with its art.
+    public struct Concept: Decodable, Sendable, Hashable {
+        public struct Media: Decodable, Sendable, Hashable {
+            public init(images: [PSNGameArt]?) {
+                self.images = images
+            }
+
+            public let images: [PSNGameArt]?
+        }
+
+        public init(media: Media?) {
+            self.media = media
+        }
+
+        public let media: Media?
     }
 
     /// `PPSA01234_00`: the game's title id, not its trophy list's.
@@ -418,11 +437,53 @@ public struct PlayedGame: Decodable, Sendable, Hashable, Identifiable {
     public let lastPlayedDateTime: Date?
     /// `PT228H56M33S`.
     public let playDuration: String?
+    /// The store's art of the game (`concept.media.images`): its cover, logo, backgrounds.
+    public let concept: Concept?
 
     public var id: String { titleId }
     public var displayName: String { localizedName ?? name }
     public var imageURL: URL? { PSNImageURL.from((localizedImageUrl ?? imageUrl)) }
     public var timePlayed: TimeInterval? { playDuration.flatMap(PSNDuration.parse) }
+    public var art: [PSNGameArt] { concept?.media?.images ?? [] }
+    /// The art for the top of the game's screen: the PS5 game hub's cover (no title on it), else
+    /// a background, else the store's poster.
+    public var keyArtURL: URL? { PSNGameArt.url(in: art, PSNGameArt.keyArtTypes) }
+    /// The game's title as a picture (transparent PNG), for over the key art.
+    public var logoURL: URL? { PSNGameArt.url(in: art, [PSNGameArt.logo]) }
+}
+
+/// A picture of a game from the PlayStation Store (a concept's media), by its type.
+public struct PSNGameArt: Decodable, Sendable, Hashable {
+    public init(url: String?, type: String?) {
+        self.url = url
+        self.type = type
+    }
+
+    public let url: String?
+    /// `GAMEHUB_COVER_ART`, `LOGO`, `PORTRAIT_BANNER`, `SCREENSHOT`…
+    public let type: String?
+
+    public var imageURL: URL? { PSNImageURL.from(url) }
+
+    /// 16:9 key art of the PS5 game hub, without the title: the console lays the logo over it.
+    public static let gameHubCoverArt = "GAMEHUB_COVER_ART"
+    /// 16:9 backgrounds of the game hub and the store.
+    public static let backgroundLayerArt = "BACKGROUND_LAYER_ART"
+    public static let background = "BACKGROUND"
+    /// 2:3 poster of the store, the title usually drawn on it.
+    public static let portraitBanner = "PORTRAIT_BANNER"
+    /// The title, transparent PNG.
+    public static let logo = "LOGO"
+    /// The key art for a header, best first.
+    public static let keyArtTypes = [gameHubCoverArt, backgroundLayerArt, background, portraitBanner]
+
+    /// The first picture of the first of `types` that the game has.
+    public static func url(in art: [PSNGameArt], _ types: [String]) -> URL? {
+        for type in types {
+            if let url = art.lazy.filter({ $0.type == type }).compactMap(\.imageURL).first { return url }
+        }
+        return nil
+    }
 }
 
 struct PlayedGamesPage: Decodable, PSNPage {

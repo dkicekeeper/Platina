@@ -70,7 +70,12 @@ struct SyncPlannerTests {
 struct PlayTimeTests {
     let played = [
         PlayedGame(titleId: "PPSA1", name: "Game EU", imageUrl: "https://img/eu.png", playCount: 3,
-                   firstPlayedDateTime: date("2026-01-01T00:00:00Z"), lastPlayedDateTime: date("2026-02-01T00:00:00Z"), playDuration: "PT10H"),
+                   firstPlayedDateTime: date("2026-01-01T00:00:00Z"), lastPlayedDateTime: date("2026-02-01T00:00:00Z"), playDuration: "PT10H",
+                   concept: .init(media: .init(images: [
+                       PSNGameArt(url: "https://img/eu-poster.jpg", type: PSNGameArt.portraitBanner),
+                       PSNGameArt(url: "https://img/eu-hub.jpg", type: PSNGameArt.gameHubCoverArt),
+                       PSNGameArt(url: "https://img/eu-logo.png", type: PSNGameArt.logo),
+                   ]))),
         PlayedGame(titleId: "PPSA2", name: "Game US", imageUrl: "https://img/us.png", playCount: 1,
                    firstPlayedDateTime: date("2026-03-01T00:00:00Z"), lastPlayedDateTime: date("2026-03-02T00:00:00Z"), playDuration: "PT30M"),
         PlayedGame(titleId: "PPSA3", name: "No trophies", lastPlayedDateTime: date("2026-04-01T00:00:00Z"), playDuration: "PT1H"),
@@ -92,6 +97,9 @@ struct PlayTimeTests {
         #expect(game.lastPlayed == date("2026-03-02T00:00:00Z"))
         #expect(game.imageURL?.absoluteString == "https://img/us.png")
         #expect(game.titleIds == ["PPSA1", "PPSA2"])
+        // The latest title has no store art: the older region's, the game hub's cover first.
+        #expect(game.artURL?.absoluteString == "https://img/eu-hub.jpg")
+        #expect(game.logoURL?.absoluteString == "https://img/eu-logo.png")
         #expect(time.count == 1)
     }
 }

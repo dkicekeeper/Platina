@@ -104,6 +104,10 @@ struct ModelTests {
         let lamb = try #require(games.titles.first)
         #expect(lamb.timePlayed == TimeInterval(137_525))  // 38 h 12 min 5 s
         #expect(lamb.imageURL?.absoluteString.hasSuffix("cotl-ru.png") == true)
+        // The store's art: the game hub's cover over a background or the poster, and the logo.
+        #expect(lamb.art.count == 7)
+        #expect(lamb.keyArtURL?.absoluteString.hasSuffix("gamehub.jpg") == true)
+        #expect(lamb.logoURL?.absoluteString.hasSuffix("logo.png") == true)
 
         let presence = try JSONDecoder.psn.decode(PresenceResponse.self, from: Fixture.data("presence")).presence
         #expect(presence.onlineStatus == "online")
@@ -111,6 +115,28 @@ struct ModelTests {
 
         let links = try JSONDecoder.psn.decode(TitleTrophyLinksResponse.self, from: Fixture.data("trophyLinks"))
         #expect(links.titles.first?.trophyTitles.first?.npCommunicationId == "NPWR28536_00")
+    }
+
+    @Test("A game's key art falls back from the game hub's cover to a background, then the poster; odd images are skipped")
+    func gameArtFallbacks() throws {
+        let json = #"""
+        {"titleId":"PPSA00001_00","name":"Game","concept":{"media":{"audios":[],"videos":[],"images":[
+          {"url":"https://image.api.playstation.com/poster.jpg","type":"PORTRAIT_BANNER"},
+          {"type":"LOGO"},
+          {"url":"https://image.api.playstation.com/odd.jpg"},
+          {"url":"https://image.api.playstation.com/bg.jpg","format":"UNKNOWN","type":"BACKGROUND"}
+        ]}}}
+        """#
+        let game = try JSONDecoder.psn.decode(PlayedGame.self, from: Data(json.utf8))
+        #expect(game.keyArtURL?.absoluteString.hasSuffix("bg.jpg") == true)
+        #expect(game.logoURL == nil)
+
+        let posterOnly = PSNGameArt.url(in: [PSNGameArt(url: "https://image.api.playstation.com/p.jpg", type: "PORTRAIT_BANNER")], PSNGameArt.keyArtTypes)
+        #expect(posterOnly?.absoluteString.hasSuffix("p.jpg") == true)
+
+        let noConcept = try JSONDecoder.psn.decode(PlayedGame.self, from: Data(#"{"titleId":"PPSA00002_00","name":"Old","concept":null}"#.utf8))
+        #expect(noConcept.art.isEmpty)
+        #expect(noConcept.keyArtURL == nil)
     }
 
     @Test("The trophy level reads as a number, as PSN sends it, and as text, as psn-api has it")
