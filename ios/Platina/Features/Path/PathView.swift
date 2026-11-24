@@ -57,6 +57,7 @@ struct PathView: View {
                     sessionsSection
                 }
                 .screenPadding()
+                .readableWidth()
                 .padding(.bottom, AppSpacing.xxl)
             }
             .background(AppColors.Background.base)

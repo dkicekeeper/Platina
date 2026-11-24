@@ -35,6 +35,7 @@ struct LibraryView: View {
                     content
                 }
                 .screenPadding()
+                .readableWidth()
                 .padding(.bottom, AppSpacing.xxl)
             }
             .background(AppColors.Background.base)

@@ -191,6 +191,7 @@ struct WalkthroughBanner: ViewModifier {
                 if let message {
                     MessageBanner(message: message, type: .success)
                         .screenPadding()
+                        .readableWidth()
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .task(id: message) {
                             try? await Task.sleep(for: .seconds(4))

@@ -75,6 +75,7 @@ struct TrophyView: View {
                         }
                     }
                     .screenPadding()
+                    .readableWidth()
                     .padding(.vertical, AppSpacing.xl)
                 }
             } else {

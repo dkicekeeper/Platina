@@ -196,6 +196,7 @@ struct WalkthroughView: View {
                         )
                     }
                     .screenPadding()
+                    .readableWidth()
                     .padding(.bottom, AppSpacing.xxl)
                 }
             } else {

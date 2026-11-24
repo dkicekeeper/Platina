@@ -33,6 +33,7 @@ struct ChatView: View {
                     }
                 }
                 .screenPadding()
+                .readableWidth()
                 .padding(.vertical, AppSpacing.lg)
             }
             .scrollDismissesKeyboard(.interactively)
@@ -62,6 +63,7 @@ struct ChatView: View {
             )
             .disabled(!thread.isAvailable)
             .screenPadding()
+            .readableWidth()
             .padding(.bottom, AppSpacing.sm)
         }
         .background(AppColors.Background.base)

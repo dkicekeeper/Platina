@@ -46,6 +46,7 @@ struct ChapterView: View {
                         actions(chapter)
                     }
                     .screenPadding()
+                    .readableWidth()
                     .padding(.bottom, AppSpacing.xxl)
                 }
                 .navigationTitle(Text(verbatim: chapter.title))

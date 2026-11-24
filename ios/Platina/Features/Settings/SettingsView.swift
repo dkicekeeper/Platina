@@ -53,6 +53,7 @@ struct SettingsView: View {
                 }
             }
             .screenPadding()
+            .readableWidth()
             .padding(.vertical, AppSpacing.lg)
         }
         .background(AppColors.Background.base)

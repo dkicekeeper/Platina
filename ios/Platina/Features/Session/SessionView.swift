@@ -53,6 +53,7 @@ struct SessionView: View {
                 if let banner {
                     MessageBanner(message: banner, type: .success)
                         .screenPadding()
+                        .readableWidth()
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .task {
                             try? await Task.sleep(for: .seconds(4))
@@ -124,6 +125,7 @@ struct SessionView: View {
                 }
             }
             .screenPadding()
+            .readableWidth()
             .padding(.vertical, AppSpacing.lg)
         }
         .onAppear { note = session.note }
@@ -316,6 +318,7 @@ struct SessionSummaryView: View {
                     }
                 }
                 .screenPadding()
+                .readableWidth()
                 .padding(.vertical, AppSpacing.lg)
             }
             .background(AppColors.Background.base)

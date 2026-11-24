@@ -53,6 +53,7 @@ struct SignInView: View {
                     .multilineTextAlignment(.center)
             }
             .screenPadding()
+            .readableWidth()
             .padding(.vertical, AppSpacing.xxxl)
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -61,6 +62,7 @@ struct SignInView: View {
             if let message = errorMessage ?? model.signOutReason {
                 MessageBanner(message: message, type: .error)
                     .screenPadding()
+                    .readableWidth()
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .onTapGesture {
                         errorMessage = nil

@@ -105,6 +105,7 @@ struct GameView: View {
                         }
                     }
                     .screenPadding()
+                    .readableWidth()
                     .padding(.bottom, AppSpacing.xxl)
                 }
                 .navigationTitle(Text(verbatim: game.name))
