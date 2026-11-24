@@ -93,6 +93,8 @@ export function extractPageMedia(html: string, pageUrl: string, sites: string[])
       }
       const file = url.pathname.split("/").pop() ?? "";
       if (url.protocol !== "https:" || !hostIn(url, sites) || !IMAGE_FILE.test(url.pathname) || CHROME.test(file)) continue;
+      // WordPress's own images (emoji, the controller buttons PowerPyx puts in its text as R1, L1).
+      if (/\/wp-includes\/|\/smilies\/|\/emoji\//i.test(url.pathname) || /\b(wp-smiley|emoji)\b/i.test(attribute(tag, "class") ?? "")) continue;
       const width = Number.parseInt(attribute(tag, "width") ?? "", 10);
       if (Number.isFinite(width) && width > 0 && width < 200) continue;
       const href = url.toString();

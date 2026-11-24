@@ -18,7 +18,7 @@ import type { GuideGame, GuideTrophy } from "./validate";
 // server checks ids against the trophy list, pages against what the search and the fetch really
 // returned, pictures against IMAGE_SOURCES, and hides hidden trophies' names.
 
-export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.5";
+export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.6";
 export const WALKTHROUGH_TTL = 30 * 24 * 3600;
 
 export const walkthroughKey = (gameId: string, language: Language) => `walk:${gameId}:${language}`;
@@ -212,7 +212,7 @@ export const WALKTHROUGH_SYSTEM_PROMPT = `You plan walkthroughs for Platina, an 
 2. Then call save_walkthrough once, everything in the language the request names, in your own words; never copy a page.
 - overview: 2 to 4 sentences: how the route to the platinum goes: playthroughs, chapter select, what to leave for the cleanup.
 - playthroughs: the minimum to the platinum, or null when no source says.
-- chapters: the game's own chapters (or missions, acts, areas) in the order of play, 1 to 60, named as the game names them: the units its chapter select or its map has, never a roadmap's stages or a whole playthrough as one chapter. A later playthrough's work goes into chapters with playthrough 2 and on, only for what that playthrough needs. id: c1, c2... in order. summary: 1 or 2 sentences on what you do there. missable: everything that can be lost in this chapter, with what to do (trophyId when it is a trophy; null for an item or collectible that feeds one). choices: the choices here that matter for trophies, a few words each. collectibles: per kind with the count in this chapter. trophyIds: the trophies naturally earned in it. completionTrophyId: the story trophy for finishing it, or null. playthrough: 1, or 2 and on for chapters of a later playthrough. sourceIds: the pages it comes from.
+- chapters: the game's own chapters (or missions, acts, areas) in the order of play, 1 to 60, named as the game names them: the units its chapter select or its map has, never a roadmap's stages or a whole playthrough as one chapter. When the guide numbers chapters (Chapter 1, Chapter 2…), each is a chapter here: never several in one. A later playthrough's work goes into chapters with playthrough 2 and on, only for what that playthrough needs. id: c1, c2... in order. summary: 1 or 2 sentences on what you do there. missable: everything that can be lost in this chapter, with what to do (trophyId when it is a trophy; null for an item or collectible that feeds one). choices: the choices here that matter for trophies, a few words each. collectibles: per kind with the count in this chapter. trophyIds: the trophies naturally earned in it. completionTrophyId: the story trophy for finishing it, or null. playthrough: 1, or 2 and on for chapters of a later playthrough. sourceIds: the pages it comes from.
 - cleanup: Markdown, short: what is left after the story and how to get it (chapter select, free roam, a second playthrough).
 - sources: every page you used: id w1, w2..., title (the site and what the page is), url exactly as in your search results or as fetched.
 3. ${COMMON_RULES}`;

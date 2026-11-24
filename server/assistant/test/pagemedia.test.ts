@@ -18,6 +18,7 @@ const html = `<!doctype html><html><head><title>Test Game Chapter 1 Collectible 
 <h3>Record #2: Lullaby</h3>
 <p>On the desk in the locked office; the key is in the hall.</p>
 <p><img data-src="/wp-content/uploads/test-game-record-2.jpg" src="data:image/gif;base64,R0lG" alt=""></p>
+<p>Press <img src="https://www.powerpyx.com/wp-includes/images/smilies/r1.png" alt="R1" class="wp-smiley" style="height: 1em"> to attack.</p>
 <p><img src="https://cdn.example.com/ad-banner.jpg" alt="ad"></p>
 <p><img src="https://www.powerpyx.com/wp-content/uploads/tiny-arrow.png" width="24"></p>
 <p><img src="http://www.powerpyx.com/wp-content/uploads/insecure.jpg"></p>
