@@ -3390,6 +3390,40 @@
         }
       }
     },
+    "library.pick.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its trophies, guide and walkthrough open here."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Её трофеи, гайд и прохождение откроются здесь."
+          }
+        }
+      }
+    },
+    "library.pick.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a game"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите игру"
+          }
+        }
+      }
+    },
     "library.search": {
       "extractionState": "manual",
       "localizations": {
