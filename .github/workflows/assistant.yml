@@ -5,6 +5,8 @@ name: Assistant server
 #   setup   create the KV namespaces ATTEST, QUOTA and GUIDES if missing, print their ids
 #   deploy  deploy the Worker and upload its secrets; prints the Worker's address
 #   eval    run the model eval against the Claude API (spends credits; see server/assistant/README.md)
+#   smoke   one real walkthrough build (plan + first chapter) outside the Worker, with timings
+#           and the API's errors (about the cost of one build in the app)
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID  setup, deploy
@@ -27,7 +29,7 @@ on:
       action:
         description: "What to run"
         type: choice
-        options: [test, setup, deploy, eval]
+        options: [test, setup, deploy, eval, smoke]
         default: test
       models:
         description: "eval: comma-separated model ids"
@@ -170,3 +172,21 @@ jobs:
           name: assistant-eval
           path: server/assistant/eval/out/
           retention-days: 14
+
+  smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'smoke'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/assistant/package-lock.json
+      - run: npm ci
+      - name: One walkthrough build (spends API credits)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_EVAL_API_KEY || secrets.ANTHROPIC_API_KEY }}
+        run: npx tsx scripts/smoke-walkthrough.ts ru
