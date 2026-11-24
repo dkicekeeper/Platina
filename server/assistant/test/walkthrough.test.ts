@@ -6,6 +6,7 @@ import { normalizeUrl, type ModelCall } from "../src/guide";
 import type { GuideGame, GuideTrophy } from "../src/validate";
 import {
   addSeen,
+  blockedDomains,
   buildChapter,
   buildWalkthrough,
   chapterKey,
@@ -269,6 +270,37 @@ describe("buildWalkthrough", () => {
     const { walkthrough } = await buildWalkthrough(game, "ru", { config: readConfig({}), call, kv, now: NOW, onProgress: () => {} });
     expect(walkthrough.sources).toEqual([{ id: "w1", title: "PowerPyx: walkthrough", url: WALK_URL }]);
     expect(params[0]!.messages[0]!.content as string).toContain(`source: PowerPyx ${WALK_URL}`);
+  });
+
+  it("reads only sites Anthropic's fetcher may read, and drops one that starts blocking it", async () => {
+    const refusal = Object.assign(
+      new Error(`400 {"type":"error","error":{"type":"invalid_request_error","message":"The following domains are not accessible to our user agent: ['fandom.com']. Read more: https://support.anthropic.com/"}}`),
+      { status: 400 },
+    );
+    expect(blockedDomains(refusal)).toEqual(["fandom.com"]);
+    expect(blockedDomains(Object.assign(new Error("overloaded"), { status: 529 }))).toEqual([]);
+
+    const seenParams: Params[] = [];
+    const answers: (() => Anthropic.Beta.BetaMessage)[] = [
+      () => {
+        throw refusal;
+      },
+      () => message([searchUse("srv_1", "q"), searchResult("srv_1", [WALK_URL]), toolUse("toolu_1", SAVE_WALKTHROUGH, overviewDraft())], "tool_use"),
+    ];
+    const call: ModelCall = async (p, onEvent) => {
+      seenParams.push(structuredClone(p));
+      const next = answers.shift()!();
+      for (const event of eventsOf(next)) onEvent(event);
+      return next;
+    };
+    const { walkthrough } = await buildWalkthrough(game, "ru", { config: readConfig({}), call, kv: new MemoryKV(), onProgress: () => {} });
+    expect(walkthrough.chapters).toHaveLength(2);
+    const domains = (p: Params) => (p.tools as { name: string; allowed_domains?: string[] }[]).find((t) => t.name === "web_fetch")!.allowed_domains!;
+    expect(domains(seenParams[0]!)).not.toContain("reddit.com");
+    expect(domains(seenParams[0]!)).not.toContain("ign.com");
+    expect(domains(seenParams[0]!)).toContain("fandom.com");
+    expect(domains(seenParams[1]!)).not.toContain("fandom.com");
+    expect(domains(seenParams[1]!)).toContain("powerpyx.com");
   });
 
   it("stops on a refusal", async () => {

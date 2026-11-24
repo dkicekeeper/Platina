@@ -9,14 +9,21 @@ export interface EventStream {
   onDisconnect(handler: () => void): void;
 }
 
-export function eventStream(headers: Record<string, string> = {}): EventStream {
+/** How often a comment line goes out while nothing else does: a build reads pages and thinks for
+ * minutes, and the app (and any proxy on the way) gives up on a silent connection. */
+export const HEARTBEAT_MS = 15_000;
+
+export function eventStream(headers: Record<string, string> = {}, heartbeatMs = HEARTBEAT_MS): EventStream {
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
   let closing = false;
+  // An SSE comment: readers skip it.
+  const heartbeat = heartbeatMs > 0 ? setInterval(() => void writer.write(encoder.encode(": ping\n\n")).catch(() => undefined), heartbeatMs) : undefined;
   const handlers: (() => void)[] = [];
   // The reader went away (the app closed the chat or lost the connection): the writer errors.
   writer.closed.catch(() => {
+    if (heartbeat) clearInterval(heartbeat);
     if (!closing) handlers.forEach((handler) => handler());
   });
   return {
@@ -24,6 +31,7 @@ export function eventStream(headers: Record<string, string> = {}): EventStream {
     send: (event, data) => writer.write(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)).catch(() => undefined),
     close: async () => {
       closing = true;
+      if (heartbeat) clearInterval(heartbeat);
       await writer.close().catch(() => undefined);
     },
     onDisconnect: (handler) => {

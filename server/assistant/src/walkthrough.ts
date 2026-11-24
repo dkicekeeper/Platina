@@ -23,19 +23,29 @@ export const WALKTHROUGH_TTL = 30 * 24 * 3600;
 export const walkthroughKey = (gameId: string, language: Language) => `walk:${gameId}:${language}`;
 export const chapterKey = (gameId: string, language: Language, chapterId: string) => `walk:${gameId}:${language}:${chapterId}`;
 
-/** The sites whose pages the walkthrough reads (web_fetch). */
+/** The sites whose pages the walkthrough reads (web_fetch). Only sites Anthropic's fetcher may
+ * read: the API refuses the whole request when the list names one that blocks it (ign.com and
+ * reddit.com did, 2026-11-24). A site that starts blocking later is dropped for the build
+ * (`blockedDomains`). */
 export const GUIDE_SITES = [
   "powerpyx.com",
   "psnprofiles.com",
   "stratege.ru",
   "playstationtrophies.org",
   "truetrophies.com",
-  "ign.com",
   "gamefaqs.gamespot.com",
   "fextralife.com",
   "fandom.com",
-  "reddit.com",
 ];
+
+/** The domains an API refusal names as closed to Anthropic's fetcher, if it is that refusal. */
+export function blockedDomains(error: unknown): string[] {
+  const status = (error as { status?: unknown } | undefined)?.status;
+  const message = error instanceof Error ? error.message : "";
+  if (status !== 400 || !/not accessible to our user agent/i.test(message)) return [];
+  const list = /not accessible to our user agent:\s*\[([^\]]*)\]/i.exec(message)?.[1] ?? "";
+  return [...list.matchAll(/['"]([^'"]+)['"]/g)].map((m) => m[1]!.toLowerCase());
+}
 
 // MARK: - What is built
 
@@ -584,10 +594,16 @@ export interface WalkthroughBuildOptions {
   onModelStarted?: () => void;
 }
 
-function params(config: Config, system: string, saveTool: Anthropic.Beta.BetaTool, messages: Anthropic.Beta.BetaMessageParam[]): Params {
+function params(
+  config: Config,
+  system: string,
+  saveTool: Anthropic.Beta.BetaTool,
+  messages: Anthropic.Beta.BetaMessageParam[],
+  sites: string[] = GUIDE_SITES,
+): Params {
   const tools: Anthropic.Beta.BetaToolUnion[] = [
     ...(config.guideMaxSearches > 0 ? [webSearchTool(config.guideModel, config.guideMaxSearches)] : []),
-    ...(config.walkthroughMaxFetches > 0 ? [webFetchTool(config.guideModel, config.walkthroughMaxFetches, GUIDE_SITES)] : []),
+    ...(config.walkthroughMaxFetches > 0 && sites.length > 0 ? [webFetchTool(config.guideModel, config.walkthroughMaxFetches, sites)] : []),
     saveTool,
   ];
   const extras = modelExtras(config.guideModel);
@@ -628,9 +644,10 @@ async function runBuild<Draft>(
     void Promise.resolve(options.onProgress(next)).catch(() => undefined);
   };
 
+  let sites = [...GUIDE_SITES];
   for (let round = 0; round < 6; round++) {
     let started = false;
-    const message = await options.call(params(options.config, system, saveTool, messages), (event) => {
+    const onEvent = (event: Anthropic.Beta.BetaRawMessageStreamEvent) => {
       if (!started) {
         started = true;
         options.onModelStarted?.();
@@ -640,7 +657,19 @@ async function runBuild<Draft>(
       if (block.type === "server_tool_use" && block.name === "web_search") progress("search");
       if (block.type === "server_tool_use" && block.name === "web_fetch") progress("reading");
       if (block.type === "tool_use" && block.name === saveTool.name) progress("writing");
-    });
+    };
+    let message: Anthropic.Beta.BetaMessage;
+    try {
+      message = await options.call(params(options.config, system, saveTool, messages, sites), onEvent);
+    } catch (error) {
+      // A site that has started to block Anthropic's fetcher: drop it for this build and ask again.
+      const blocked = blockedDomains(error);
+      const left = sites.filter((site) => !blocked.includes(site));
+      if (blocked.length === 0 || left.length === sites.length) throw error;
+      console.log(`walkthrough: dropped blocked sites ${blocked.join(", ")}`);
+      sites = left;
+      message = await options.call(params(options.config, system, saveTool, messages, sites), onEvent);
+    }
     calls += 1;
     addUsage(usage, message.usage);
     addSeen(seen, message.content);
