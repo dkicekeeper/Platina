@@ -139,7 +139,88 @@
 > Спасибо за сообщество и подсказки!
 > <имя владельца>, Platina
 
-## 6. Перед отправкой (чек-лист)
+## 6. Тексты страницы в App Store (черновик)
+
+Ограничения App Store: название и подзаголовок — до 30 символов, ключевые слова — до 100 (через
+запятую, без пробелов), рекламный текст — до 170, описание — до 4000. Чужие товарные знаки
+(PlayStation, PS5, PSN) Apple не пускает в название и с осторожностью — в ключевые слова: в
+названии их нет, в описании — только как описание совместимости, с пометкой о неофициальности.
+Если ревью придерётся к ключевым словам — убрать оттуда PS5 и PSN.
+
+| Поле | Русский | English |
+|---|---|---|
+| Название | Platina: путь к платине | Platina: Trophy Hunter |
+| Подзаголовок | Трофеи, гайды и Плати рядом | Trophies, guides and Plati |
+| Ключевые слова | трофеи,платина,гайд,прохождение,коллекционки,ачивки,сессии,PS5,PSN,охотник | trophies,platinum,guide,walkthrough,collectibles,achievements,sessions,PS5,PSN,hunter |
+| Рекламный текст | Плати ведёт к платине по главам: что делать дальше, что не пропустить, где лежит предмет — с картинками и чек-листом. | Plati leads you to the platinum chapter by chapter: what's next, what not to miss, where the item is — with pictures and a checklist. |
+
+**Описание (русский)**
+
+> Platina — спутник охотника за трофеями. Каждая игра здесь — путь к платине и 100%, а Плати,
+> ассистент приложения, проходит его вместе с вами.
+>
+> ВЕДЁТ ЗА РУКУ
+> • Прохождение по главам: куда идти, что подобрать, какой выбор не пропустить ради трофея.
+> • Предупреждает о пропускаемых трофеях и точках невозврата заранее.
+> • Шаги чек-листом, картинки мест и видео из гайдов со ссылкой на источник.
+> • Прогресс запоминается: в следующий раз продолжите с того же места.
+> • «Где я?» — сфотографируйте экран, и Плати подскажет, что дальше.
+>
+> ТРОФЕИ И ИГРЫ
+> • Все ваши игры PS5 и трофеи, прогресс, редкость, время в играх.
+> • Гайд к платине: сложность, часы, прохождения, онлайн и глючные трофеи.
+> • Подсказки PlayStation к трофеям прямо в приложении.
+> • Скрытые трофеи не спойлерятся — или показываются сразу, как вам удобнее.
+>
+> СЕССИИ
+> • Начните сессию — Плати поставит цели на вечер.
+> • Live Activity с таймером и текущим шагом: отметьте шаг ✓ прямо с экрана блокировки.
+> • «Что дальше в Platina» через Siri.
+> • Итог сессии в журнале: что получено и с чего начать в следующий раз.
+>
+> А ЕЩЁ
+> • Статистика, полка платин, карточки для шаринга, виджеты.
+> • Ваши данные — на устройстве и в вашем iCloud. Вход — на странице Sony: пароль приложение не видит.
+>
+> Platina — неофициальное приложение, не связано с Sony Interactive Entertainment.
+> PlayStation, PS5 и PSN — товарные знаки Sony Interactive Entertainment Inc.
+
+**Description (English)**
+
+> Platina is a trophy hunter's companion. Every game is a road to the platinum and 100%, and
+> Plati, the app's assistant, walks it with you.
+>
+> LEADS YOU BY THE HAND
+> • A walkthrough chapter by chapter: where to go, what to pick up, which choice not to miss.
+> • Warns about missable trophies and points of no return before you reach them.
+> • Steps as a checklist, with pictures of the spot and videos from the guides, credited.
+> • Your progress is kept: next time you pick up where you stopped.
+> • "Where am I?" — take a photo of the screen and Plati tells you what's next.
+>
+> TROPHIES AND GAMES
+> • All your PS5 games and trophies, progress, rarity and time played.
+> • A platinum guide: difficulty, hours, playthroughs, online and glitched trophies.
+> • PlayStation's own trophy hints, right in the app.
+> • Hidden trophies stay hidden — or show at once, as you like.
+>
+> SESSIONS
+> • Start a session and Plati sets the evening's goals.
+> • A Live Activity with the timer and the current step: tick it from the lock screen.
+> • "What's next in Platina" with Siri.
+> • A session journal: what you earned and where to start next time.
+>
+> AND
+> • Statistics, a platinum shelf, share cards, widgets.
+> • Your data stays on your device and in your iCloud. You sign in on Sony's page; the app never
+>   sees your password.
+>
+> Platina is unofficial and not affiliated with Sony Interactive Entertainment.
+> PlayStation, PS5 and PSN are trademarks of Sony Interactive Entertainment Inc.
+
+Категория: основная — Справочники (Reference), дополнительная — Развлечения. Возраст: 12+ (в
+гайдах и видео из игр бывает насилие; выбрать в анкете честно).
+
+## 7. Перед отправкой (чек-лист)
 
 - [ ] Политика конфиденциальности опубликована, ссылка в App Store Connect.
 - [ ] App Privacy заполнен (раздел 2).
