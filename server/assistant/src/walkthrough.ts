@@ -18,7 +18,7 @@ import type { GuideGame, GuideTrophy } from "./validate";
 // server checks ids against the trophy list, pages against what the search and the fetch really
 // returned, pictures against IMAGE_SOURCES, and hides hidden trophies' names.
 
-export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.3";
+export const WALKTHROUGH_PROMPT_VERSION = "2026-11-24.4";
 export const WALKTHROUGH_TTL = 30 * 24 * 3600;
 
 export const walkthroughKey = (gameId: string, language: Language) => `walk:${gameId}:${language}`;
@@ -227,7 +227,7 @@ export function chapterSystemPrompt(imageSites: string[]): string {
 2. Then call save_chapter once with the chapter's steps in the order of play, in the language the request names, in your own words; never copy a page.
 - steps: 5 to 60 steps a player can follow while playing. kind: path (where to go), collectible (one collectible and exactly where; collectible {kind, number} as the guide numbers it), choice (a decision that matters for a trophy: which option and why), point_of_no_return (past it you can't come back this playthrough: what to finish first), trophy (a trophy earned here and how), boss (a fight worth a tip), tip (anything else worth knowing). text: Markdown, 1 to 3 short imperative sentences, concrete (left after the bridge, the room with the red door). trophyIds: the trophies the step earns or feeds. spoiler: true when it reveals the story or a hidden trophy; the app hides it until tapped. sourceId: the page it comes from, or null.
 - ${pictures}
-- video: a YouTube video from your search results that shows this step, {youtubeId, startSeconds}, or null.
+- video: search once for a YouTube video of this chapter's collectibles or walkthrough (like "<game> <chapter> all collectibles video"); attach it to the steps it shows, {youtubeId, startSeconds}, with the second the step starts where the video's description or the guide gives timestamps, else 0. Only ids from your search results or pages; null when there is none.
 - Every collectible of the chapter gets its own step, numbered as the guide numbers it, in the order of play. Every missable thing and choice listed for this chapter gets its step, and a point_of_no_return step comes before every point of no return.
 - sources: the pages you used, ids w1, w2...
 3. ${COMMON_RULES}`;
