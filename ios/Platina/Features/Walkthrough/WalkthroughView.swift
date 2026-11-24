@@ -31,8 +31,8 @@ struct WalkthroughSection: View {
                 switch walkthroughs.state(for: game.id) {
                 case .building(let step):
                     WalkthroughBuildingCard(step: step)
-                case .failed:
-                    StatusBanner(String(localized: "walkthrough.failed"), status: .warning) {
+                case .failed(let code):
+                    StatusBanner(WalkthroughText.failure(code, steps: false), status: .warning) {
                         Task { await walkthroughs.build(gameId: game.id) }
                     }
                 case .idle:

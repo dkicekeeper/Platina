@@ -8356,6 +8356,74 @@
         }
       }
     },
+    "walkthrough.failed.code %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The walkthrough didn’t come together (%@). Tap to try again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прохождение не собралось (%@). Нажмите, чтобы попробовать ещё раз."
+          }
+        }
+      }
+    },
+    "walkthrough.failed.noPlan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game’s chapter plan is needed first. Tap to build it again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала нужен план игры по главам. Нажмите, чтобы собрать его заново."
+          }
+        }
+      }
+    },
+    "walkthrough.failed.offline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plati’s server didn’t answer. Tap to try again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер Плати не ответил. Нажмите, чтобы попробовать ещё раз."
+          }
+        }
+      }
+    },
+    "walkthrough.failed.quota": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No more walkthrough builds today — try again tomorrow."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На сегодня сборки прохождений закончились — завтра можно снова."
+          }
+        }
+      }
+    },
     "walkthrough.header": {
       "extractionState": "manual",
       "localizations": {
@@ -8879,6 +8947,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Шаги главы не собрались. Нажмите, чтобы попробовать ещё раз."
+          }
+        }
+      }
+    },
+    "walkthrough.steps.failed.code %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The chapter’s steps didn’t come together (%@). Tap to try again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаги главы не собрались (%@). Нажмите, чтобы попробовать ещё раз."
           }
         }
       }

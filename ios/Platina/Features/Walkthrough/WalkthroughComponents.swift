@@ -90,6 +90,22 @@ enum WalkthroughText {
         }
     }
 
+    /// Why a build failed, in words, with the code at the end for a bug report.
+    static func failure(_ code: String, steps: Bool) -> String {
+        switch code {
+        case "quota": String(localized: "walkthrough.failed.quota")
+        case "offline", "timeout": String(localized: "walkthrough.failed.offline")
+        case "region_unavailable": String(localized: "plati.error.region")
+        case "disabled": String(localized: "plati.error.disabled")
+        case "attest": String(localized: "plati.error.attest")
+        case "no_walkthrough": String(localized: "walkthrough.failed.noPlan")
+        default:
+            steps
+                ? String(localized: "walkthrough.steps.failed.code \(code)")
+                : String(localized: "walkthrough.failed.code \(code)")
+        }
+    }
+
     static func buildProgress(_ step: String) -> Double {
         switch step {
         case "search": 0.3

@@ -160,8 +160,8 @@ struct ChapterView: View {
                 switch walkthroughs.state(for: gameId, chapterId: chapter.id) {
                 case .building(let step):
                     WalkthroughBuildingCard(step: step)
-                case .failed:
-                    StatusBanner(String(localized: "walkthrough.steps.failed"), status: .warning) {
+                case .failed(let code):
+                    StatusBanner(WalkthroughText.failure(code, steps: true), status: .warning) {
                         Task { await walkthroughs.buildChapter(gameId: gameId, chapterId: chapter.id) }
                     }
                 case .idle:

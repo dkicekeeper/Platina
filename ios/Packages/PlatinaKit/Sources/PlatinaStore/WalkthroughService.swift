@@ -2,7 +2,10 @@
 import Foundation
 import Observation
 import SwiftData
+import os
 import PlatinaAssistant
+
+private let log = Logger(subsystem: "dakacom.Platina", category: "Plati")
 
 /// The walkthrough "by the hand" (docs/assistant.md §8, docs/PLAN.md §5): a game's chapters,
 /// then each chapter's steps, each the stored copy first, then the server's cache (free), then a
@@ -242,15 +245,38 @@ public final class WalkthroughService {
                     states[key] = .idle
                     return event
                 case .error(let code, _):
+                    log.error("walkthrough \(key, privacy: .public): the server's error \(code, privacy: .public)")
                     states[key] = .failed(code)
                     return event
                 }
             }
+            log.error("walkthrough \(key, privacy: .public): the stream ended without a result")
             states[key] = .failed("no_result")
         } catch {
-            states[key] = .failed(String(describing: error))
+            let code = Self.code(error)
+            log.error("walkthrough \(key, privacy: .public): \(code, privacy: .public) (\(String(describing: error), privacy: .public))")
+            states[key] = .failed(code)
         }
         return nil
+    }
+
+    /// A failure as a short code the screens explain: the server's own, or the connection's.
+    static func code(_ error: any Error) -> String {
+        if let error = error as? AssistantServerError {
+            switch error {
+            case .notConfigured: return "not_configured"
+            case .invalidRequest: return "invalid_request"
+            case .quotaExceeded: return "quota"
+            case .regionUnavailable: return "region_unavailable"
+            case .disabled: return "disabled"
+            case .attestation: return "attest"
+            case .http(let status): return "http_\(status)"
+            }
+        }
+        if let error = error as? URLError {
+            return error.code == .timedOut ? "timeout" : "offline"
+        }
+        return "unknown"
     }
 
     private func save(_ plan: Walkthrough) {
