@@ -11,8 +11,10 @@ open ios/Platina.xcodeproj
 пересобирает его после `pull`, `merge`, `rebase` и смены ветки, если изменился `project.yml`
 (версия DesignKit, настройки) или появились и пропали файлы (`.githooks`,
 `scripts/xcodegen-if-needed.sh`); Xcode подхватывает новый проект сам. Проект, сгенерированный до
-смены версии DesignKit, не соберётся: сборка остановится с ошибкой «…pins DesignKit X…» и
-подскажет, что запустить. Вручную: `cd ios && xcodegen generate`; если Xcode всё равно показывает
+смены версии DesignKit или до новых файлов, не соберётся: обе цели (приложение и виджеты) первым
+делом проверяют его (`scripts/check-xcode-project.sh`) и останавливают сборку с ошибкой «…pins
+DesignKit X…» или «…generated before these files came…» и подсказкой, что запустить. Без этой
+проверки старый проект падал на непонятном «Cannot find 'CompleteStepIntent' in scope». Вручную: `cd ios && xcodegen generate`; если Xcode всё равно показывает
 старую версию DesignKit — File → Packages → Reset Package Caches.
 
 1. В Xcode у целей **Platina** и **PlatinaWidgets** (Signing & Capabilities) — ваша команда

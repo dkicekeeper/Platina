@@ -65,6 +65,8 @@ scripts/designkit_strings.py    ключи строк DesignKit → катало
 scripts/setup.sh                один раз на Mac: XcodeGen, git-хуки, проект
 scripts/xcodegen-if-needed.sh   из .githooks: проект заново после pull, если изменился project.yml
                                 или список файлов (проект не в git)
+scripts/check-xcode-project.sh  фаза сборки обеих целей: старый проект (другая версия DesignKit,
+                                нет новых файлов) останавливает сборку с тем, что запустить
 ```
 
 PSNKit, PlatinaCore, PlatinaAssistant и PlatinaShared тестируются и на Linux (`swift test`);
