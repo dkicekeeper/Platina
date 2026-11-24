@@ -59,10 +59,13 @@ struct ProfileView: View {
                             value: stats.currentStreak.formatted(),
                             valueCaption: String(localized: "profile.streak.days")
                         )
-                        monthsSection(stats)
-                        activitySection(stats)
-                        platinumShelf(stats)
-                        rarestSection(stats)
+                        // Two in a row where they fit (an iPad, a Mac window), one on a phone.
+                        LazyVGrid(columns: sectionColumns, alignment: .leading, spacing: AppSpacing.xl) {
+                            monthsSection(stats)
+                            activitySection(stats)
+                            platinumShelf(stats)
+                            rarestSection(stats)
+                        }
                     } else {
                         StatsStripSkeleton(count: 4)
                         StatsStripSkeleton(count: 4)
@@ -70,7 +73,7 @@ struct ProfileView: View {
                     }
                 }
                 .screenPadding()
-                .readableWidth()
+                .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
             .background(AppColors.Background.base)
@@ -93,6 +96,10 @@ struct ProfileView: View {
 
     // MARK: Sections
 
+    /// The sections' columns: half a readable column at least, so a phone holds one and the wide
+    /// column of an iPad or a Mac window two (a chart and its neighbour keep a phone's width).
+    private var sectionColumns: [GridItem] { AppLayout.cardColumns(minimum: AppLayout.readableWidth / 2) }
+
     @ViewBuilder
     private func monthsSection(_ stats: LibraryStats) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -105,6 +112,7 @@ struct ProfileView: View {
             .padding(AppSpacing.lg)
             .cardStyle()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -115,6 +123,7 @@ struct ProfileView: View {
                 .padding(AppSpacing.lg)
                 .cardStyle()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -134,6 +143,7 @@ struct ProfileView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -149,6 +159,7 @@ struct ProfileView: View {
                     )
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
