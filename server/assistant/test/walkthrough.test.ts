@@ -344,6 +344,8 @@ describe("buildChapter", () => {
     expect(input).toContain(`w1: PowerPyx: walkthrough ${WALK_URL}`);
     const system = (params[0]!.system as { text: string }[])[0]!.text;
     expect(system).toContain("powerpyx.com, psnprofiles.com, stratege.ru, playstationtrophies.org");
+    // A chapter reads whole pages: the basic tools, not the filtering ones.
+    expect((params[0]!.tools as { type?: string; name: string }[]).filter((t) => t.type).map((t) => t.type)).toEqual(["web_search_20250305", "web_fetch_20250910"]);
 
     // Kept, and stale once the plan is rebuilt.
     await storeChapter(kv, chapter);

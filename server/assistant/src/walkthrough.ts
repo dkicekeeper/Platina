@@ -608,10 +608,14 @@ function params(
   saveTool: Anthropic.Beta.BetaTool,
   messages: Anthropic.Beta.BetaMessageParam[],
   sites: string[] = GUIDE_SITES,
+  wholePages = false,
 ): Params {
+  // A chapter's steps need every item of the page; the filtering tools let the model's own code
+  // cut a page down, and the details went with it ("about 15 items here").
+  const filtering = !wholePages;
   const tools: Anthropic.Beta.BetaToolUnion[] = [
-    ...(config.guideMaxSearches > 0 ? [webSearchTool(config.guideModel, config.guideMaxSearches)] : []),
-    ...(config.walkthroughMaxFetches > 0 && sites.length > 0 ? [webFetchTool(config.guideModel, config.walkthroughMaxFetches, sites)] : []),
+    ...(config.guideMaxSearches > 0 ? [webSearchTool(config.guideModel, config.guideMaxSearches, undefined, filtering)] : []),
+    ...(config.walkthroughMaxFetches > 0 && sites.length > 0 ? [webFetchTool(config.guideModel, config.walkthroughMaxFetches, sites, 20000, filtering)] : []),
     saveTool,
   ];
   const extras = modelExtras(config.guideModel);
@@ -639,6 +643,7 @@ async function runBuild<Draft>(
   seen: Seen,
   check: (input: unknown) => { problems: string[]; draft: Draft },
   usable: (draft: Draft) => boolean,
+  wholePages = false,
 ): Promise<{ draft: Draft; usage: Usage; calls: number }> {
   const usage = emptyUsage();
   const messages: Anthropic.Beta.BetaMessageParam[] = [{ role: "user", content: input }];
@@ -668,7 +673,7 @@ async function runBuild<Draft>(
     };
     let message: Anthropic.Beta.BetaMessage;
     try {
-      message = await options.call(params(options.config, system, saveTool, messages, sites), onEvent);
+      message = await options.call(params(options.config, system, saveTool, messages, sites, wholePages), onEvent);
     } catch (error) {
       // A site that has started to block Anthropic's fetcher: drop it for this build and ask again.
       const blocked = blockedDomains(error);
@@ -676,7 +681,7 @@ async function runBuild<Draft>(
       if (blocked.length === 0 || left.length === sites.length) throw error;
       console.log(`walkthrough: dropped blocked sites ${blocked.join(", ")}`);
       sites = left;
-      message = await options.call(params(options.config, system, saveTool, messages, sites), onEvent);
+      message = await options.call(params(options.config, system, saveTool, messages, sites, wholePages), onEvent);
     }
     calls += 1;
     addUsage(usage, message.usage);
@@ -765,6 +770,7 @@ export async function buildChapter(
     seen,
     (input) => checkChapter(input, { trophies: game.trophies, seen, language, imageSites }),
     (d) => d.steps.length > 0,
+    true,
   );
   // The pictures and videos of the pages it came from, matched to the steps.
   let steps = draft;

@@ -276,18 +276,20 @@ const DYNAMIC_FILTERING_MODELS = new Set([
   "claude-sonnet-4-6",
 ]);
 
-export function webSearchTool(model: string, maxUses: number, allowedDomains?: string[]): Anthropic.Beta.BetaToolUnion {
+/** `filtering: false` takes the basic version even where the filtering one exists: the model then
+ * reads whole results instead of what its own code kept. */
+export function webSearchTool(model: string, maxUses: number, allowedDomains?: string[], filtering = true): Anthropic.Beta.BetaToolUnion {
   const domains = allowedDomains?.length ? { allowed_domains: allowedDomains } : {};
-  return DYNAMIC_FILTERING_MODELS.has(model)
+  return filtering && DYNAMIC_FILTERING_MODELS.has(model)
     ? { type: "web_search_20260209", name: "web_search", max_uses: maxUses, ...domains }
     : { type: "web_search_20250305", name: "web_search", max_uses: maxUses, ...domains };
 }
 
 /** Web fetch: reads a page whose address is already in the conversation (a search result, the
  * request, an earlier page). Same model split as web search. */
-export function webFetchTool(model: string, maxUses: number, allowedDomains?: string[], maxContentTokens = 20000): Anthropic.Beta.BetaToolUnion {
+export function webFetchTool(model: string, maxUses: number, allowedDomains?: string[], maxContentTokens = 20000, filtering = true): Anthropic.Beta.BetaToolUnion {
   const options = { max_uses: maxUses, max_content_tokens: maxContentTokens, ...(allowedDomains?.length ? { allowed_domains: allowedDomains } : {}) };
-  return DYNAMIC_FILTERING_MODELS.has(model)
+  return filtering && DYNAMIC_FILTERING_MODELS.has(model)
     ? { type: "web_fetch_20260209", name: "web_fetch", ...options }
     : { type: "web_fetch_20250910", name: "web_fetch", ...options };
 }
