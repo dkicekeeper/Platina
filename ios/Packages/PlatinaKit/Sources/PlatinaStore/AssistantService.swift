@@ -351,6 +351,9 @@ public final class AssistantService {
         let today = now()
         lines.append("date: \(today.formatted(.iso8601.year().month().day())) (\(today.formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "en_US")))))")
         lines.append("language: \(language)")
+        // The person's choice in Settings: Plati may name what the app already shows.
+        if DisplaySettings.showsHiddenTrophies { lines.append("hidden_trophies: shown") }
+        if DisplaySettings.showsSpoilers { lines.append("spoilers: shown") }
         if let profile = try? store.profile() {
             lines.append("psn: \(profile.onlineId ?? "?"), trophy level \(profile.level)")
         }

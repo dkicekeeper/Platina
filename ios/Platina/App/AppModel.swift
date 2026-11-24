@@ -138,7 +138,7 @@ final class AppModel {
 
     /// A step as Siri says it: the chapter, then the step (a spoiler one says so instead).
     private static func line(_ chapter: Walkthrough.Chapter, _ step: ChapterSteps.Step) -> String {
-        let text = step.spoiler ? String(localized: "intent.step.spoiler") : WalkthroughText.plain(step.text)
+        let text = step.spoiler && !DisplaySettings.showsSpoilers ? String(localized: "intent.step.spoiler") : WalkthroughText.plain(step.text)
         return String(localized: "intent.step.line \(chapter.title) \(text)")
     }
 
@@ -210,7 +210,7 @@ final class AppModel {
                 chapterId: found.chapter.id,
                 stepId: found.step.id,
                 chapterText: String(localized: "walkthrough.activity.chapter \(number) \(found.chapter.title)"),
-                text: found.step.spoiler ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(found.step.text),
+                text: found.step.spoiler && !DisplaySettings.showsSpoilers ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(found.step.text),
                 doneLabel: String(localized: "walkthrough.activity.done")
             )
         }

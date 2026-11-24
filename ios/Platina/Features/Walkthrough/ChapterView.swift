@@ -22,6 +22,8 @@ struct ChapterView: View {
     @State private var openedImage: WalkthroughImage?
     @State private var playingVideo: WalkthroughVideo?
     @State private var isShowingChat = false
+    @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
+    @AppStorage(DisplaySettings.spoilersKey) private var showsSpoilers = false
 
     init(gameId: String, chapterId: String) {
         self.gameId = gameId
@@ -124,7 +126,7 @@ struct ChapterView: View {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         if let trophy {
                             Label {
-                                Text(verbatim: trophy.isHidden && !trophy.isEarned ? String(localized: "trophy.hidden.title") : trophy.name)
+                                Text(verbatim: trophy.isHidden && !trophy.isEarned && !showsHiddenTrophies ? String(localized: "trophy.hidden.title") : trophy.name)
                                     .strikethrough(trophy.isEarned)
                             } icon: {
                                 Icon(trophy.isEarned ? "checkmark.circle.fill" : trophy.type.systemImage, size: AppIconSize.sm, tint: .monochrome(trophy.isEarned ? AppColors.success : trophy.type.color))
@@ -229,7 +231,7 @@ struct ChapterView: View {
         VStack(spacing: AppSpacing.md) {
             if let next = walkthroughs.currentStep(gameId: gameId), next.chapter.id == chapter.id {
                 DSButton(String(localized: "walkthrough.speak"), systemImage: "speaker.wave.2", appearance: .secondary, fullWidth: true) {
-                    let text = next.step.spoiler ? String(localized: "intent.step.spoiler") : WalkthroughText.plain(next.step.text)
+                    let text = next.step.spoiler && !showsSpoilers ? String(localized: "intent.step.spoiler") : WalkthroughText.plain(next.step.text)
                     StepSpeaker.shared.speak(text)
                 }
             }

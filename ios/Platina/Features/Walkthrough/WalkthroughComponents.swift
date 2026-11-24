@@ -164,7 +164,10 @@ struct WalkthroughStepRow: View {
     let onOpenImage: (WalkthroughImage) -> Void
     let onPlayVideo: (WalkthroughVideo) -> Void
 
-    private var isHidden: Bool { step.spoiler && !isRevealed }
+    @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
+    @AppStorage(DisplaySettings.spoilersKey) private var showsSpoilers = false
+
+    private var isHidden: Bool { step.spoiler && !isRevealed && !showsSpoilers }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -239,7 +242,7 @@ struct WalkthroughStepRow: View {
             ))
         }
         for trophy in trophies {
-            let name = trophy.isHidden && !trophy.isEarned ? String(localized: "trophy.hidden.title") : trophy.name
+            let name = trophy.isHidden && !trophy.isEarned && !showsHiddenTrophies ? String(localized: "trophy.hidden.title") : trophy.name
             items.append(.init(text: name, systemImage: trophy.type.systemImage, color: trophy.type.color))
         }
         return items

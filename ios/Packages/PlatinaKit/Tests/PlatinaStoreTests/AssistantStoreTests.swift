@@ -178,6 +178,25 @@ struct AssistantStoreTests {
         #expect(thread.messages.last?.text == "Цели на сегодня: кости и платина.")
     }
 
+    @Test("The settings' choice about spoilers reaches Plati's context")
+    func spoilerSettings() async throws {
+        let (assistant, _, _, _) = try await makeAssistant([])
+        let defaults = UserDefaults.standard
+        defer {
+            defaults.removeObject(forKey: DisplaySettings.hiddenTrophiesKey)
+            defaults.removeObject(forKey: DisplaySettings.spoilersKey)
+        }
+        defaults.removeObject(forKey: DisplaySettings.hiddenTrophiesKey)
+        defaults.removeObject(forKey: DisplaySettings.spoilersKey)
+        #expect(!assistant.appContext(gameId: nil).contains("hidden_trophies"))
+        defaults.set(true, forKey: DisplaySettings.hiddenTrophiesKey)
+        defaults.set(true, forKey: DisplaySettings.spoilersKey)
+        let context = assistant.appContext(gameId: nil)
+        #expect(context.contains("hidden_trophies: shown"))
+        #expect(context.contains("spoilers: shown"))
+        #expect(DisplaySettings.showsHiddenTrophies)
+    }
+
     @Test("get_guide builds the guide once and keeps it")
     func guide() async throws {
         let (assistant, _, _, _) = try await makeAssistant([])

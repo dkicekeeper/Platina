@@ -225,7 +225,8 @@ public final class AssistantToolkit: AssistantToolExecuting {
         let filter = input["filter"]?.stringValue ?? "all"
         let type = input["type"]?.stringValue
         let group = input["group_id"]?.stringValue
-        let showHidden = input["include_hidden_details"]?.boolValue ?? false
+        // The person may have chosen to see hidden trophies everywhere (Settings).
+        let showHidden = (input["include_hidden_details"]?.boolValue ?? false) || DisplaySettings.showsHiddenTrophies
         let limit = min(Int(input["limit"]?.numberValue ?? 60), 200)
         let guide = guides.guide(for: game.id)
         return game.trophies
@@ -415,7 +416,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
         // A hidden trophy not earned yet keeps its name: list_trophies' rule.
         func name(_ id: Int) -> String? {
             guard let trophy = trophies[id] else { return nil }
-            return trophy.isHidden && !trophy.isEarned ? nil : trophy.name
+            return trophy.isHidden && !trophy.isEarned && !DisplaySettings.showsHiddenTrophies ? nil : trophy.name
         }
         guard !asked.isEmpty else {
             let ids = await gameHelp.helpedTrophyIds(gameId: game.id).sorted()
@@ -518,7 +519,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
                         let trophy = item.trophyId.flatMap { trophies[$0] }
                         return WalkthroughAnswer.Missable(
                             trophy_id: item.trophyId,
-                            trophy_name: trophy.flatMap { $0.isHidden && !$0.isEarned ? nil : $0.name },
+                            trophy_name: trophy.flatMap { $0.isHidden && !$0.isEarned && !DisplaySettings.showsHiddenTrophies ? nil : $0.name },
                             earned: trophy?.isEarned,
                             note: item.note
                         )

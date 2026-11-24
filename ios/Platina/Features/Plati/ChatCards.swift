@@ -60,6 +60,7 @@ private struct ChatChecklistCard: View {
 
     @Environment(AppModel.self) private var app
     @State private var revealed: Set<String> = []
+    @AppStorage(DisplaySettings.spoilersKey) private var showsSpoilers = false
 
     var body: some View {
         let walkthroughs = app.assistant.walkthroughs
@@ -76,7 +77,7 @@ private struct ChatChecklistCard: View {
                 .foregroundStyle(AppColors.Text.secondary)
                 ForEach(shown) { step in
                     let done = walkthroughs.isStepDone(step, gameId: gameId, chapterId: chapterId)
-                    let hidden = step.spoiler && !revealed.contains(step.id)
+                    let hidden = step.spoiler && !showsSpoilers && !revealed.contains(step.id)
                     ChecklistRow(
                         hidden ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(step.text),
                         isChecked: done,
@@ -153,6 +154,7 @@ private struct ChatTrophiesCard: View {
     let trophyIds: [Int]
 
     @Environment(AppModel.self) private var app
+    @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
 
     var body: some View {
         let all = (try? app.store.game(gameId))?.trophies ?? []
@@ -160,7 +162,7 @@ private struct ChatTrophiesCard: View {
         if !trophies.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(trophies, id: \.key) { trophy in
-                    TrophyRow(trophy: trophy)
+                    TrophyRow(trophy: trophy, isRevealed: showsHiddenTrophies)
                 }
             }
             .padding(.horizontal, AppSpacing.lg)

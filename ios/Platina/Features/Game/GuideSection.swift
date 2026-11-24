@@ -13,6 +13,7 @@ import PlatinaStore
 struct GuideSection: View {
     let game: GameRecord
     @Environment(AppModel.self) private var app
+    @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -83,7 +84,7 @@ struct GuideSection: View {
                 ForEach(guide.missable, id: \.trophyId) { missable in
                     let trophy = game.trophies.first { $0.trophyId == missable.trophyId }
                     ChecklistRow(
-                        trophy.map { $0.isHidden && !$0.isEarned ? String(localized: "trophy.hidden.title") : $0.name } ?? "#\(missable.trophyId)",
+                        trophy.map { $0.isHidden && !$0.isEarned && !showsHiddenTrophies ? String(localized: "trophy.hidden.title") : $0.name } ?? "#\(missable.trophyId)",
                         isChecked: trophy?.isEarned ?? false,
                         tint: trophy?.type.color ?? AppColors.warning,
                         verticalPadding: AppSpacing.xs

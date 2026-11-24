@@ -331,6 +331,7 @@ private struct TrophySectionView: View {
     @Binding var revealedHidden: Set<Int>
     var helpedTrophies: Set<Int> = []
     let onOpen: (String) -> Void
+    @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -340,7 +341,7 @@ private struct TrophySectionView: View {
             CardList(section.trophies, layout: .section) { (trophy: TrophyRecord) in
                 TrophyRow(
                     trophy: trophy,
-                    isRevealed: revealedHidden.contains(trophy.trophyId),
+                    isRevealed: showsHiddenTrophies || revealedHidden.contains(trophy.trophyId),
                     hasGameHelp: helpedTrophies.contains(trophy.trophyId)
                 )
                     .contentShape(Rectangle())
@@ -350,7 +351,7 @@ private struct TrophySectionView: View {
     }
 
     private func tap(_ trophy: TrophyRecord) {
-        if trophy.isHidden, !trophy.isEarned, !revealedHidden.contains(trophy.trophyId) {
+        if trophy.isHidden, !trophy.isEarned, !showsHiddenTrophies, !revealedHidden.contains(trophy.trophyId) {
             revealedHidden.insert(trophy.trophyId)
         } else {
             onOpen(trophy.key)

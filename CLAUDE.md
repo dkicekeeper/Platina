@@ -38,7 +38,8 @@ ios/
 │   │                           RootView и вкладки, фоновое обновление, Siri (StepShortcuts,
 │   │                           фразы — AppShortcuts.xcstrings)
 │   ├── Features/<Экран>/       Path, Library, Game (+ гайд), Walkthrough (прохождение по главам),
-│   │                           Trophy, Session, Plati, Profile, Onboarding, Share, Widgets
+│   │                           Trophy, Session, Plati, Profile, Settings (шестерёнка в профиле:
+│   │                           аккаунт, спойлеры), Onboarding, Share, Widgets
 │   ├── Support/                цвета приложения, тексты
 │   ├── Localizable.xcstrings   строки: русский (основной) и английский, плюс ключи DesignKit
 │   └── Platina.entitlements    App Group (виджеты), iCloud (данные человека), пуши CloudKit
@@ -174,7 +175,10 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
 - Каждая строка интерфейса — ключ в `Localizable.xcstrings` на двух языках (`ru`, `en`).
 - Ошибки PSN показываются через `PSNError.userMessage`; истёкшая сессия ведёт на экран входа
   (`AppModel.handle`).
-- Скрытые трофеи не спойлерим: название и описание — по нажатию.
+- Скрытые трофеи не спойлерим: название и описание — по нажатию; шаги-спойлеры прохождения —
+  тоже. Если человек включил в Настройках «Показывать скрытые трофеи» или «Раскрывать
+  спойлеры» (`DisplaySettings`, `@AppStorage` с его ключами), — сразу, везде (экраны, карточки
+  чата, Live Activity, Siri), и Плати видит это в `<app_context>`.
 
 <!-- designkit:agents:start -->
 <!-- From DesignKit 8.12.0, docs/agents.md. Do not edit here: the DesignKit update workflow rewrites it. -->

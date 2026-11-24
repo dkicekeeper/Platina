@@ -99,6 +99,7 @@ private struct CurrentChapterCard: View {
     let total: Int
     let done: Int
     let nextStep: ChapterSteps.Step?
+    @AppStorage(DisplaySettings.spoilersKey) private var showsSpoilers = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -130,7 +131,7 @@ private struct CurrentChapterCard: View {
                     Text("walkthrough.next")
                         .font(AppTypography.caption)
                         .foregroundStyle(AppColors.Text.secondary)
-                    Text(verbatim: nextStep.spoiler ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(nextStep.text))
+                    Text(verbatim: nextStep.spoiler && !showsSpoilers ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(nextStep.text))
                         .font(AppTypography.bodySmall)
                         .foregroundStyle(AppColors.Text.primary)
                         .lineLimit(3)
@@ -260,6 +261,7 @@ struct WalkthroughView: View {
 struct SessionChapterCard: View {
     let gameId: String
     @Environment(AppModel.self) private var app
+    @AppStorage(DisplaySettings.spoilersKey) private var showsSpoilers = false
 
     var body: some View {
         let walkthroughs = app.assistant.walkthroughs
@@ -294,7 +296,7 @@ struct SessionChapterCard: View {
                     }
                     ForEach(Array(next)) { step in
                         ChecklistRow(
-                            step.spoiler ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(step.text),
+                            step.spoiler && !showsSpoilers ? String(localized: "walkthrough.step.spoiler") : WalkthroughText.plain(step.text),
                             isChecked: false,
                             tint: step.kind.tint,
                             accessorySystemImage: step.kind.systemImage,

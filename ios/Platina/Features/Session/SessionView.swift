@@ -198,13 +198,14 @@ private struct SessionTrophies: View {
 private struct GoalsSection: View {
     @Environment(AppModel.self) private var app
     let session: PlaySessionRecord
+    @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
 
     var body: some View {
         let goals = app.sessions.goalTrophies()
         FormSection(header: String(localized: "session.goals.header")) {
             ForEach(goals, id: \.key) { trophy in
                 ChecklistRow(
-                    trophy.isHidden && !trophy.isEarned ? String(localized: "trophy.hidden.title") : trophy.name,
+                    trophy.isHidden && !trophy.isEarned && !showsHiddenTrophies ? String(localized: "trophy.hidden.title") : trophy.name,
                     isChecked: session.isGoalDone(trophy.trophyId),
                     tint: trophy.type.color,
                     accessorySystemImage: trophy.isEarned ? "trophy.fill" : nil,
@@ -228,6 +229,7 @@ private struct GoalsSection: View {
 struct GoalPicker: View {
     let gameId: String
     @Environment(AppModel.self) private var app
+    @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
     @State private var selection: Set<Int>
 
     init(gameId: String, initial: Set<Int>) {
@@ -242,9 +244,9 @@ struct GoalPicker: View {
         SearchablePicker(
             trophies.map { trophy in
                 SearchablePickerOption(
-                    trophy.isHidden ? String(localized: "trophy.hidden.title") : trophy.name,
+                    trophy.isHidden && !showsHiddenTrophies ? String(localized: "trophy.hidden.title") : trophy.name,
                     value: trophy.trophyId,
-                    subtitle: trophy.isHidden ? trophy.type.title : trophy.detail,
+                    subtitle: trophy.isHidden && !showsHiddenTrophies ? trophy.type.title : trophy.detail,
                     systemImage: trophy.type.systemImage,
                     iconColor: trophy.type.color
                 )

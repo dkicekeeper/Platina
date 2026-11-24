@@ -8,7 +8,7 @@ import PlatinaCore
 import PlatinaStore
 
 /// The person and their numbers (docs/PLAN.md §3.7): level, platinums, months, activity, the
-/// platinum shelf, the rarest trophies; and the account.
+/// platinum shelf, the rarest trophies. The account and the rest are in Settings (the gear).
 struct ProfileView: View {
     @Environment(AppModel.self) private var app
     @Query private var profiles: [ProfileRecord]
@@ -16,7 +16,6 @@ struct ProfileView: View {
     @Query private var plans: [GamePlanRecord]
     @Query(filter: #Predicate<TrophyRecord> { $0.isEarned == true }) private var earnedRecords: [TrophyRecord]
     @State private var openedGame: String?
-    @State private var isConfirmingSignOut = false
 
     private var computedStats: LibraryStats {
         let statuses = Dictionary(plans.map { ($0.gameId, $0.status) }, uniquingKeysWith: { first, _ in first })
@@ -69,7 +68,6 @@ struct ProfileView: View {
                         StatsStripSkeleton(count: 4)
                         StreakCardSkeleton()
                     }
-                    accountSection
                 }
                 .screenPadding()
                 .padding(.bottom, AppSpacing.xxl)
@@ -80,13 +78,13 @@ struct ProfileView: View {
             .navigationDestination(item: $openedGame) { gameId in
                 GameView(gameId: gameId)
             }
-            .confirmationDialog(
-                Text("library.signOut.confirm"),
-                isPresented: $isConfirmingSignOut,
-                titleVisibility: .visible
-            ) {
-                Button(String(localized: "library.signOut"), role: .destructive) {
-                    Task { await app.signOut() }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Label(String(localized: "settings.title"), systemImage: "gearshape")
+                    }
                 }
             }
         }
@@ -150,27 +148,6 @@ struct ProfileView: View {
                     )
                 }
             }
-        }
-    }
-
-    private var accountSection: some View {
-        FormSection(header: String(localized: "profile.account.header")) {
-            UniversalRow(
-                String(localized: "profile.account.synced"),
-                icon: "arrow.triangle.2.circlepath",
-                value: app.sync.lastSyncedAt.map { Formatting.relativeTime($0) } ?? String(localized: "profile.account.never")
-            )
-            UniversalRow(
-                String(localized: "profile.account.syncNow"),
-                icon: "arrow.clockwise",
-                accessory: .action { Task { await app.sync.sync(force: true) } }
-            )
-            UniversalRow(
-                String(localized: "library.signOut"),
-                icon: "rectangle.portrait.and.arrow.right",
-                role: .destructive,
-                accessory: .action { isConfirmingSignOut = true }
-            )
         }
     }
 }
