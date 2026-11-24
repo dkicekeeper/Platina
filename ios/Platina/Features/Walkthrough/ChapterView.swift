@@ -22,6 +22,7 @@ struct ChapterView: View {
     @State private var openedImage: WalkthroughImage?
     @State private var playingVideo: WalkthroughVideo?
     @State private var isShowingChat = false
+    @State private var banner: String?
     @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
     @AppStorage(DisplaySettings.spoilersKey) private var showsSpoilers = false
 
@@ -64,6 +65,7 @@ struct ChapterView: View {
                 }
             }
         }
+        .modifier(WalkthroughBanner(message: $banner))
         .sheet(isPresented: $isShowingChat) {
             GameChatSheet(gameId: gameId, gameName: games.first?.name ?? "")
         }
@@ -252,9 +254,15 @@ struct ChapterView: View {
                 }
             }
             if walkthroughs.chapter(gameId: gameId, chapterId: chapter.id) != nil {
-                DSButton(String(localized: "walkthrough.steps.rebuild"), systemImage: "arrow.clockwise", appearance: .flat, size: .small) {
-                    Task { await walkthroughs.buildChapter(gameId: gameId, chapterId: chapter.id, refresh: true) }
-                }
+                WalkthroughRebuildControl(
+                    state: walkthroughs.state(for: gameId, chapterId: chapter.id),
+                    title: String(localized: "walkthrough.steps.rebuild"),
+                    confirmTitle: String(localized: "walkthrough.steps.rebuild.confirm.title"),
+                    confirmMessage: String(localized: "walkthrough.steps.rebuild.confirm.message"),
+                    steps: true,
+                    rebuild: { await walkthroughs.buildChapter(gameId: gameId, chapterId: chapter.id, refresh: true) != nil },
+                    onRebuilt: { banner = String(localized: "walkthrough.steps.rebuilt") }
+                )
             }
         }
     }

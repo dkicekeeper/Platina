@@ -8849,6 +8849,74 @@
         }
       }
     },
+    "walkthrough.rebuild.confirm.action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rebuild"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пересобрать"
+          }
+        }
+      }
+    },
+    "walkthrough.rebuild.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plati reads the guides again and lays out the chapters, which takes a minute or two. Each chapter's steps are built again when you open it."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плати заново прочитает гайды и составит главы, это минута-две. Шаги глав соберутся заново, когда вы их откроете."
+          }
+        }
+      }
+    },
+    "walkthrough.rebuild.confirm.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rebuild the walkthrough?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пересобрать прохождение?"
+          }
+        }
+      }
+    },
+    "walkthrough.rebuilt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The walkthrough is rebuilt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прохождение пересобрано"
+          }
+        }
+      }
+    },
     "walkthrough.session.header": {
       "extractionState": "manual",
       "localizations": {
@@ -9202,6 +9270,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пересобрать шаги главы"
+          }
+        }
+      }
+    },
+    "walkthrough.steps.rebuild.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plati reads the chapter's page again, which takes about a minute. This chapter's ticks are cleared: the steps will be new."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плати заново прочитает страницу главы, это около минуты. Галочки этой главы снимутся: шаги будут новые."
+          }
+        }
+      }
+    },
+    "walkthrough.steps.rebuild.confirm.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rebuild this chapter's steps?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пересобрать шаги главы?"
+          }
+        }
+      }
+    },
+    "walkthrough.steps.rebuilt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The chapter's steps are rebuilt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаги главы пересобраны"
           }
         }
       }

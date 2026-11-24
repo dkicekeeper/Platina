@@ -138,6 +138,70 @@ struct WalkthroughBuildingCard: View {
     }
 }
 
+/// Rebuilding what is already built, the plan or a chapter's steps: the button asks first (a
+/// rebuild is a model call and replaces what is there), then Plati at work in its place, then why
+/// it failed, with a retry. What was built stays on screen until the new one arrives.
+struct WalkthroughRebuildControl: View {
+    let state: WalkthroughService.BuildState
+    let title: String
+    let confirmTitle: String
+    let confirmMessage: String
+    /// Whether it rebuilds a chapter's steps (the failure's wording).
+    let steps: Bool
+    /// The rebuild; true when it came back.
+    let rebuild: () async -> Bool
+    let onRebuilt: () -> Void
+
+    @State private var isConfirming = false
+
+    var body: some View {
+        switch state {
+        case .building(let step):
+            WalkthroughBuildingCard(step: step)
+        case .failed(let code):
+            StatusBanner(WalkthroughText.failure(code, steps: steps), status: .warning) { start() }
+        case .idle:
+            DSButton(title, systemImage: "arrow.clockwise", appearance: .flat, size: .small) {
+                isConfirming = true
+            }
+            .confirmationDialog(Text(verbatim: confirmTitle), isPresented: $isConfirming, titleVisibility: .visible) {
+                Button(String(localized: "walkthrough.rebuild.confirm.action")) { start() }
+                Button(String(localized: "common.cancel"), role: .cancel) {}
+            } message: {
+                Text(verbatim: confirmMessage)
+            }
+        }
+    }
+
+    private func start() {
+        Task {
+            if await rebuild() { onRebuilt() }
+        }
+    }
+}
+
+/// The outcome of a rebuild over the top of the screen for a few seconds; `MessageBanner` speaks
+/// it to VoiceOver.
+struct WalkthroughBanner: ViewModifier {
+    @Binding var message: String?
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .top) {
+                if let message {
+                    MessageBanner(message: message, type: .success)
+                        .screenPadding()
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .task(id: message) {
+                            try? await Task.sleep(for: .seconds(4))
+                            self.message = nil
+                        }
+                }
+            }
+            .animation(AppAnimation.gentleSpring, value: message)
+    }
+}
+
 /// A picture from a guide, shown full screen with its source.
 struct WalkthroughImage: Identifiable, Hashable {
     let url: URL

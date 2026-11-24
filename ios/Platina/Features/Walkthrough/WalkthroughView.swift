@@ -25,6 +25,10 @@ struct WalkthroughSection: View {
                         Text("walkthrough.all \(plan.chapters.count)")
                     }
                 }
+                if case .building(let step) = walkthroughs.state(for: game.id) {
+                    // A rebuild under way (from the walkthrough's screen or Plati).
+                    WalkthroughBuildingCard(step: step)
+                }
                 current(plan, walkthroughs: walkthroughs)
             } else {
                 SectionHeader(String(localized: "walkthrough.header"), systemImage: "point.bottomleft.forward.to.point.topright.scurvepath")
@@ -150,6 +154,7 @@ struct WalkthroughView: View {
     let gameId: String
     @Environment(AppModel.self) private var app
     @Environment(\.openURL) private var openURL
+    @State private var banner: String?
 
     var body: some View {
         let walkthroughs = app.assistant.walkthroughs
@@ -180,9 +185,15 @@ struct WalkthroughView: View {
                                 }
                             }
                         }
-                        DSButton(String(localized: "walkthrough.rebuild"), systemImage: "arrow.clockwise", appearance: .flat, size: .small) {
-                            Task { await walkthroughs.build(gameId: gameId, refresh: true) }
-                        }
+                        WalkthroughRebuildControl(
+                            state: walkthroughs.state(for: gameId),
+                            title: String(localized: "walkthrough.rebuild"),
+                            confirmTitle: String(localized: "walkthrough.rebuild.confirm.title"),
+                            confirmMessage: String(localized: "walkthrough.rebuild.confirm.message"),
+                            steps: false,
+                            rebuild: { await walkthroughs.build(gameId: gameId, refresh: true) != nil },
+                            onRebuilt: { banner = String(localized: "walkthrough.rebuilt") }
+                        )
                     }
                     .screenPadding()
                     .padding(.bottom, AppSpacing.xxl)
@@ -195,6 +206,7 @@ struct WalkthroughView: View {
         .background(AppColors.Background.base)
         .navigationTitle(Text("walkthrough.header"))
         .navigationBarTitleDisplayMode(.inline)
+        .modifier(WalkthroughBanner(message: $banner))
     }
 
     /// Every kind of collectible in the game: found of how many.
