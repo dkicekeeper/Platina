@@ -114,20 +114,7 @@ struct GameView: View {
                                 }
                             }
                         )
-                        .heroBackground(clearHeight: GameHeader.room) {
-                            // The store's key art (the PS5 game hub's cover, without the title,
-                            // as the console lays the logo over it), else the game list's cover,
-                            // else the trophy list's icon, until the game list has been read.
-                            // The game's icon, seen in the list already, stands in blurred
-                            // until the art has loaded.
-                            if let art = game.artURL {
-                                RemotePhoto(key: "game-art-\(game.id)", url: art, placeholderKey: "game-\(game.id)")
-                            } else if let cover = game.coverURL {
-                                RemotePhoto(key: "game-cover-\(game.id)", url: cover, placeholderKey: "game-\(game.id)")
-                            } else {
-                                RemotePhoto(key: "game-\(game.id)", url: game.iconURL)
-                            }
-                        }
+                        .gameArt(game)
 
                         // An iPad or a Mac window: the trophies, and beside them the guide, the
                         // walkthrough and the sessions. Narrower (a phone, a panel open beside
@@ -353,6 +340,36 @@ struct TrophySection: Identifiable {
     let id: String
     let title: String?
     let trophies: [TrophyRecord]
+}
+
+private extension View {
+    /// The game's art behind its header (`.heroBackground(picture:)`). Where the store has the
+    /// game hub's cover in two layers, its backdrop with the hero character standing in front of
+    /// it, whole under the bars (DesignKit 8.17.0): the cover cropped to a phone's width showed a
+    /// shoulder. Else the hub's cover itself (without the title, as the console lays the logo
+    /// over it), else the game list's cover, else the trophy list's icon, until the game list has
+    /// been read. The game's icon, seen in the list already, stands in blurred until the art has
+    /// loaded; the character shows once it is there.
+    @ViewBuilder
+    func gameArt(_ game: GameRecord) -> some View {
+        if let backdrop = game.backdropURL, let character = game.characterURL {
+            heroBackground(clearHeight: GameHeader.room) {
+                RemotePhoto(key: "game-backdrop-\(game.id)", url: backdrop, placeholderKey: "game-\(game.id)")
+            } subject: {
+                RemotePhoto(key: "game-character-\(game.id)", url: character)
+            }
+        } else {
+            heroBackground(clearHeight: GameHeader.room) {
+                if let art = game.artURL {
+                    RemotePhoto(key: "game-art-\(game.id)", url: art, placeholderKey: "game-\(game.id)")
+                } else if let cover = game.coverURL {
+                    RemotePhoto(key: "game-cover-\(game.id)", url: cover, placeholderKey: "game-\(game.id)")
+                } else {
+                    RemotePhoto(key: "game-\(game.id)", url: game.iconURL)
+                }
+            }
+        }
+    }
 }
 
 /// The top of a game's screen, as a film's page in the TV app (`.heroBackground(picture:)`):
