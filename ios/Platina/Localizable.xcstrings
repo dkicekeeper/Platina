@@ -1604,57 +1604,6 @@
         }
       }
     },
-    "game.hero.lastPlayed %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "last played %@"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "играли %@"
-          }
-        }
-      }
-    },
-    "game.hero.launches %lld": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld launches"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "запусков: %lld"
-          }
-        }
-      }
-    },
-    "game.hero.played %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ played"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ в игре"
-          }
-        }
-      }
-    },
     "game.missing": {
       "extractionState": "manual",
       "localizations": {
@@ -1855,6 +1804,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Поделиться"
+          }
+        }
+      }
+    },
+    "game.stat.lastPlayed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last played"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "играли"
+          }
+        }
+      }
+    },
+    "game.stat.launches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "launches"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "запусков"
+          }
+        }
+      }
+    },
+    "game.stat.played": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "played"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "в игре"
+          }
+        }
+      }
+    },
+    "game.stat.progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "completed"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "пройдено"
           }
         }
       }

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import DesignTokens
+import DesignSupport
 import PlatinaStore
 
 @main
@@ -14,6 +15,10 @@ struct PlatinaApp: App {
         // 8.12.0, the owner's choice: less glass). Buttons and the tab bar stay glass.
         DesignKitTheme.surface = .fill
         DesignKitFonts.registerIfNeeded()
+        // Every RemotePhoto loads through the app's cache: a picture seen before shows at once,
+        // from memory or disk, and is downloaded only once (PhotoCache).
+        DesignKitPhotoLoader.loader = { key, url in await PhotoCache.shared.image(key: key, url: url) }
+        DesignKitPhotoLoader.cached = { key in PhotoCache.shared.cached(key) }
 
         let container: ModelContainer
         do {

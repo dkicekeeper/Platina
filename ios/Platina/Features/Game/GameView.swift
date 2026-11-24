@@ -318,7 +318,7 @@ struct TrophySection: Identifiable {
 /// The top of a game's screen, as a film's page in the TV app (`.heroBackground(picture:)`):
 /// the game's art from the top of the screen with its title logo (the name where it has none) at
 /// the foot of the art's room, then centred on the art's own darkened colours: the trophy counts,
-/// the session button and the plan, the progress and time played.
+/// the session button and the plan, the progress, and the numbers in a strip of tiles.
 private struct GameHeader: View {
     let game: GameRecord
     let status: GamePlanStatus
@@ -336,9 +336,10 @@ private struct GameHeader: View {
             GameTitleLogo(game: game)
                 .frame(maxWidth: .infinity, minHeight: Self.room - AppSpacing.lg, alignment: .bottom)
 
+            // White and bold on the art: the first thing read under the title.
             TrophyCountsLine(earned: game.earned, defined: game.defined)
-                .font(AppTypography.bodySmall)
-                .foregroundStyle(AppColors.Text.secondary)
+                .font(AppTypography.bodyEmphasis)
+                .foregroundStyle(AppColors.Text.primary)
 
             VStack(spacing: AppSpacing.md) {
                 DSButton(
@@ -363,33 +364,32 @@ private struct GameHeader: View {
                 )
             }
 
-            VStack(spacing: AppSpacing.sm) {
+            VStack(spacing: AppSpacing.md) {
                 LinearProgressBar(value: Double(game.progress) / 100, color: progressColor)
-                Text(verbatim: facts)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.Text.secondary)
-                    .multilineTextAlignment(.center)
+                StatsStrip(items: stats)
             }
-            .accessibilityElement(children: .combine)
         }
         .screenPadding()
         .readableWidth()
         .padding(.bottom, AppSpacing.xl)
     }
 
-    /// "Пройдено на 64% · 42 ч в игре · играли вчера · 37 запусков".
-    private var facts: String {
-        var parts = [String(localized: "game.progress \(game.progress)")]
+    /// 64% completed · 42 h played · yesterday last played · 37 launches: what PSN knows, in tiles.
+    private var stats: [StatsStrip.Item] {
+        var items = [StatsStrip.Item(
+            value: (Double(game.progress) / 100).formatted(.percent.precision(.fractionLength(0))),
+            title: String(localized: "game.stat.progress")
+        )]
         if let seconds = game.playSeconds, seconds > 0 {
-            parts.append(String(localized: "game.hero.played \(PlayTimeText.duration(seconds))"))
+            items.append(.init(value: PlayTimeText.duration(seconds), title: String(localized: "game.stat.played")))
         }
         if let lastPlayed = game.lastPlayed {
-            parts.append(String(localized: "game.hero.lastPlayed \(Formatting.relativeTime(lastPlayed))"))
+            items.append(.init(value: Formatting.relativeTime(lastPlayed), title: String(localized: "game.stat.lastPlayed")))
         }
         if let count = game.playCount, count > 0 {
-            parts.append(String(localized: "game.hero.launches \(count)"))
+            items.append(.init(value: count.formatted(), title: String(localized: "game.stat.launches")))
         }
-        return parts.joined(separator: " \u{00B7} ")
+        return items
     }
 }
 
