@@ -159,6 +159,7 @@ struct WalkthroughView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: AppSpacing.xl) {
                         overview(plan, position: position)
+                        collectibles(walkthroughs.collectibles(gameId: gameId))
                         ForEach(playthroughs(plan), id: \.self) { playthrough in
                             chapters(plan, playthrough: playthrough, position: position, titled: playthroughs(plan).count > 1)
                         }
@@ -194,6 +195,31 @@ struct WalkthroughView: View {
         .background(AppColors.Background.base)
         .navigationTitle(Text("walkthrough.header"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// Every kind of collectible in the game: found of how many.
+    @ViewBuilder
+    private func collectibles(_ tally: [CollectibleTally]) -> some View {
+        if !tally.isEmpty {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                SectionHeader(String(localized: "walkthrough.collectibles.header"), systemImage: "sparkles")
+                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                    ForEach(tally) { item in
+                        ChecklistSummaryRow(
+                            title: item.kind,
+                            checked: item.found,
+                            total: item.total,
+                            progressText: String(localized: "walkthrough.steps.count \(item.found) \(item.total)")
+                        )
+                    }
+                    Text("walkthrough.collectibles.footer")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.Text.secondary)
+                }
+                .padding(AppSpacing.lg)
+                .cardStyle()
+            }
+        }
     }
 
     private func playthroughs(_ plan: Walkthrough) -> [Int] {

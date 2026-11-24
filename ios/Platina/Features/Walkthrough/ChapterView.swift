@@ -104,10 +104,15 @@ struct ChapterView: View {
                     .font(AppTypography.body)
                     .foregroundStyle(AppColors.Text.primary)
             }
-            if !chapter.collectibles.isEmpty {
+            let tally = walkthroughs.collectibles(gameId: gameId, chapterId: chapter.id)
+            if !tally.isEmpty {
                 FlowLayout(spacing: AppSpacing.sm) {
-                    ForEach(chapter.collectibles, id: \.kind) { item in
-                        Badge(String(localized: "walkthrough.collectibles \(item.kind) \(item.count)"), systemImage: "sparkles", color: AppColors.Status.info)
+                    ForEach(tally) { item in
+                        Badge(
+                            String(localized: "walkthrough.collectibles.found \(item.kind) \(item.found) \(item.total)"),
+                            systemImage: item.found >= item.total ? "checkmark.seal.fill" : "sparkles",
+                            color: item.found >= item.total ? AppColors.success : AppColors.Status.info
+                        )
                     }
                 }
             }

@@ -122,4 +122,33 @@ struct WalkthroughTests {
         #expect(WalkthroughPosition.isStepDone(chapter.steps[2], chapterId: "c1", earned: [], marks: .init(), chapterState: .done))
         #expect(WalkthroughPosition.nextStep(in: chapter, earned: [5], marks: marks, chapterState: .current)?.id == "s3")
     }
+
+    @Test("Collectibles are tallied over the game: ticked or earned, singular and plural matched")
+    func collectibles() throws {
+        let plan = Walkthrough(
+            gameId: "NPWR12345_00", language: "ru", generatedAt: "x", overview: "", playthroughs: 1,
+            chapters: [
+                .init(id: "c1", title: "Пролог", summary: "", collectibles: [.init(kind: "Реликвии", count: 3)]),
+                .init(id: "c2", title: "Замок", summary: "", collectibles: [.init(kind: "реликвии", count: 2), .init(kind: "Карты таро", count: 4)]),
+            ],
+            cleanup: "", sources: []
+        )
+        let c1 = ChapterSteps(
+            gameId: "NPWR12345_00", language: "ru", chapterId: "c1", walkthroughGeneratedAt: "x", generatedAt: "x",
+            steps: [
+                .init(id: "s1", kind: .collectible, text: "Реликвия 1", collectible: .init(kind: "Реликвия", number: 1)),
+                .init(id: "s2", kind: .collectible, text: "Реликвия 2", trophyIds: [7], collectible: .init(kind: "Реликвия", number: 2)),
+                .init(id: "s3", kind: .collectible, text: "Реликвия 3", collectible: .init(kind: "Реликвия", number: 3)),
+                .init(id: "s4", kind: .collectible, text: "Карта таро 1", collectible: .init(kind: "Карта таро", number: 1)),
+                .init(id: "s5", kind: .path, text: "Иди налево."),
+            ],
+            sources: []
+        )
+        let marks = WalkthroughMarks(checkedSteps: ["c1/s1", "c1/s4", "c1/s5"], doneChapters: ["c1"])
+        let tally = CollectibleTally.tally(plan: plan, chapters: [c1], earned: [7], marks: marks)
+        #expect(tally == [
+            CollectibleTally(kind: "Реликвии", found: 2, total: 5),
+            CollectibleTally(kind: "Карты таро", found: 1, total: 4),
+        ])
+    }
 }

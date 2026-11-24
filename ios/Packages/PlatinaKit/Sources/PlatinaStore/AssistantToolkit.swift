@@ -483,10 +483,19 @@ public final class AssistantToolkit: AssistantToolExecuting {
             let playthrough: Int
         }
 
+        struct Found: Encodable {
+            let kind: String
+            let found: Int
+            let total: Int
+        }
+
         let overview: String
         let playthroughs: Int?
         let current_chapter: ChapterRef?
         let chapters: [Chapter]
+        /// Collectibles found in the whole game, per kind (ticked or earned; unbuilt chapters
+        /// count as not found).
+        let collectibles: [Found]
         let cleanup: String
         let sources: [Guide.Source]
     }
@@ -531,6 +540,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
                     playthrough: chapter.playthrough
                 )
             },
+            collectibles: walkthroughs.collectibles(gameId: game.id).map { .init(kind: $0.kind, found: $0.found, total: $0.total) },
             cleanup: plan.cleanup,
             sources: plan.sources
         )

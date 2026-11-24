@@ -109,6 +109,20 @@ public final class WalkthroughService {
         return (chapter, step)
     }
 
+    /// The game's collectibles found of how many, per kind; with `chapterId`, that chapter's
+    /// alone. Steps not built yet count as not found.
+    public func collectibles(gameId: String, chapterId: String? = nil) -> [CollectibleTally] {
+        guard let plan = walkthrough(for: gameId) else { return [] }
+        let chapters = plan.chapters.filter { chapterId == nil || $0.id == chapterId }
+        let scope = Walkthrough(
+            gameId: plan.gameId, language: plan.language, generatedAt: plan.generatedAt, overview: plan.overview,
+            playthroughs: plan.playthroughs, chapters: chapters, cleanup: plan.cleanup, sources: plan.sources
+        )
+        let built = chapters.compactMap { chapter(gameId: gameId, chapterId: $0.id) }
+        let earned = (try? store.earnedTrophyIds(gameId: gameId)) ?? []
+        return CollectibleTally.tally(plan: scope, chapters: built, earned: earned, marks: marks(gameId: gameId))
+    }
+
     // MARK: Fetching and building
 
     /// The server's cached plan, if someone already built it: free, so a game's screen asks.

@@ -439,3 +439,65 @@ public struct WalkthroughPosition: Sendable, Equatable {
         chapter.steps.first { !isStepDone($0, chapterId: chapter.chapterId, earned: earned, marks: marks, chapterState: chapterState) }
     }
 }
+
+// MARK: - Collectibles
+
+/// How many of one kind of collectible the person has found in the whole game, of how many the
+/// plan counts. Found means ticked, or its trophies earned: a chapter left behind doesn't make
+/// its collectibles found (the missed ones are what the cleanup is for).
+public struct CollectibleTally: Sendable, Equatable, Identifiable {
+    /// The kind as the plan names it ("Реликвии").
+    public let kind: String
+    public let found: Int
+    public let total: Int
+
+    public var id: String { kind }
+
+    public init(kind: String, found: Int, total: Int) {
+        self.kind = kind
+        self.found = found
+        self.total = total
+    }
+
+    /// The plan's kinds ("Реликвии") and the steps' ("Реликвия") are matched by the first four
+    /// letters of each word: plural and singular, any case.
+    static func key(_ kind: String) -> String {
+        kind.lowercased()
+            .split { !$0.isLetter && !$0.isNumber }
+            .map { String($0.prefix(4)) }
+            .joined(separator: " ")
+    }
+
+    /// The tally of every kind the plan counts, in the plan's order. `chapters`: the steps built
+    /// so far, of any chapters.
+    public static func tally(
+        plan: Walkthrough, chapters: [ChapterSteps], earned: Set<Int>, marks: WalkthroughMarks
+    ) -> [CollectibleTally] {
+        var order: [String] = []
+        var names: [String: String] = [:]
+        var totals: [String: Int] = [:]
+        for chapter in plan.chapters {
+            for item in chapter.collectibles {
+                let kindKey = Self.key(item.kind)
+                if totals[kindKey] == nil {
+                    order.append(kindKey)
+                    names[kindKey] = item.kind
+                }
+                totals[kindKey, default: 0] += item.count
+            }
+        }
+        var found: [String: Int] = [:]
+        for chapter in chapters {
+            for step in chapter.steps {
+                guard let collectible = step.collectible else { continue }
+                let ticked = marks.checkedSteps.contains(WalkthroughMarks.stepKey(chapterId: chapter.chapterId, stepId: step.id))
+                let earnedAll = !step.trophyIds.isEmpty && step.trophyIds.allSatisfy { earned.contains($0) }
+                if ticked || earnedAll { found[Self.key(collectible.kind), default: 0] += 1 }
+            }
+        }
+        return order.map { kindKey in
+            let total = totals[kindKey] ?? 0
+            return CollectibleTally(kind: names[kindKey] ?? kindKey, found: min(found[kindKey] ?? 0, total), total: total)
+        }
+    }
+}
