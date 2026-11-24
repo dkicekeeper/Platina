@@ -7,6 +7,7 @@ name: Assistant server
 #   eval    run the model eval against the Claude API (spends credits; see server/assistant/README.md)
 #   smoke   one real walkthrough build (plan + first chapter) outside the Worker, with timings
 #           and the API's errors (about the cost of one build in the app)
+#   probe   what web_fetch returns from a guide page: text, image URLs, YouTube ids (two calls)
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID  setup, deploy
@@ -29,7 +30,7 @@ on:
       action:
         description: "What to run"
         type: choice
-        options: [test, setup, deploy, eval, smoke]
+        options: [test, setup, deploy, eval, smoke, probe]
         default: test
       models:
         description: "eval: comma-separated model ids"
@@ -190,3 +191,21 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_EVAL_API_KEY || secrets.ANTHROPIC_API_KEY }}
         run: npx tsx scripts/smoke-walkthrough.ts ru
+
+  probe:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'probe'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/assistant/package-lock.json
+      - run: npm ci
+      - name: What web_fetch returns (spends API credits)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_EVAL_API_KEY || secrets.ANTHROPIC_API_KEY }}
+        run: npx tsx scripts/probe-fetch.ts "Lies of P"
