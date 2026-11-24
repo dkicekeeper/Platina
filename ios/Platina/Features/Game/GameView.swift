@@ -118,32 +118,47 @@ struct GameView: View {
                             // The store's key art (the PS5 game hub's cover, without the title,
                             // as the console lays the logo over it), else the game list's cover,
                             // else the trophy list's icon, until the game list has been read.
+                            // The game's icon, seen in the list already, stands in blurred
+                            // until the art has loaded.
                             if let art = game.artURL {
-                                RemotePhoto(key: "game-art-\(game.id)", url: art)
+                                RemotePhoto(key: "game-art-\(game.id)", url: art, placeholderKey: "game-\(game.id)")
                             } else if let cover = game.coverURL {
-                                RemotePhoto(key: "game-cover-\(game.id)", url: cover)
+                                RemotePhoto(key: "game-cover-\(game.id)", url: cover, placeholderKey: "game-\(game.id)")
                             } else {
                                 RemotePhoto(key: "game-\(game.id)", url: game.iconURL)
                             }
                         }
 
-                        VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                            ChipPicker(
-                                options: GameSection.allCases,
-                                selection: Binding<GameSection?>(get: { section }, set: { if let new = $0 { section = new } }),
-                                systemImage: { $0.systemImage }
-                            ) { $0.title }
-                            sectionContent(game)
+                        // An iPad or a Mac window: the trophies, and beside them the guide, the
+                        // walkthrough and the sessions. Narrower (a phone, a panel open beside
+                        // the screen): chips over one part at a time.
+                        AdaptiveColumns {
+                            trophiesColumn(game)
+                        } side: {
+                            GuideSection(game: game)
+                            WalkthroughSection(game: game)
+                            sessionsSection(limit: Self.sideSessions)
+                        } narrow: {
+                            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                                ChipPicker(
+                                    options: GameSection.allCases,
+                                    selection: Binding<GameSection?>(get: { section }, set: { if let new = $0 { section = new } }),
+                                    systemImage: { $0.systemImage }
+                                ) { $0.title }
+                                sectionContent(game)
+                            }
                         }
                         .screenPadding()
-                        .readableWidth()
+                        .readableWidth(AppLayout.wideWidth)
                         .padding(.bottom, AppSpacing.xxl)
                     }
                 }
                 .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
                 .navigationTitle(Text(verbatim: isHeroUnderBar ? "" : game.name))
-                .sheet(isPresented: $isShowingChat) {
-                    GameChatSheet(gameId: game.id, gameName: game.name)
+                // A panel beside the game on an iPad or a Mac window, a sheet on a phone.
+                .inspector(isPresented: $isShowingChat) {
+                    GameChatSheet(gameId: game.id, gameName: game.name) { isShowingChat = false }
+                        .inspectorColumnWidth(min: AppLayout.cardMinWidth, ideal: AppLayout.sideColumnWidth)
                 }
                 .sheet(isPresented: $isShowingShare) {
                     GameShareSheet(game: game)
@@ -165,16 +180,16 @@ struct GameView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    if section == .trophies {
-                        Picker(selection: $sort) {
-                            ForEach(TrophySort.allCases, id: \.self) { sort in
-                                Text(sort.title).tag(sort)
-                            }
-                        } label: {
-                            Text("library.sort")
+                    // The trophies' order: beside the guide on a wide screen, under their chip
+                    // on a phone.
+                    Picker(selection: $sort) {
+                        ForEach(TrophySort.allCases, id: \.self) { sort in
+                            Text(sort.title).tag(sort)
                         }
-                        Divider()
+                    } label: {
+                        Text("library.sort")
                     }
+                    Divider()
                     Button {
                         isShowingShare = true
                     } label: {
@@ -201,30 +216,55 @@ struct GameView: View {
         }
     }
 
+    /// How many sessions the side column shows; the chips' Sessions shows them all.
+    private static let sideSessions = 5
+
     /// The part the chips picked.
     @ViewBuilder
     private func sectionContent(_ game: GameRecord) -> some View {
         switch section {
         case .trophies:
+            trophiesColumn(game)
+        case .guide:
+            GuideSection(game: game)
+        case .walkthrough:
+            WalkthroughSection(game: game)
+        case .sessions:
+            sessionsSection(limit: nil)
+        }
+    }
+
+    /// The trophies with their filter: the main column, or the chips' Trophies.
+    @ViewBuilder
+    private func trophiesColumn(_ game: GameRecord) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             SegmentedPicker(
                 title: String(localized: "game.filter.title"),
                 selection: $filter,
                 options: TrophyFilter.allCases.map { (label: $0.title, value: $0) }
             )
             trophies(of: game)
-        case .guide:
-            GuideSection(game: game)
-        case .walkthrough:
-            WalkthroughSection(game: game)
-        case .sessions:
+        }
+    }
+
+    /// The game's sessions, the latest first: `limit` of them beside the trophies, all of them
+    /// under the chips.
+    @ViewBuilder
+    private func sessionsSection(limit: Int?) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            if limit != nil {
+                SectionHeader(GameSection.sessions.title, systemImage: GameSection.sessions.systemImage)
+            }
             if sessions.isEmpty {
                 EmptyState(
                     icon: "clock.arrow.circlepath",
                     title: String(localized: "game.sessions.empty.title"),
-                    description: String(localized: "game.sessions.empty.message")
+                    description: String(localized: "game.sessions.empty.message"),
+                    style: limit == nil ? .standard : .compact
                 )
             } else {
-                CardList(sessions, layout: .section, onOpen: { app.endedSession = $0 }) { (session: PlaySessionRecord) in
+                let shown = limit.map { Array(sessions.prefix($0)) } ?? sessions
+                CardList(shown, layout: .section, onOpen: { app.endedSession = $0 }) { (session: PlaySessionRecord) in
                     SessionRow(session: session)
                 }
             }

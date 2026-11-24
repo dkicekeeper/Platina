@@ -42,7 +42,7 @@ ios/
 │   ├── Features/<Экран>/       Path, Library, Game (+ гайд), Walkthrough (прохождение по главам),
 │   │                           Trophy, Session, Plati, Profile, Settings (шестерёнка в профиле:
 │   │                           аккаунт, спойлеры), Onboarding, Share, Widgets
-│   ├── Support/                цвета приложения, тексты
+│   ├── Support/                цвета приложения, тексты, кэш картинок (`PhotoCache`)
 │   ├── Localizable.xcstrings   строки: русский (основной) и английский, плюс ключи DesignKit
 │   └── Platina.entitlements    App Group (виджеты), iCloud (данные человека), пуши CloudKit
 ├── PlatinaWidgets/             расширение: Live Activity сессии (с шагом и ✓), виджеты «Путь к
@@ -111,6 +111,10 @@ PlatinaStore — на симуляторе в CI.
   `BACKGROUND_LAYER_ART`/`BACKGROUND`, `PORTRAIT_BANNER` (2:3 постер, название обычно на нём),
   `LOGO` (название, прозрачный PNG), `MASTER`, скриншоты. `PlayedGame.keyArtURL` (обложка хаба,
   фон, постер) и `logoURL` → `GameRecord.artURL`/`logoURL`: шапка экрана игры.
+- Картинки (арт, логотипы, иконки трофеев, аватары) грузит `RemotePhoto` DesignKit через
+  `PhotoCache` (`DesignKitPhotoLoader`, настроен в `PlatinaApp`): память, пока приложение
+  открыто, и диск (Caches, до 300 МБ) между запусками; каждая качается один раз и уменьшается до
+  ширины экрана iPad. Не грузить картинки в обход него.
 - Сбои запросов PSN и синхронизации пишутся в системный журнал (`PSNLog`, категория `PSN` и
   `Sync`): пути и коды ошибок, без токенов. Первым делом проси у владельца эти строки из
   консоли Xcode.
@@ -193,7 +197,7 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
   чата, Live Activity, Siri), и Плати видит это в `<app_context>`.
 
 <!-- designkit:agents:start -->
-<!-- From DesignKit 8.14.0, docs/agents.md. Do not edit here: the DesignKit update workflow rewrites it. -->
+<!-- From DesignKit 8.15.0, docs/agents.md. Do not edit here: the DesignKit update workflow rewrites it. -->
 
 ## DesignKit for an app's agent
 
@@ -232,7 +236,9 @@ matches the version the app builds with. Do not edit the block in the app; chang
 7. Motion through DesignKit (`AppMotion` springs, `.popIn`, `.riseIn`, effects); everything stops
    under Reduce Motion and `.designKitMotion(false)`.
 8. On an iPad or a Mac a scrolling screen keeps to a column: `.readableWidth()` after
-   `.screenPadding()` (8.13.0). No checks for the device or the screen size.
+   `.screenPadding()` (8.13.0); a detail screen puts its summaries beside the main column in
+   `AdaptiveColumns`, the phone's layout in `narrow:` (8.15.0). No checks for the device or the
+   screen size: the width the view gets decides.
 
 ### What a screen needs → the component
 
@@ -259,7 +265,7 @@ matches the version the app builds with. Do not edit the block in the app; chang
 | Photos | `RemotePhoto`, `PhotoTile`, `PhotoGrid`, `PhotoCarousel`, `PhotoViewer` |
 | Edit sheet | `EditSheetContainer`, `EditableHero`, `AmountEntrySheet` |
 | A moment of success | `.celebration`, `.completionMoment` |
-| A screen on an iPad or a Mac | `.readableWidth()`; cards side by side in `LazyVGrid(columns: AppLayout.cardColumns())` under `.readableWidth(AppLayout.wideWidth)`; list and detail in `NavigationSplitView` |
+| A screen on an iPad or a Mac | `.readableWidth()`; cards side by side in `CardList(layout: .grid)` (8.15.0) or `LazyVGrid(columns: AppLayout.cardColumns())` under `.readableWidth(AppLayout.wideWidth)`; a main column with summaries beside it in `AdaptiveColumns` (the phone's layout in `narrow:`); list and detail in `NavigationSplitView` |
 
 ### Check before pushing
 

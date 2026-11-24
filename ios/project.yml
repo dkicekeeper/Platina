@@ -23,7 +23,7 @@ packages:
   # Точная версия; поднимается отдельным коммитом (docs/PLAN.md §6).
   DesignKit:
     url: https://github.com/dkicekeeper/DesignKit
-    exactVersion: "8.14.0"
+    exactVersion: "8.15.0"
   PlatinaKit:
     path: Packages/PlatinaKit
 

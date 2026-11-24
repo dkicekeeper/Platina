@@ -291,10 +291,12 @@ struct PlatiView: View {
     }
 }
 
-/// A game's conversation with Plati, from the game's screen.
+/// A game's conversation with Plati, from the game's screen: a sheet, or a panel beside the game
+/// on a wide screen (`.inspector`), which closes through `onDone`.
 struct GameChatSheet: View {
     let gameId: String
     let gameName: String
+    var onDone: (() -> Void)?
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
 
@@ -309,7 +311,9 @@ struct GameChatSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "session.summary.done")) { dismiss() }
+                    Button(String(localized: "session.summary.done")) {
+                        if let onDone { onDone() } else { dismiss() }
+                    }
                 }
             }
         }

@@ -67,8 +67,10 @@ struct ChapterView: View {
             }
         }
         .modifier(WalkthroughBanner(message: $banner))
-        .sheet(isPresented: $isShowingChat) {
-            GameChatSheet(gameId: gameId, gameName: games.first?.name ?? "")
+        // Plati beside the chapter's steps on an iPad or a Mac window, a sheet on a phone.
+        .inspector(isPresented: $isShowingChat) {
+            GameChatSheet(gameId: gameId, gameName: games.first?.name ?? "") { isShowingChat = false }
+                .inspectorColumnWidth(min: AppLayout.cardMinWidth, ideal: AppLayout.sideColumnWidth)
         }
         .sheet(item: $playingVideo) { video in
             YouTubeVideoSheet(video: video)

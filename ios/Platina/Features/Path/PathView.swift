@@ -52,12 +52,15 @@ struct PathView: View {
                     runningGameNotice
                     currentSession
                     chasingSection
-                    almostSection
-                    recentSection
-                    sessionsSection
+                    // Side by side on an iPad or a Mac window, one under another on a phone.
+                    LazyVGrid(columns: AppLayout.cardColumns(), alignment: .leading, spacing: AppSpacing.xl) {
+                        almostSection
+                        recentSection
+                        sessionsSection
+                    }
                 }
                 .screenPadding()
-                .readableWidth()
+                .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
             .background(AppColors.Background.base)
@@ -140,13 +143,13 @@ struct PathView: View {
                     )
                 }
             } else {
-                CardList(chasing, layout: .cards, onOpen: { openedGame = $0.id }) { (game: GameRecord) in
+                CardList(chasing, layout: .grid, onOpen: { openedGame = $0.id }) { (game: GameRecord) in
                     ChasingGameCard(game: game)
                 }
             }
             if !closeToPlatinum.isEmpty {
                 SectionHeader(String(localized: "path.close.header"), systemImage: "flag.checkered")
-                CardList(closeToPlatinum, layout: .cards, onOpen: { openedGame = $0.id }) { (game: GameRecord) in
+                CardList(closeToPlatinum, layout: .grid, onOpen: { openedGame = $0.id }) { (game: GameRecord) in
                     ChasingGameCard(game: game)
                 }
             }
@@ -179,6 +182,7 @@ struct PathView: View {
                 .padding(AppSpacing.lg)
                 .cardStyle()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -210,6 +214,7 @@ struct PathView: View {
                 .padding(AppSpacing.lg)
                 .cardStyle()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -222,6 +227,7 @@ struct PathView: View {
                     SessionRow(session: session)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
