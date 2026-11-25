@@ -66,6 +66,7 @@ struct GameView: View {
     let gameId: String
 
     @Environment(AppModel.self) private var app
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Query private var games: [GameRecord]
     @Query private var plans: [GamePlanRecord]
     @Query private var sessions: [PlaySessionRecord]
@@ -82,7 +83,7 @@ struct GameView: View {
     /// The header shows the game's name; the bar's title stays empty until it scrolls away.
     @State private var isHeroUnderBar = true
 
-    /// The chips and the part under them, on a phone.
+    /// The part under the header: on a phone, the chips first.
     private static let sectionsAnchor = "sections"
 
     init(gameId: String) {
@@ -138,8 +139,9 @@ struct GameView: View {
                                     ) { $0.title }
                                     sectionContent(game)
                                 }
-                                .id(Self.sectionsAnchor)
                             }
+                            // Outside the columns' ViewThatFits, which hides ids from scrollTo.
+                            .id(Self.sectionsAnchor)
                             .screenPadding()
                             .readableWidth(AppLayout.wideWidth)
                             .padding(.bottom, AppSpacing.xxl)
@@ -148,7 +150,7 @@ struct GameView: View {
                     .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
                     // The App Store's screenshot of the guide: its chips under the bar.
                     .task {
-                        guard ScreenshotDemo.screen == .guide else { return }
+                        guard ScreenshotDemo.screen == .guide, horizontalSizeClass == .compact else { return }
                         try? await Task.sleep(for: .seconds(1.5))
                         proxy.scrollTo(Self.sectionsAnchor, anchor: .top)
                     }
