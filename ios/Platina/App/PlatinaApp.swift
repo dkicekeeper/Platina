@@ -6,6 +6,7 @@ import PlatinaStore
 
 @main
 struct PlatinaApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model: AppModel
 
     init() {

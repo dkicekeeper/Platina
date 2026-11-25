@@ -139,7 +139,10 @@ public struct PSNAuthenticator: Sendable {
         ])
     }
 
-    func authorizationCode(fromNPSSO npsso: String) async throws -> String {
+    /// An authorization code for an NPSSO token: the sign-in's step before the tokens. Trophy
+    /// notifications ask for a second one and hand only it to Plati's server, which exchanges
+    /// it for tokens of its own (docs/assistant.md §9).
+    public func authorizationCode(fromNPSSO npsso: String) async throws -> String {
         var request = URLRequest(url: PSNAuth.authorizeURL)
         request.setValue("npsso=\(npsso)", forHTTPHeaderField: "Cookie")
         request.httpShouldHandleCookies = false

@@ -79,6 +79,10 @@ struct MainTabView: View {
         .sheet(item: $app.endedSession) { session in
             SessionSummaryView(session: session)
         }
+        // A tap on a trophy notification: the games tab, where the library opens the game.
+        .onChange(of: app.alerts.openRequest, initial: true) { _, request in
+            if let request, request.isFresh { selection = .games }
+        }
         .task { await app.sync.sync() }
         .task(id: checkLoopKey) {
             await runChecks()

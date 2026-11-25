@@ -3,14 +3,18 @@ import DesignTokens
 import DesignSupport
 import DesignComponents
 import PlatinaStore
+import PSNKit
 
-/// Settings, from the gear on the profile: the PSN account, and whether hidden trophies and
-/// the walkthrough's spoilers show at once or wait for a tap (`DisplaySettings`).
+/// Settings, from the gear on the profile: the PSN account, trophy notifications from Plati's
+/// server (`TrophyAlerts`), and whether hidden trophies and the walkthrough's spoilers show at
+/// once or wait for a tap (`DisplaySettings`).
 struct SettingsView: View {
     @Environment(AppModel.self) private var app
     @AppStorage(DisplaySettings.hiddenTrophiesKey) private var showsHiddenTrophies = false
     @AppStorage(DisplaySettings.spoilersKey) private var showsSpoilers = false
     @State private var isConfirmingSignOut = false
+    /// Turning trophy notifications on: Sony's sign-in once more, for the server's own code.
+    @State private var isShowingAlertsSignIn = false
 
     var body: some View {
         ScrollView {
@@ -32,6 +36,9 @@ struct SettingsView: View {
                         role: .destructive,
                         accessory: .action { isConfirmingSignOut = true }
                     )
+                }
+                if app.alerts.isAvailable {
+                    alertsSection
                 }
                 FormSection(
                     header: String(localized: "settings.spoilers.header"),
@@ -59,6 +66,16 @@ struct SettingsView: View {
         .background(AppColors.Background.base)
         .navigationTitle(Text("settings.title"))
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isShowingAlertsSignIn) {
+            SonyLoginSheet { result in
+                isShowingAlertsSignIn = false
+                guard case .npsso(let token) = result else {
+                    app.alerts.errorMessage = String(localized: "error.signInFailed")
+                    return
+                }
+                Task { await app.alerts.turnOn(npsso: token, psn: app.client) }
+            }
+        }
         .confirmationDialog(
             Text("library.signOut.confirm"),
             isPresented: $isConfirmingSignOut,
@@ -66,6 +83,40 @@ struct SettingsView: View {
         ) {
             Button(String(localized: "library.signOut"), role: .destructive) {
                 Task { await app.signOut() }
+            }
+        }
+    }
+
+    /// A push for every trophy, the app closed or not (docs/assistant.md §9). On asks Sony's
+    /// sign-in once more: the server gets a code of its own, never the app's tokens.
+    @ViewBuilder
+    private var alertsSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            if let message = app.alerts.errorMessage {
+                MessageBanner(message: message, type: .error)
+            }
+            FormSection(
+                header: String(localized: "settings.alerts.header"),
+                footer: app.alerts.state == .paused
+                    ? String(localized: "settings.alerts.paused")
+                    : String(localized: "settings.alerts.footer")
+            ) {
+                UniversalRow(
+                    String(localized: "settings.alerts"),
+                    icon: "bell.badge",
+                    hint: app.alerts.isWorking ? String(localized: "settings.alerts.working") : nil,
+                    accessory: .toggle(Binding(
+                        get: { app.alerts.isOn || app.alerts.isWorking },
+                        set: { isOn in
+                            if isOn {
+                                app.alerts.errorMessage = nil
+                                isShowingAlertsSignIn = true
+                            } else {
+                                Task { await app.alerts.turnOff() }
+                            }
+                        }
+                    ))
+                )
             }
         }
     }

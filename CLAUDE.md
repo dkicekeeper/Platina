@@ -82,7 +82,10 @@ PlatinaStore — на симуляторе в CI.
   (`authorize` с cookie `npsso` → редирект `com.scee.psxandroid.scecompcall://redirect?code=…`)
   и токены. Запасной путь — токен NPSSO вручную. URL-scheme PlayStation App приложение **не
   регистрирует**.
-- Токены — в Keychain (`KeychainTokenStore`), на наш сервер они не уходят.
+- Токены — в Keychain (`KeychainTokenStore`), на наш сервер они не уходят. Исключение — только
+  уведомления о трофеях (1.1, их включает сам человек): приложение просит у Sony из `npsso` входа
+  второй код авторизации и отдаёт серверу его, а сервер меняет код на **свои** токены
+  (docs/assistant.md §9). Токены телефона и тогда остаются на телефоне.
 - Страница входа клиента PlayStation App (`/sonyacct/signin` с нашим `client_id`) у части людей
   не грузится нигде, даже в Safari («Время соединения с сервером истекло»; у пользователей GOG
   Galaxy то же). Вход на store.playstation.com (веб-клиент) у них работает, и после него

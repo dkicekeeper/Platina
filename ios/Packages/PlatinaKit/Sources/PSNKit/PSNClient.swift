@@ -63,6 +63,12 @@ public actor PSNClient {
         try save(try await authenticator.tokens(fromNPSSO: npsso))
     }
 
+    /// An authorization code for Plati's server, from the same NPSSO as a sign-in: the server's
+    /// own grant for trophy notifications, the app's tokens untouched (docs/assistant.md §9).
+    public func serverAuthorizationCode(npsso: String) async throws -> String {
+        try await authenticator.authorizationCode(fromNPSSO: npsso)
+    }
+
     public func signOut() throws {
         refreshing?.cancel()
         refreshing = nil

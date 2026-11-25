@@ -35,6 +35,12 @@ struct LibraryView: View {
     var body: some View {
         NavigationSplitView(preferredCompactColumn: $compactColumn) {
             list
+                // A tap on a trophy notification opens its game.
+                .onChange(of: app.alerts.openRequest, initial: true) { _, request in
+                    guard let request, request.isFresh else { return }
+                    openedGame = request.gameId
+                    compactColumn = .detail
+                }
         } detail: {
             NavigationStack {
                 if ScreenshotDemo.screen == .chapter {

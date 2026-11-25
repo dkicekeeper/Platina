@@ -13,6 +13,8 @@
 | Сообщения Плати (текст, фото экрана для «Где я?»), данные, которые Плати попросил у телефона (трофеи, игры) | идут на наш сервер (Cloudflare Worker) и в Anthropic (Claude) только для ответа; сервер их не хранит и не пишет в лог | Anthropic обрабатывает по своим правилам для коммерческого API (срок хранения и обучение — проверить по текущей политике Anthropic перед публикацией) |
 | Гайды и прохождения игр | кэш на сервере (Cloudflare KV, 30 дней) — общий для всех, без данных человека | все пользователи приложения |
 | Ключ App Attest и счётчики запросов | сервер (KV): id ключа и число вызовов за день/месяц | никто; нужен, чтобы сервер отвечал только настоящему приложению и держал лимиты |
+| Друзья PSN и их открытые списки трофеев (1.1) | кэш на устройстве, запрашиваются у Sony с телефона | Sony |
+| Уведомления о трофеях (1.1, только если включены): свои токены сервера (зашифрованы), номер аккаунта PSN, push-токен, язык, снимок списков трофеев | сервер (Durable Object на установку), стирается при выключении, выходе, отказе Sony или 410 от APNs | никто; Sony (запросы), Apple (пуши) |
 
 Нет: аналитики, рекламы, трекинга, сторонних SDK, аккаунтов в нашем сервисе, продажи данных.
 
@@ -31,6 +33,13 @@
     (если ревью спросит — пояснить, что это ключ подписи запросов).
 - PSN-данные (трофеи, профиль) берутся у Sony с телефона и на наш сервер уходят только кусками,
   которые Плати попросил для ответа, — это входит в «Other User Content».
+
+### С 1.1 (уведомления о трофеях)
+
+Когда выйдет 1.1, владелец меняет App Privacy: **Data Linked to You → Identifiers → User ID**
+(номер аккаунта PSN, который сервер хранит для уведомлений о трофеях; только у тех, кто их
+включил); цель — App Functionality; не для трекинга. Остальное — как выше. Политика на Pages уже
+описывает это (раздел 4).
 
 ## 3. Политика конфиденциальности и поддержка
 
@@ -110,6 +119,16 @@ API — удаление в течение 30 дней, без обучения;
 
 Владельцу: завести отдельный аккаунт PSN для ревью (с парой игр PS5 и трофеями), без двухфакторки
 или с ней, но тогда объяснить в заметках.
+
+С 1.1 — добавить в заметки:
+
+> Version 1.1 adds optional trophy notifications (Settings → Trophy notifications, off by
+> default). To notify about trophies while the app is closed, our server needs access of its own:
+> when the person turns it on and signs in to PSN once more, the app asks Sony for a one-time
+> authorization code and sends only that code to our server, which exchanges it for its own
+> tokens (stored encrypted) and checks PSN while the person plays. The app's own tokens stay in
+> the keychain. Turning it off or signing out deletes everything on the server. Friends
+> comparison reads the friends' public trophy lists from Sony on the device.
 
 ## 5. Письма источникам гайдов (черновики)
 

@@ -28,6 +28,8 @@ final class AppModel {
     let gameHelp: GameHelpService
     /// The person's PSN friends and their progress in shared games.
     let friends: FriendsSync
+    /// Trophy notifications from Plati's server, the app closed or not (docs/assistant.md §9).
+    let alerts = TrophyAlerts.shared
 
     /// The session screen is open.
     var isShowingSession = false
@@ -77,7 +79,8 @@ final class AppModel {
             self?.handle(error)
         }
         sync.onNewTrophies = { [weak self] trophies in
-            guard let self, !isActive else { return }
+            // With the server's notifications on, they already told: no second one.
+            guard let self, !isActive, !alerts.isOn else { return }
             BackgroundRefresh.notify(trophies)
         }
         sync.onSynced = { [weak self] in
@@ -181,6 +184,18 @@ final class AppModel {
         return AssistantServerClient(baseURL: url, signer: signer)
     }
 
+    /// Trophy notifications' client: the server and a signature, as Plati's (nil: unavailable).
+    private static func alertsClient() -> TrophyAlertsClient? {
+        guard !ScreenshotDemo.isOn, let url = AssistantConfig.serverURL else { return nil }
+        if AssistantAttestation.isSupported {
+            return TrophyAlertsClient(baseURL: url, signer: AssistantAttestation(baseURL: url))
+        }
+        if let token = AssistantConfig.devToken {
+            return TrophyAlertsClient(baseURL: url, signer: DevTokenSigner(token: token))
+        }
+        return nil
+    }
+
     func endSession() async {
         isShowingSession = false
         await sessions.end()
@@ -238,17 +253,23 @@ final class AppModel {
             isShowingSession = ScreenshotDemo.screen == .session
             return
         }
+        alerts.configure(client: Self.alertsClient())
         phase = await client.isSignedIn ? .signedIn : .signedOut
     }
 
     func signIn(npsso: String) async throws {
         try await client.signIn(npsso: npsso)
         didSignIn()
+        // Notifications that were on (or paused when Sony refused the server's grant) get a new
+        // grant from the same sign-in.
+        let client = client
+        Task { await alerts.signedIn(npsso: npsso, psn: client) }
     }
 
     /// Signs out of PSN and forgets what PSN gave. The person's own plans stay on the device.
     func signOut() async {
         await sessions.end()
+        await alerts.turnOff()
         try? await client.signOut()
         try? store.eraseCache()
         sync.reset()

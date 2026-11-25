@@ -1,6 +1,91 @@
 {
   "sourceLanguage": "ru",
   "strings": {
+    "alerts.error.code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PSN didn’t accept the sign-in. Try again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PSN не принял вход. Попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "alerts.error.generic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t turn the notifications on. Try again later."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось включить уведомления. Попробуйте позже."
+          }
+        }
+      }
+    },
+    "alerts.error.permission": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow notifications for Platina in the iPhone’s Settings."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешите уведомления для Platina в Настройках iPhone."
+          }
+        }
+      }
+    },
+    "alerts.error.push": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS didn’t give an address for pushes. Check the connection and try again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS не выдала адрес для пушей. Проверьте интернет и попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "alerts.error.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trophy notifications aren’t available yet: the server isn’t ready."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомления о трофеях пока недоступны: сервер ещё не готов."
+          }
+        }
+      }
+    },
     "amount.hidden": {
       "comment": "DesignKit",
       "extractionState": "manual",
@@ -6943,6 +7028,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "О приложении"
+          }
+        }
+      }
+    },
+    "settings.alerts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trophy notifications"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомления о трофеях"
+          }
+        }
+      }
+    },
+    "settings.alerts.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A push for every new trophy, even when Platina is closed; the platinum gets its own. For this, Plati’s server gets access of its own to your PSN trophies: sign in to PSN once more when you turn it on. The app’s own tokens stay on the phone. Turn it off and the server forgets everything."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пуш о каждом новом трофее, даже когда Platina закрыта; платина — отдельно. Для этого сервер Плати получает свой доступ к вашим трофеям PSN: при включении войдите в PSN ещё раз. Токены приложения остаются на телефоне. Выключите — сервер всё забудет."
+          }
+        }
+      }
+    },
+    "settings.alerts.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомления"
+          }
+        }
+      }
+    },
+    "settings.alerts.paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are paused: PSN asked to sign in again. Turn them on once more."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомления на паузе: PSN попросил войти снова. Включите их ещё раз."
+          }
+        }
+      }
+    },
+    "settings.alerts.working": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning on…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включаю…"
           }
         }
       }

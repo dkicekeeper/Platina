@@ -33,6 +33,8 @@ enum BackgroundRefresh {
             content.body = String(localized: "notification.trophy.body \(trophy.name) \(trophy.game?.name ?? "")")
             content.sound = .default
             content.threadIdentifier = trophy.gameId
+            // A tap opens the game (AppDelegate).
+            content.userInfo = ["gameId": trophy.gameId]
             center.add(UNNotificationRequest(identifier: "trophy-\(trophy.key)", content: content, trigger: nil))
         }
         if trophies.count > shown.count {
