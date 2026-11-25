@@ -32,8 +32,11 @@ enum ScreenshotDemo {
             }
         }
 
-        /// The library opens Emberfall.
-        var opensGame: Bool { [.game, .guide, .walkthrough, .chapter].contains(self) }
+        /// The library opens Emberfall: on a phone over the list, on an iPad beside it.
+        var opensGame: Bool { [.library, .game, .guide, .walkthrough, .chapter].contains(self) }
+
+        /// A phone shows the open game, not the list.
+        var showsGameOnPhone: Bool { self != .library }
 
         var section: GameSection {
             switch self {

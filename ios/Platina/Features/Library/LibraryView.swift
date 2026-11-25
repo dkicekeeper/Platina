@@ -20,7 +20,8 @@ struct LibraryView: View {
     @State private var query = ""
     @State private var openedGame: String? = ScreenshotDemo.screen?.opensGame == true ? ScreenshotDemo.gameId : nil
     /// What a collapsed split view (a phone) shows: the list, or the open game over it.
-    @State private var compactColumn: NavigationSplitViewColumn = ScreenshotDemo.screen?.opensGame == true ? .detail : .sidebar
+    @State private var compactColumn: NavigationSplitViewColumn =
+        ScreenshotDemo.screen.map { $0.opensGame && $0.showsGameOnPhone } == true ? .detail : .sidebar
 
     private var statuses: [String: GamePlanStatus] {
         Dictionary(plans.map { ($0.gameId, $0.status) }, uniquingKeysWith: { first, _ in first })
