@@ -1,0 +1,111 @@
+DEFINE SCHEMA
+
+    RECORD TYPE CD_ConversationRecord (
+        CD_displayData  BYTES QUERYABLE SORTABLE,
+        CD_entityName   STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_gameId       STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_messagesData BYTES QUERYABLE SORTABLE,
+        CD_updatedAt    TIMESTAMP QUERYABLE SORTABLE,
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE CD_GamePlanRecord (
+        CD_entityName   STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_gameId       STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_statusRaw    STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_updatedAt    TIMESTAMP QUERYABLE SORTABLE,
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE CD_NoteRecord (
+        CD_entityName   STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_gameId       STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_text         STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_trophyId     INT64 QUERYABLE SORTABLE,
+        CD_updatedAt    TIMESTAMP QUERYABLE SORTABLE,
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE CD_PlaySessionRecord (
+        CD_checkedGoalTrophyIds BYTES QUERYABLE SORTABLE,
+        CD_earnedTrophyIds      BYTES QUERYABLE SORTABLE,
+        CD_endPlaySeconds       DOUBLE QUERYABLE SORTABLE,
+        CD_endProgress          INT64 QUERYABLE SORTABLE,
+        CD_endedAt              TIMESTAMP QUERYABLE SORTABLE,
+        CD_entityName           STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_gameId               STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_gameName             STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_goalTrophyIds        BYTES QUERYABLE SORTABLE,
+        CD_nextSteps            STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_note                 STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_pausedAt             TIMESTAMP QUERYABLE SORTABLE,
+        CD_pausedSeconds        DOUBLE QUERYABLE SORTABLE,
+        CD_sessionId            STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_startPlaySeconds     DOUBLE QUERYABLE SORTABLE,
+        CD_startProgress        INT64 QUERYABLE SORTABLE,
+        CD_startedAt            TIMESTAMP QUERYABLE SORTABLE,
+        CD_summary              STRING QUERYABLE SEARCHABLE SORTABLE,
+        "___createTime"         TIMESTAMP,
+        "___createdBy"          REFERENCE,
+        "___etag"               STRING,
+        "___modTime"            TIMESTAMP,
+        "___modifiedBy"         REFERENCE,
+        "___recordID"           REFERENCE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE CD_WalkthroughProgressRecord (
+        CD_checkedSteps   BYTES QUERYABLE SORTABLE,
+        CD_currentChapter STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_doneChapters   BYTES QUERYABLE SORTABLE,
+        CD_entityName     STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_gameId         STRING QUERYABLE SEARCHABLE SORTABLE,
+        CD_updatedAt      TIMESTAMP QUERYABLE SORTABLE,
+        "___createTime"   TIMESTAMP,
+        "___createdBy"    REFERENCE,
+        "___etag"         STRING,
+        "___modTime"      TIMESTAMP,
+        "___modifiedBy"   REFERENCE,
+        "___recordID"     REFERENCE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE Users (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        roles           LIST<INT64>,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );
