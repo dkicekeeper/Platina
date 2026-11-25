@@ -3075,7 +3075,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Подробнее: %@"
+            "value": "Пояснение: %@"
           }
         }
       }
@@ -3093,7 +3093,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Подробнее"
+            "value": "Пояснение"
           }
         }
       }
