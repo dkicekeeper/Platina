@@ -233,8 +233,9 @@ API — удаление в течение 30 дней, без обучения;
 
 ## 7. Перед отправкой (чек-лист)
 
-- [x] Политика конфиденциальности и поддержка — в `docs/public` (GitHub Pages); осталось включить
-      Pages в настройках и вставить ссылки в App Store Connect.
+- [x] Политика конфиденциальности и поддержка опубликованы (GitHub Pages из `docs/public`,
+      2026-11-25): https://dkicekeeper.github.io/Platina/privacy-policy.html и
+      https://dkicekeeper.github.io/Platina/support.html; осталось вставить их в App Store Connect.
 - [ ] App Privacy заполнен (раздел 2).
 - [ ] Отдельный аккаунт PSN для ревью, заметки (раздел 4).
 - [ ] Письма отправлены (раздел 5); ответы — в `IMAGE_SOURCES`.
