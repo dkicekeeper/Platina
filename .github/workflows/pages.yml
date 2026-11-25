@@ -24,10 +24,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # Two jobs, as in GitHub's starter workflows: the deploy reads the site among the artifacts of a
+  # finished job (in one job it found none, five runs in a row).
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -35,5 +34,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs/public
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v5
