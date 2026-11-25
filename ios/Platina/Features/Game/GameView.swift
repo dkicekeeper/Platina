@@ -588,8 +588,8 @@ enum TrophyMeta {
         String(localized: "trophy.rate \(rate.formatted(.number.precision(.fractionLength(1))))")
     }
 
-    /// The `InfoTip` on the share of players, where a screen explains it once (the rarest
-    /// trophies' header), not on every row of a list.
+    /// The `InfoTip` on the share of players, where a screen explains it once (the trophy's
+    /// facts, the rarest trophies' header), not on every row of a list.
     static var rateInfoTitle: String { String(localized: "trophy.rate.info.title") }
     static var rateInfoMessage: String { String(localized: "trophy.rate.info.message") }
 }
