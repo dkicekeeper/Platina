@@ -21,3 +21,4 @@ ios/Config/Local.xcconfig
 
 # App Store screenshots (Actions → Screenshots artifact)
 screenshots/raw/
+screenshots/store/

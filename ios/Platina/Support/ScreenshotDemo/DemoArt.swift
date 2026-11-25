@@ -183,12 +183,13 @@ enum DemoArt {
     /// A badge in the game's colours with one of its symbols; the platinum (id 0) a crown on silver.
     private static func trophy(_ theme: Theme, id: Int) -> UIImage {
         render(CGSize(width: 256, height: 256), opaque: true) { context, size in
-            let colors = id == 0 ? [rgb(0x8E9AAF), rgb(0xE8ECF3)] : [theme.sky[1], theme.sky[2]]
+            // The platinum: a light crown on the game's night, ringed in silver.
+            let colors = id == 0 ? [theme.sky[0], theme.sky[1]] : [theme.sky[1], theme.sky[2]]
             let gradient = CGGradient(colorsSpace: nil, colors: colors.map(\.cgColor) as CFArray, locations: [0, 1])!
             context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: size.width, y: size.height), options: [])
             let ring = CGRect(origin: .zero, size: size).insetBy(dx: 26, dy: 26)
-            context.setStrokeColor(UIColor.white.withAlphaComponent(0.35).cgColor)
-            context.setLineWidth(6)
+            context.setStrokeColor(id == 0 ? rgb(0xDDE6F5).cgColor : UIColor.white.withAlphaComponent(0.35).cgColor)
+            context.setLineWidth(id == 0 ? 10 : 6)
             context.strokeEllipse(in: ring)
             let name = id == 0 ? "crown.fill" : theme.symbols[id % theme.symbols.count]
             let config = UIImage.SymbolConfiguration(pointSize: 104, weight: .semibold)
@@ -203,7 +204,7 @@ enum DemoArt {
 
     private static func avatar() -> UIImage {
         render(CGSize(width: 512, height: 512), opaque: true) { context, size in
-            let gradient = CGGradient(colorsSpace: nil, colors: [rgb(0x3573BA).cgColor, rgb(0x7B4FD6).cgColor] as CFArray, locations: [0, 1])!
+            let gradient = CGGradient(colorsSpace: nil, colors: [rgb(0xD6006F).cgColor, rgb(0x6B2FD6).cgColor] as CFArray, locations: [0, 1])!
             context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: size.width, y: size.height), options: [])
             let config = UIImage.SymbolConfiguration(pointSize: 260, weight: .bold)
             if let symbol = UIImage(systemName: "gamecontroller.fill", withConfiguration: config)?.withTintColor(.white, renderingMode: .alwaysOriginal) {

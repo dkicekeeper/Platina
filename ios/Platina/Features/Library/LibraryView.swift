@@ -20,7 +20,8 @@ struct LibraryView: View {
     @State private var query = ""
     @State private var openedGame: String? = ScreenshotDemo.screen?.opensGame == true ? ScreenshotDemo.gameId : nil
     /// What a collapsed split view (a phone) shows: the list, or the open game over it.
-    @State private var compactColumn: NavigationSplitViewColumn = ScreenshotDemo.screen?.opensGame == true ? .detail : .sidebar
+    @State private var compactColumn: NavigationSplitViewColumn =
+        ScreenshotDemo.screen.map { $0.opensGame && $0.showsGameOnPhone } == true ? .detail : .sidebar
 
     private var statuses: [String: GamePlanStatus] {
         Dictionary(plans.map { ($0.gameId, $0.status) }, uniquingKeysWith: { first, _ in first })
@@ -37,8 +38,10 @@ struct LibraryView: View {
         } detail: {
             NavigationStack {
                 if ScreenshotDemo.screen == .chapter {
-                    // The App Store's screenshot of the current chapter.
+                    // The App Store's screenshots of the current chapter and of every chapter.
                     ChapterView(gameId: ScreenshotDemo.gameId, chapterId: ScreenshotDemo.chapterId)
+                } else if ScreenshotDemo.screen == .walkthrough {
+                    WalkthroughView(gameId: ScreenshotDemo.gameId)
                 } else if let openedGame {
                     // A game of its own each time: its sections, filters and loading start over.
                     GameView(gameId: openedGame)

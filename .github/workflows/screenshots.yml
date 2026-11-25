@@ -4,7 +4,8 @@ name: Screenshots
 # (-ScreenshotDemo: a made-up library, art drawn on the device, Plati from a script) on an iPhone
 # 6.9" and an iPad 13", in Russian and English. scripts/capture_screenshots.sh runs the UI test
 # PlatinaUITests/ScreenshotCaptureTests and exports its pictures; they come out as the
-# "screenshots" artifact (screenshots/raw/<device>/<language>/NN-screen.png).
+# "screenshots" artifact (screenshots/raw/<device>/<language>/NN-screen.png); in their frames,
+# in the store's order (scripts/store_frames.py), they are the "store-frames" artifact.
 # Run: Actions → Screenshots → Run workflow.
 
 on:
@@ -62,4 +63,21 @@ jobs:
         with:
           name: screenshots
           path: screenshots/raw
+          if-no-files-found: warn
+
+      # The store's frames (scripts/store_frames.py): each picture under its headline in Inter on
+      # a dark page; Inter is DesignKit's, at the version the app builds with.
+      - name: Store frames
+        run: |
+          VERSION=$(python3 -c 'import re; print(re.search(r"DesignKit:\s*\n\s*url:.*\n\s*exactVersion:\s*\"([^\"]+)\"", open("ios/project.yml").read()).group(1))')
+          git clone --depth 1 --branch "$VERSION" https://github.com/dkicekeeper/DesignKit "$RUNNER_TEMP/DesignKit"
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow
+          "$RUNNER_TEMP/venv/bin/python" scripts/store_frames.py \
+            --font "$RUNNER_TEMP/DesignKit/Sources/DesignTokens/Resources/Fonts/Inter-VariableFont_opsz,wght.ttf"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-frames
+          path: screenshots/store
           if-no-files-found: warn

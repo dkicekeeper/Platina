@@ -28,7 +28,10 @@ final class ScreenshotCaptureTests: XCTestCase {
         let environment = ProcessInfo.processInfo.environment
         let language = environment["SCREENSHOT_LANGUAGE"] ?? "ru"
         let locale = environment["SCREENSHOT_LOCALE"] ?? "ru_RU"
-        let only = environment["SCREENSHOT_SCREENS"].map { Set($0.split(separator: ",").map(String.init)) }
+        // Empty (the workflow's default): every screen.
+        let only = environment["SCREENSHOT_SCREENS"]
+            .map { Set($0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }) }
+            .flatMap { $0.isEmpty ? nil : $0 }
 
         for (index, screen) in Self.screens.enumerated() where only?.contains(screen) ?? true {
             let app = XCUIApplication()
@@ -38,11 +41,25 @@ final class ScreenshotCaptureTests: XCTestCase {
                 "-AppleLanguages", "(\(language))",
                 "-AppleLocale", locale,
             ]
-            app.launch()
-            XCTAssertTrue(app.wait(for: .runningForeground, timeout: 60), "\(screen): the app did not start")
-            // The demo syncs its library and seeds the person's side in memory, then the screen
-            // draws its art and settles its entrances.
-            sleep(screen == "plati" || screen == "session" ? 10 : 8)
+            // Once in 36 (2026-11-25, the iPhone's English Path) the picture caught the app on its
+            // onboarding: an instance not in the demo, signed out. Such a launch goes again.
+            for attempt in 1...3 {
+                app.launch()
+                XCTAssertTrue(app.wait(for: .runningForeground, timeout: 60), "\(screen): the app did not start")
+                // The demo syncs its library and seeds the person's side in memory, then the
+                // screen draws its art and settles its entrances.
+                sleep(screen == "plati" || screen == "session" ? 10 : 8)
+                let onboarding = app.descendants(matching: .any).matching(identifier: "onboarding").firstMatch
+                guard onboarding.exists, attempt < 3 else { break }
+                print("\(screen): the onboarding, not the demo; launching again")
+                app.terminate()
+            }
+            // The guide scrolls to its chips by itself (`GameView`), the walkthrough is its own
+            // screen; the chat opens at its end: back a little, to the reply's first line.
+            if screen == "plati" {
+                drag(app, from: 0.35, to: 0.55)
+                sleep(2)
+            }
 
             let shot = XCUIScreen.main.screenshot()
             let attachment = XCTAttachment(screenshot: shot)
@@ -51,5 +68,12 @@ final class ScreenshotCaptureTests: XCTestCase {
             add(attachment)
             app.terminate()
         }
+    }
+
+    /// A slow drag down the middle of the screen, between two heights (0 the top, 1 the bottom).
+    private func drag(_ app: XCUIApplication, from start: CGFloat, to end: CGFloat) {
+        let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: start))
+        let to = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: end))
+        from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.3)
     }
 }

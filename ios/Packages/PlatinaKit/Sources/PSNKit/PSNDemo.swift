@@ -187,10 +187,12 @@ public enum PSNDemo {
         last: Double,
         platinum: (en: String, ru: String)
     ) -> Game {
-        var types = Array(repeating: "bronze", count: counts.bronze) + Array(repeating: "silver", count: counts.silver)
+        let types = Array(repeating: "bronze", count: counts.bronze) + Array(repeating: "silver", count: counts.silver)
             + Array(repeating: "gold", count: counts.gold)
-        // Golds and silvers among the bronzes, as games have them.
-        types.sort { order($0, seed: number) < order($1, seed: number) }
+        // Golds and silvers among the bronzes, as games have them, the same on every run.
+        let shuffled = types.enumerated()
+            .sorted { order($0.element, index: $0.offset, seed: number) < order($1.element, index: $1.offset, seed: number) }
+            .map(\.element)
         let earnedCount = Int((Double(types.count) * earnedShare).rounded())
         var trophies: [Trophy] = []
         let complete = earnedShare >= 1
@@ -200,7 +202,7 @@ public enum PSNDemo {
             hidden: false, group: "default",
             earnedDaysAgo: complete ? last : nil, progress: nil, rarity: rarity(type: "platinum", index: number)
         ))
-        for (offset, type) in types.enumerated() {
+        for (offset, type) in shuffled.enumerated() {
             let names = pool[(offset * 7 + number * 5) % pool.count]
             let earned: Double? = offset < earnedCount
                 ? first - (first - last) * Double(offset + 1) / Double(max(earnedCount, 1))
@@ -222,10 +224,10 @@ public enum PSNDemo {
     }
 
     /// A stable shuffle key, so a game's golds land in the same places on every run.
-    private static func order(_ type: String, seed: Int) -> Int {
-        var hash = seed &* 31
+    private static func order(_ type: String, index: Int, seed: Int) -> Int {
+        var hash = seed &* 31 &+ index &* 7_919
         for scalar in type.unicodeScalars { hash = hash &* 33 &+ Int(scalar.value) }
-        return hash % 97
+        return (hash & 0x7FFF_FFFF) % 9_973
     }
 
     static func rarity(type: String, index: Int) -> (rare: Int, rate: String) {

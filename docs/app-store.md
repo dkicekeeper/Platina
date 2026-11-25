@@ -158,90 +158,80 @@ API — удаление в течение 30 дней, без обучения;
 названии их нет, в описании — только как описание совместимости, с пометкой о неофициальности.
 Если ревью придерётся к ключевым словам — убрать оттуда PS5 и PSN.
 
-| Поле | Русский | English |
-|---|---|---|
-| Название | Platina: путь к платине | Platina: Trophy Hunter |
-| Подзаголовок | Трофеи, гайды и Плати рядом | Trophies, guides and Plati |
-| Ключевые слова | трофеи,платина,гайд,прохождение,коллекционки,ачивки,сессии,PS5,PSN,охотник | trophies,platinum,guide,walkthrough,collectibles,achievements,sessions,PS5,PSN,hunter |
-| Рекламный текст | Плати ведёт к платине по главам: что делать дальше, что не пропустить, где лежит предмет — с картинками и чек-листом. | Plati leads you to the platinum chapter by chapter: what's next, what not to miss, where the item is — with pictures and a checklist. |
+Сами тексты (название, подзаголовок, ключевые слова, рекламный текст, описание на двух
+языках), ссылки, категории, ответы анкеты возраста и заметки для ревью — в
+[`appstore/metadata.json`](../appstore/metadata.json): его пишет в App Store Connect воркфлоу
+**App Store** (раздел 9), поэтому правится только он.
 
-**Описание (русский)**
-
-> Platina — спутник охотника за трофеями. Каждая игра здесь — путь к платине и 100%, а Плати,
-> ассистент приложения, проходит его вместе с вами.
->
-> ВЕДЁТ ЗА РУКУ
-> • Прохождение по главам: куда идти, что подобрать, какой выбор не пропустить ради трофея.
-> • Предупреждает о пропускаемых трофеях и точках невозврата заранее.
-> • Шаги чек-листом, картинки мест и видео из гайдов со ссылкой на источник.
-> • Прогресс запоминается: в следующий раз продолжите с того же места.
-> • «Где я?» — сфотографируйте экран, и Плати подскажет, что дальше.
->
-> ТРОФЕИ И ИГРЫ
-> • Все ваши игры PS5 и трофеи, прогресс, редкость, время в играх.
-> • Гайд к платине: сложность, часы, прохождения, онлайн и глючные трофеи.
-> • Подсказки PlayStation к трофеям прямо в приложении.
-> • Скрытые трофеи не спойлерятся — или показываются сразу, как вам удобнее.
->
-> СЕССИИ
-> • Начните сессию — Плати поставит цели на вечер.
-> • Live Activity с таймером и текущим шагом: отметьте шаг ✓ прямо с экрана блокировки.
-> • «Что дальше в Platina» через Siri.
-> • Итог сессии в журнале: что получено и с чего начать в следующий раз.
->
-> А ЕЩЁ
-> • Статистика, полка платин, карточки для шаринга, виджеты.
-> • Ваши данные — на устройстве и в вашем iCloud. Вход — на странице Sony: пароль приложение не видит.
->
-> Platina — неофициальное приложение, не связано с Sony Interactive Entertainment.
-> PlayStation, PS5 и PSN — товарные знаки Sony Interactive Entertainment Inc.
-
-**Description (English)**
-
-> Platina is a trophy hunter's companion. Every game is a road to the platinum and 100%, and
-> Plati, the app's assistant, walks it with you.
->
-> LEADS YOU BY THE HAND
-> • A walkthrough chapter by chapter: where to go, what to pick up, which choice not to miss.
-> • Warns about missable trophies and points of no return before you reach them.
-> • Steps as a checklist, with pictures of the spot and videos from the guides, credited.
-> • Your progress is kept: next time you pick up where you stopped.
-> • "Where am I?" — take a photo of the screen and Plati tells you what's next.
->
-> TROPHIES AND GAMES
-> • All your PS5 games and trophies, progress, rarity and time played.
-> • A platinum guide: difficulty, hours, playthroughs, online and glitched trophies.
-> • PlayStation's own trophy hints, right in the app.
-> • Hidden trophies stay hidden — or show at once, as you like.
->
-> SESSIONS
-> • Start a session and Plati sets the evening's goals.
-> • A Live Activity with the timer and the current step: tick it from the lock screen.
-> • "What's next in Platina" with Siri.
-> • A session journal: what you earned and where to start next time.
->
-> AND
-> • Statistics, a platinum shelf, share cards, widgets.
-> • Your data stays on your device and in your iCloud. You sign in on Sony's page; the app never
->   sees your password.
->
-> Platina is unofficial and not affiliated with Sony Interactive Entertainment.
-> PlayStation, PS5 and PSN are trademarks of Sony Interactive Entertainment Inc.
-
-Категория: основная — Справочники (Reference), дополнительная — Развлечения. Возраст: 12+ (в
-гайдах и видео из игр бывает насилие; выбрать в анкете честно).
+Категория: основная — Справочники (Reference), дополнительная — Развлечения. Возраст: в арте игр,
+картинках гайдов и видео бывает насилие (фэнтезийное и реалистичное, редко и мягко), оружие и
+страшное; остального нет; чат Плати — с ассистентом, не между людьми.
 
 ## 7. Перед отправкой (чек-лист)
 
-- [x] Политика конфиденциальности и поддержка — в `docs/public` (GitHub Pages); осталось включить
-      Pages в настройках и вставить ссылки в App Store Connect.
+- [x] Политика конфиденциальности и поддержка опубликованы (GitHub Pages из `docs/public`,
+      2026-11-25): https://dkicekeeper.github.io/Platina/privacy-policy.html и
+      https://dkicekeeper.github.io/Platina/support.html; осталось вставить их в App Store Connect.
 - [ ] App Privacy заполнен (раздел 2).
 - [ ] Отдельный аккаунт PSN для ревью, заметки (раздел 4).
 - [ ] Письма отправлены (раздел 5); ответы — в `IMAGE_SOURCES`.
 - [ ] Схема CloudKit выкачена в продакшен (docs/testflight.md).
-- [ ] Скриншоты: iPhone 6.9" и 6.5", iPad 13" (приложение для iPad включено), Mac — если
-      оставляем «Designed for iPad» на Mac.
+- [ ] Скриншоты (раздел 8): iPhone 6.9" (App Store уменьшает их для меньших iPhone), iPad 13"
+      (приложение для iPad включено); Mac — если оставляем «Designed for iPad» на Mac.
 - [ ] Название, подзаголовок, описание, ключевые слова, категория (Utilities / Games
       Reference), возрастной рейтинг; пометка, что приложение неофициальное и не связано с Sony.
 - [ ] Проверка, что в ответах нет чужих текстов целиком: eval Плати (`ANTHROPIC_EVAL_API_KEY`)
       и выборочно — шаги нескольких глав против исходных страниц.
+
+## 8. Скриншоты
+
+Снимаются сами, без Mac под рукой: Actions → **Screenshots** → Run workflow (входы: устройства,
+языки, экраны). Приложение запускается в демо (`-ScreenshotDemo`, `ios/Platina/Support/
+ScreenshotDemo`): выдуманная библиотека из восьми игр (`PSNDemo` в PSNKit, тот же путь
+синхронизации, что с PSN), их арт рисуется на устройстве (`DemoArt`), Плати отвечает по сценарию
+(`AssistantDemoTransport`), сессии, план и галочки прохождения засеяны после синхронизации; ни PSN,
+ни сервер Плати, ни iCloud не трогаются. Каждый экран приложение открывает само
+(`-ScreenshotScreen <экран>`), UI-тест `PlatinaUITests/ScreenshotCaptureTests` только ждёт и
+снимает; `scripts/capture_screenshots.sh` гоняет его на iPhone Pro Max (6.9", 1320×2868) и iPad
+Pro 13" (2064×2752) на русском и английском.
+
+Два артефакта прогона:
+
+- `screenshots` — сырые снимки, `<устройство>/<язык>/NN-экран.png`;
+- `store-frames` — они же в кадрах для App Store (`scripts/store_frames.py`), в порядке
+  страницы магазина, и листы для просмотра (`sheet-<устройство>-<язык>.jpg`).
+
+Кадры — решение владельца 2026-11-25: тёмная страница со свечением своего цвета, заголовок
+Inter (из DesignKit той версии, с которой собирается приложение) в две строки, вторая — цветом
+«Плазма»; первый кадр — наклонённый телефон, вокруг летят медали четырёх металлов с кубком
+иконки; на iPhone карточка, о которой кадр, поднята из экрана крупнее (предупреждение Плати,
+пропускаемое главы). Заголовки:
+
+| № | Экран | Русский | English |
+|---|---|---|---|
+| 1 | Игра | Каждый трофей. / До платины. | Every trophy. / All the way to platinum. |
+| 2 | Плати | Плати знает, / что дальше | Plati knows / what’s next |
+| 3 | Глава | Ни одного / пропущенного | Never miss / a missable |
+| 4 | Сессия | Играйте сессиями / с целями | Play in sessions / with goals |
+| 5 | Прохождение | Вся игра / по главам | The whole game, / chapter by chapter |
+| 6 | Гайд | Сложность, часы, / пропускаемое | Difficulty, hours, / missables |
+| 7 | Путь | Всё, что вы / добиваете | Every game / you’re chasing |
+| 8 | Библиотека | Вся библиотека / в одном месте | Your whole library / in one place |
+| 9 | Профиль | Статистика / и серии | Stats / and streaks |
+
+На скриншотах нет «PS5», «PlayStation» и чужих игр: товарные знаки Sony — только в описании, с
+пометкой о неофициальности (раздел 6). Локально: `python3 scripts/store_frames.py --raw <снимки>
+--font <DesignKit>/Sources/DesignTokens/Resources/Fonts/Inter-VariableFont_opsz,wght.ttf`.
+
+## 9. Страница в App Store Connect
+
+Воркфлоу **App Store** (Actions → App Store → Run workflow, `scripts/asc_metadata.py`) пишет
+страницу через App Store Connect API тем же ключом, что TestFlight: названия, подзаголовки и
+политику конфиденциальности языков, категории, описание, ключевые слова, рекламный текст и
+ссылки версии, скриншоты (кадры из артефактов `store-frames` прогонов Screenshots: их номера во
+входе `frames_runs`, поздние поверх ранних), ответы анкеты возраста и заметки для ревью. Без
+`apply` он только читает App Store Connect и показывает, что бы изменил. Скриншоты набора
+заменяются целиком.
+
+API не умеет (остаётся в App Store Connect руками): App Privacy, контакт и тестовый аккаунт для
+ревью, ответ о правах на чужой контент, цена и доступность, выбор сборки и отправка на ревью.

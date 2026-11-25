@@ -1,0 +1,81 @@
+name: App Store
+
+# Platina's App Store page in App Store Connect (docs/app-store.md §8, appstore/metadata.json):
+# names, subtitle, privacy policy, categories, description, keywords, links, screenshots, age
+# rating and the notes for App Review, through the App Store Connect API with the same key as
+# TestFlight. Without "apply" it only reads App Store Connect and prints what it would change.
+# Screenshots come from Screenshots runs' "store-frames" artifacts (later runs over earlier ones).
+# Run: Actions → App Store → Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Write to App Store Connect (off: only show what would change)"
+        type: boolean
+        default: false
+      parts:
+        description: "info, texts, screenshots, age, review (comma-separated)"
+        required: false
+        default: "info,texts,screenshots,age,review"
+      frames_runs:
+        description: "Screenshots run ids whose store-frames to upload, space-separated (later ones win)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: app-store
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependencies
+        run: pip install --quiet pyjwt cryptography requests
+
+      - name: Store frames
+        if: inputs.frames_runs != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUNS: ${{ inputs.frames_runs }}
+        run: |
+          mkdir -p screenshots/store
+          for run in $RUNS; do
+            dir="$RUNNER_TEMP/frames-$run"
+            gh run download "$run" --repo "$GITHUB_REPOSITORY" --name store-frames --dir "$dir"
+            cp -R "$dir"/. screenshots/store/
+          done
+          find screenshots/store -name '*.png' | sort
+
+      - name: App Store Connect API key
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc/AuthKey.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/asc/AuthKey.p8" >> "$GITHUB_ENV"
+
+      - name: App Store page
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          PARTS: ${{ inputs.parts }}
+          APPLY: ${{ inputs.apply }}
+        run: |
+          python3 scripts/asc_metadata.py --parts "$PARTS" ${{ inputs.apply && '--apply' || '' }}
+
+      - name: Remove API key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"

@@ -1,0 +1,69 @@
+{
+  "_about": "The App Store page of Platina, as scripts/asc_metadata.py writes it to App Store Connect (Actions → App Store). docs/app-store.md explains the choices; the texts live only here.",
+  "bundleId": "dakacom.Platina",
+  "versionString": "1.0",
+  "categories": {
+    "primary": "REFERENCE",
+    "secondary": "ENTERTAINMENT"
+  },
+  "locales": {
+    "ru": {
+      "name": "Platina: путь к платине",
+      "subtitle": "Трофеи, гайды и Плати рядом",
+      "privacyPolicyUrl": "https://dkicekeeper.github.io/Platina/privacy-policy.html",
+      "supportUrl": "https://dkicekeeper.github.io/Platina/support.html",
+      "marketingUrl": "https://dkicekeeper.github.io/Platina/",
+      "keywords": "трофеи,платина,гайд,прохождение,коллекционки,ачивки,сессии,PS5,PSN,охотник",
+      "promotionalText": "Плати ведёт к платине по главам: что делать дальше, что не пропустить, где лежит предмет — с картинками и чек-листом.",
+      "description": "Platina — спутник охотника за трофеями. Каждая игра здесь — путь к платине и 100%, а Плати, ассистент приложения, проходит его вместе с вами.\n\nВЕДЁТ ЗА РУКУ\n• Прохождение по главам: куда идти, что подобрать, какой выбор не пропустить ради трофея.\n• Предупреждает о пропускаемых трофеях и точках невозврата заранее.\n• Шаги чек-листом, картинки мест и видео из гайдов со ссылкой на источник.\n• Прогресс запоминается: в следующий раз продолжите с того же места.\n• «Где я?» — сфотографируйте экран, и Плати подскажет, что дальше.\n\nТРОФЕИ И ИГРЫ\n• Все ваши игры PS5 и трофеи, прогресс, редкость, время в играх.\n• Гайд к платине: сложность, часы, прохождения, онлайн и глючные трофеи.\n• Подсказки PlayStation к трофеям прямо в приложении.\n• Скрытые трофеи не спойлерятся — или показываются сразу, как вам удобнее.\n\nСЕССИИ\n• Начните сессию — Плати поставит цели на вечер.\n• Live Activity с таймером и текущим шагом: отметьте шаг выполненным прямо с экрана блокировки.\n• «Что дальше в Platina» через Siri.\n• Итог сессии в журнале: что получено и с чего начать в следующий раз.\n\nА ЕЩЁ\n• Статистика, полка платин, карточки для шаринга, виджеты.\n• Ваши данные — на устройстве и в вашем iCloud. Вход — на странице Sony: пароль приложение не видит.\n\nPlatina — неофициальное приложение, не связано с Sony Interactive Entertainment.\nPlayStation, PS5 и PSN — товарные знаки Sony Interactive Entertainment Inc.",
+      "screenshots": "ru"
+    },
+    "en-US": {
+      "name": "Platina: Trophy Hunter",
+      "subtitle": "Trophies, guides and Plati",
+      "privacyPolicyUrl": "https://dkicekeeper.github.io/Platina/privacy-policy.html",
+      "supportUrl": "https://dkicekeeper.github.io/Platina/support.html",
+      "marketingUrl": "https://dkicekeeper.github.io/Platina/",
+      "keywords": "trophies,platinum,guide,walkthrough,collectibles,achievements,sessions,PS5,PSN,hunter",
+      "promotionalText": "Plati leads you to the platinum chapter by chapter: what's next, what not to miss, where the item is — with pictures and a checklist.",
+      "description": "Platina is a trophy hunter's companion. Every game is a road to the platinum and 100%, and Plati, the app's assistant, walks it with you.\n\nLEADS YOU BY THE HAND\n• A walkthrough chapter by chapter: where to go, what to pick up, which choice not to miss.\n• Warns about missable trophies and points of no return before you reach them.\n• Steps as a checklist, with pictures of the spot and videos from the guides, credited.\n• Your progress is kept: next time you pick up where you stopped.\n• \"Where am I?\" — take a photo of the screen and Plati tells you what's next.\n\nTROPHIES AND GAMES\n• All your PS5 games and trophies, progress, rarity and time played.\n• A platinum guide: difficulty, hours, playthroughs, online and glitched trophies.\n• PlayStation's own trophy hints, right in the app.\n• Hidden trophies stay hidden — or show at once, as you like.\n\nSESSIONS\n• Start a session and Plati sets the evening's goals.\n• A Live Activity with the timer and the current step: tick it from the lock screen.\n• \"What's next in Platina\" with Siri.\n• A session journal: what you earned and where to start next time.\n\nAND\n• Statistics, a platinum shelf, share cards, widgets.\n• Your data stays on your device and in your iCloud. You sign in on Sony's page; the app never sees your password.\n\nPlatina is unofficial and not affiliated with Sony Interactive Entertainment.\nPlayStation, PS5 and PSN are trademarks of Sony Interactive Entertainment Inc.",
+      "screenshots": "en"
+    }
+  },
+  "screenshotDisplayTypes": {
+    "iphone": "APP_IPHONE_67",
+    "ipad": "APP_IPAD_PRO_3GEN_129"
+  },
+  "review": {
+    "demoAccountRequired": true,
+    "notes": "Platina is an unofficial companion for PlayStation trophy hunters. Sign-in: the reviewer signs in with a PlayStation Network account on Sony's own PlayStation Store page inside the app (the test account is in the sign-in fields of this review information); the app never sees the password and keeps Sony's tokens only in the device keychain. Trophy data comes from PSN's web API, the same one the PlayStation App and playstation.com use. Plati, the in-app assistant, runs on our server with Anthropic's Claude; it retells guides in its own words with links to the sources and shows guide pictures from the sources' sites with their credit. App Attest protects the server, so the assistant needs a real device (not the simulator)."
+  },
+  "ageRating": {
+    "_why": "docs/app-store.md §6: game art, guide pictures and embedded YouTube videos of the games can show fantasy and realistic violence, mildly and now and then; nothing else applies. Plati's chat is with the assistant, not between people.",
+    "advertising": false,
+    "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+    "contests": "NONE",
+    "gambling": false,
+    "gamblingSimulated": "NONE",
+    "gunsOrOtherWeapons": "INFREQUENT_OR_MILD",
+    "healthOrWellnessTopics": false,
+    "horrorOrFearThemes": "INFREQUENT_OR_MILD",
+    "lootBox": false,
+    "matureOrSuggestiveThemes": "NONE",
+    "medicalOrTreatmentInformation": "NONE",
+    "messagingAndChat": false,
+    "parentalControls": false,
+    "profanityOrCrudeHumor": "NONE",
+    "ageAssurance": false,
+    "sexualContentGraphicAndNudity": "NONE",
+    "sexualContentOrNudity": "NONE",
+    "socialMedia": false,
+    "sharedLocation": false,
+    "datingAndRelationships": false,
+    "unrestrictedWebAccess": false,
+    "userGeneratedContent": false,
+    "violenceCartoonOrFantasy": "INFREQUENT_OR_MILD",
+    "violenceRealistic": "INFREQUENT_OR_MILD",
+    "violenceRealisticProlongedGraphicOrSadistic": "NONE"
+  }
+}
