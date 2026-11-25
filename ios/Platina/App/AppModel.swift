@@ -51,10 +51,14 @@ final class AppModel {
             language: AppLanguage.psnLanguage
         )
         self.client = client
-        store = LibraryStore(container: container)
+        let store = LibraryStore(container: container)
+        self.store = store
         sync = LibrarySync(client: client, store: store)
         sessions = SessionTracker(store: store, sync: sync)
-        let gameHelp = GameHelpService(client: client)
+        // Game Help is a PS5 feature: PS4 games are never asked.
+        let gameHelp = GameHelpService(client: client) { gameId in
+            (try? store.game(gameId))?.isPS4 != true
+        }
         self.gameHelp = gameHelp
         assistant = AssistantService(
             store: store,

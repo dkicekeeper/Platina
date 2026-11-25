@@ -1638,6 +1638,23 @@
         }
       }
     },
+    "game.platform.ps4": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PS4"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PS4"
+          }
+        }
+      }
+    },
     "game.progress %lld": {
       "extractionState": "manual",
       "localizations": {

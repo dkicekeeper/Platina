@@ -411,6 +411,7 @@ public final class AssistantToolkit: AssistantToolExecuting {
     private func getGameHelp(_ input: JSONValue) async throws -> GameHelpAnswer {
         guard let gameHelp else { throw ToolError("PlayStation's Game Help is not available in this app.") }
         let game = try requireGame(input)
+        if game.isPS4 { throw ToolError("PlayStation's Game Help exists only for PS5 games; this is a PS4 game.") }
         let trophies = Dictionary(game.trophies.map { ($0.trophyId, $0) }, uniquingKeysWith: { first, _ in first })
         let asked = (input["trophy_ids"]?.arrayValue ?? []).compactMap { $0.numberValue.map(Int.init) }
         // A hidden trophy not earned yet keeps its name: list_trophies' rule.

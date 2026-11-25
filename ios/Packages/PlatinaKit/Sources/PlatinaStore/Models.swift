@@ -117,6 +117,11 @@ public final class GameRecord {
     public var characterURL: URL? { PSNImageURL.from(characterURLString) }
     public var isPlatinumEarned: Bool { definedPlatinum > 0 && earnedPlatinum > 0 }
     public var isCompleted: Bool { defined.total > 0 && earned.total >= defined.total }
+    /// A PS4 game (one with PS5 and PS4 versions is a PS5 game): no Game Help, "PS4" in its rows.
+    public var isPS4: Bool {
+        let platforms = platform.uppercased().split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        return platforms.contains("PS4") && !platforms.contains("PS5")
+    }
 
     /// The trophies are stored and match what PSN says about the game.
     public var hasCurrentDetails: Bool {

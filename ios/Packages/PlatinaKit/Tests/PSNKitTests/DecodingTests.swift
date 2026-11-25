@@ -53,8 +53,28 @@ struct ModelTests {
 
         let bloodborne = page.trophyTitles[1]
         #expect(!bloodborne.isPS5)
+        #expect(bloodborne.isPS4)
+        #expect(bloodborne.isSupported)
         #expect(bloodborne.isPlatinumEarned)
         #expect(bloodborne.isCompleted)
+    }
+
+    @Test("PS5 and PS4 lists are in, the older consoles' are not")
+    func supportedPlatforms() {
+        func title(_ platform: String) -> TrophyTitle {
+            TrophyTitle(
+                npCommunicationId: "NPWR00000_00", trophyTitleName: "Game", trophyTitlePlatform: platform,
+                definedTrophies: TrophyCounts(bronze: 1, silver: 0, gold: 0, platinum: 0),
+                earnedTrophies: TrophyCounts(bronze: 0, silver: 0, gold: 0, platinum: 0),
+                progress: 0, lastUpdatedDateTime: Date(timeIntervalSince1970: 0)
+            )
+        }
+        #expect(title("PS5").isSupported)
+        #expect(title("PS4").isSupported)
+        #expect(title("PS5,PS4").isSupported)
+        #expect(!title("PS5,PS4").isPS4)
+        #expect(!title("PSVITA").isSupported)
+        #expect(!title("PS3").isSupported)
     }
 
     @Test("An empty icon is no icon")

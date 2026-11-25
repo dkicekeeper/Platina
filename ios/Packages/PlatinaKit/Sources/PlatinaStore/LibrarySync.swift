@@ -77,7 +77,7 @@ public final class LibrarySync {
             async let summaryRequest = client.trophySummary()
             async let titlesRequest = client.trophyTitles()
             let summary = try await summaryRequest
-            let titles = try await titlesRequest.filter(\.isPS5)
+            let titles = try await titlesRequest.filter(\.isSupported)
             let profile = try? await client.profile(accountId: summary.accountId)
             try store.save(summary: summary, profile: profile, syncedAt: nil)
             try store.save(titles: titles)

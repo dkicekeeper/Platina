@@ -104,6 +104,10 @@ public struct TrophyTitle: Decodable, Sendable, Hashable, Identifiable {
         trophyTitlePlatform.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
     }
     public var isPS5: Bool { platforms.contains("PS5") }
+    /// A PS4 list (a game with PS5 and PS4 versions counts as PS5).
+    public var isPS4: Bool { platforms.contains("PS4") && !isPS5 }
+    /// The consoles the app follows: PS5 and PS4 (not PS3 or Vita).
+    public var isSupported: Bool { isPS5 || isPS4 }
     public var hasPlatinum: Bool { definedTrophies.platinum > 0 }
     public var isPlatinumEarned: Bool { hasPlatinum && earnedTrophies.platinum > 0 }
     public var isCompleted: Bool { earnedTrophies.total >= definedTrophies.total && definedTrophies.total > 0 }

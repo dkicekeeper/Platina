@@ -11,12 +11,15 @@ import PSNKit
 @Observable
 public final class GameHelpService {
     private let client: PSNClient
+    /// Whether a game can have Game Help: a PS5 feature, so PS4 games are never asked.
+    private let isEligible: @MainActor (String) -> Bool
     @ObservationIgnored private var hints: [String: [GameHelpHint]] = [:]
     @ObservationIgnored private var asking: [String: Task<[GameHelpHint], any Error>] = [:]
     @ObservationIgnored private var known: [String: GameHelp] = [:]
 
-    public init(client: PSNClient) {
+    public init(client: PSNClient, isEligible: @escaping @MainActor (String) -> Bool = { _ in true }) {
         self.client = client
+        self.isEligible = isEligible
     }
 
     /// The trophy's help, or nil when it has none or PSN would not say.
@@ -63,6 +66,7 @@ public final class GameHelpService {
     }
 
     private func hints(for gameId: String) async throws -> [GameHelpHint] {
+        guard isEligible(gameId) else { return [] }
         if let known = hints[gameId] { return known }
         if let running = asking[gameId] { return try await running.value }
         let client = client

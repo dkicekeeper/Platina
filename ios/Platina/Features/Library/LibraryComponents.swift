@@ -28,6 +28,9 @@ struct GameRow: View {
 
     private var meta: [MetaItem] {
         var items: [MetaItem] = []
+        if game.isPS4 {
+            items.append(.text(String(localized: "game.platform.ps4")))
+        }
         if status != .none {
             items.append(.label(status.title, systemImage: status.systemImage))
         }
