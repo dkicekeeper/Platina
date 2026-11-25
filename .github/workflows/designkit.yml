@@ -36,7 +36,8 @@ jobs:
         with:
           ref: main
 
-      - id: versions
+      - name: The pin and the newest DesignKit
+        id: versions
         run: |
           # The pin as ios.yml's lint reads it: exactVersion under the DesignKit package.
           CURRENT=$(python3 -c 'import re; m = re.search(r"DesignKit:\s*\n\s*url:.*\n\s*exactVersion:\s*\"([^\"]+)\"", open("ios/project.yml").read()); print(m.group(1) if m else "")')
