@@ -78,7 +78,7 @@ struct GameView: View {
     @State private var isLoadingTrophies = false
     @State private var isShowingChat = false
     @State private var isShowingShare = false
-    @State private var section: GameSection = .trophies
+    @State private var section: GameSection = ScreenshotDemo.screen?.section ?? .trophies
     /// The header shows the game's name; the bar's title stays empty until it scrolls away.
     @State private var isHeroUnderBar = true
 

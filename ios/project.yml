@@ -56,6 +56,10 @@ targets:
       - package: PlatinaKit
         product: PlatinaAssistant
       - target: PlatinaWidgets
+    # The App Store's screenshots run as its UI tests (scripts/capture_screenshots.sh).
+    scheme:
+      testTargets:
+        - PlatinaUITests
     preBuildScripts:
       # This project is generated from project.yml and is not in git: one generated before a pull
       # keeps an old DesignKit or misses new files. The git hooks regenerate it (scripts/setup.sh,
@@ -110,3 +114,20 @@ targets:
         CODE_SIGN_ENTITLEMENTS: PlatinaWidgets/PlatinaWidgets.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: Platina
         SKIP_INSTALL: YES
+
+  # The App Store's screenshots: the app in its demo, one launch per screen
+  # (PlatinaUITests/ScreenshotCaptureTests.swift, scripts/capture_screenshots.sh).
+  PlatinaUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: PlatinaUITests
+    dependencies:
+      - target: Platina
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dakacom.PlatinaUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Platina
+        TARGETED_DEVICE_FAMILY: "1,2"

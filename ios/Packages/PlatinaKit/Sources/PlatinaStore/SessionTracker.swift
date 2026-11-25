@@ -40,6 +40,14 @@ public final class SessionTracker {
 
     public var isRunning: Bool { current != nil }
 
+    /// Takes the store's running session as the current one: a session put in the store outside
+    /// the tracker (the App Store screenshots' demo seeds one).
+    public func adoptRunningSession() {
+        current = try? store.runningSession()
+        lastEarned = []
+        onChange?(current)
+    }
+
     /// Starts a session in a game (ending one in another game first).
     public func start(gameId: String) async {
         // Time played before the session: what PSN says now, so the end can tell the difference.

@@ -12,6 +12,8 @@ enum PlatiAvailability: Equatable {
     case unsupportedDevice
 
     static let current: PlatiAvailability = {
+        // The screenshots' Plati answers from a script on the device.
+        if ScreenshotDemo.isOn { return .available }
         guard AssistantConfig.serverURL != nil else { return .notConfigured }
         guard AssistantAttestation.isSupported || AssistantConfig.devToken != nil else { return .unsupportedDevice }
         return .available

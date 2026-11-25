@@ -20,6 +20,18 @@ struct PlatinaApp: App {
         DesignKitPhotoLoader.loader = { key, url in await PhotoCache.shared.image(key: key, url: url) }
         DesignKitPhotoLoader.cached = { key in PhotoCache.shared.cached(key) }
 
+        // The App Store's screenshots: a made-up library in memory, nothing real touched.
+        if ScreenshotDemo.isOn {
+            ScreenshotDemo.installArt()
+            do {
+                let container = try LibraryStore.makeContainer(inMemory: true)
+                _model = State(initialValue: AppModel(container: container, client: ScreenshotDemo.client()))
+            } catch {
+                fatalError("SwiftData cannot create an in-memory store: \(error)")
+            }
+            return
+        }
+
         let container: ModelContainer
         do {
             container = try LibraryStore.makeContainer()

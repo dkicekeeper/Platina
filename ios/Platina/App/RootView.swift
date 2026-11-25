@@ -39,7 +39,7 @@ enum AppTab: Hashable {
 struct MainTabView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.scenePhase) private var scenePhase
-    @State private var selection: AppTab = .path
+    @State private var selection: AppTab = ScreenshotDemo.screen?.tab ?? .path
 
     var body: some View {
         @Bindable var app = app

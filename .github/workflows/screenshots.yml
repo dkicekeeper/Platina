@@ -1,0 +1,65 @@
+name: Screenshots
+
+# The App Store's screenshots on simulators (docs/app-store.md): the app in its demo
+# (-ScreenshotDemo: a made-up library, art drawn on the device, Plati from a script) on an iPhone
+# 6.9" and an iPad 13", in Russian and English. scripts/capture_screenshots.sh runs the UI test
+# PlatinaUITests/ScreenshotCaptureTests and exports its pictures; they come out as the
+# "screenshots" artifact (screenshots/raw/<device>/<language>/NN-screen.png).
+# Run: Actions → Screenshots → Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      devices:
+        description: "iphone, ipad, or both"
+        required: false
+        default: "iphone ipad"
+      languages:
+        description: "ru, en, or both"
+        required: false
+        default: "ru en"
+      screens:
+        description: "Only these screens, comma-separated (path,game,plati,chapter,session,walkthrough,guide,profile,library); empty: all"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: xcode-27
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "27"
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Simulators
+        run: xcrun simctl list devices available | grep -E "iPhone .* Pro Max|iPad Pro 13" || true
+
+      - name: Capture
+        env:
+          DEVICES: ${{ inputs.devices }}
+          LANGUAGES: ${{ inputs.languages }}
+          SCREENS: ${{ inputs.screens }}
+        run: scripts/capture_screenshots.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/raw
+          if-no-files-found: warn

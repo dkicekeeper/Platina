@@ -125,7 +125,7 @@ public enum PSNDemo {
             ("bronze", "Alchemist", "Brew every potion.", "Алхимик", "Сварите все зелья.", 7),
             ("silver", "Seeker of Echoes", "Hear all 12 Echoes.", "Искатель отзвуков", "Услышьте все 12 отзвуков.", 5),
             ("bronze", "Night Rider", "Cross the Blackwood at night.", "Ночной всадник", "Пересеките Чёрный лес ночью.", 2),
-            ("bronze", "Shieldwall", "Parry 100 attacks.", "Стена щитов", "Отразите 100 атак.", 0.1),
+            ("bronze", "Shieldwall", "Parry 100 attacks.", "Стена щитов", "Отразите 100 атак.", 0.03),
         ]
         let dlc: [(String, String, String, String, String, Double?)] = [
             ("bronze", "Shore of Bones", "Reach the Shore of Bones.", "Берег костей", "Доберитесь до Берега костей.", 4),
@@ -150,7 +150,7 @@ public enum PSNDemo {
         return Game(
             slug: "emberfall", npCommunicationId: "NPWR90001_00", titleId: "PPSA90001_00",
             name: "Emberfall: The Last Crown", trophies: trophies, dlc: ("Tides of Ash", "Приливы пепла"),
-            hours: 46.3, playCount: 58, firstPlayedDaysAgo: 39, lastPlayedDaysAgo: 0.08
+            hours: 46.3, playCount: 58, firstPlayedDaysAgo: 39, lastPlayedDaysAgo: 0.01
         )
     }()
 

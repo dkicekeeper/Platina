@@ -158,6 +158,7 @@ final class AppModel {
     /// The server's client: App Attest on a device, the dev token in the Simulator; nil without
     /// a server (docs/assistant.md §7).
     private static func assistantTransport() -> (any AssistantTransport)? {
+        if ScreenshotDemo.isOn { return AssistantDemoTransport() }
         guard let url = AssistantConfig.serverURL else { return nil }
         let signer: (any AssistantSigner)?
         if AssistantAttestation.isSupported {
@@ -219,6 +220,14 @@ final class AppModel {
     }
 
     func start() async {
+        if ScreenshotDemo.isOn {
+            // The made-up library first, then the person's side; the screens open on all of it.
+            await sync.sync(force: true)
+            await ScreenshotDemo.prepare(self)
+            phase = .signedIn
+            isShowingSession = ScreenshotDemo.screen == .session
+            return
+        }
         phase = await client.isSignedIn ? .signedIn : .signedOut
     }
 
