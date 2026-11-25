@@ -175,23 +175,33 @@ def main():
             print("  no version to edit")
             return
         current = load_version_localizations()
+        errors = []
         for locale, m in meta["locales"].items():
-            wanted = {k: m[k] for k in ("description", "keywords", "promotionalText", "supportUrl", "marketingUrl")}
-            if locale in current:
-                diff = changed(current[locale]["attributes"], wanted)
-                print(f"  {locale}: " + (", ".join(f"{k} {show(current[locale]['attributes'].get(k), 30)} → {show(v, 30)}" for k, v in diff.items()) or "as wanted"))
-                if diff:
-                    asc.write("PATCH", f"/v1/appStoreVersionLocalizations/{current[locale]['id']}",
-                              {"data": {"type": "appStoreVersionLocalizations", "id": current[locale]["id"], "attributes": diff}},
-                              f"{locale} texts")
-            else:
-                print(f"  {locale}: missing")
-                made = asc.write("POST", "/v1/appStoreVersionLocalizations", {"data": {
-                    "type": "appStoreVersionLocalizations", "attributes": {"locale": locale, **wanted},
-                    "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": version["id"]}}},
-                }}, f"add {locale} texts")
-                if made:
-                    current[locale] = made["data"]
+            try:
+                text_locale(current, locale, m)
+            except RuntimeError as error:  # the other language still goes
+                print(f"  ✗ {locale}: {error}")
+                errors.append(f"{locale}: {error}")
+        if errors:
+            raise RuntimeError("; ".join(errors))
+
+    def text_locale(current, locale, m):
+        wanted = {k: m[k] for k in ("description", "keywords", "promotionalText", "supportUrl", "marketingUrl")}
+        if locale in current:
+            diff = changed(current[locale]["attributes"], wanted)
+            print(f"  {locale}: " + (", ".join(f"{k} {show(current[locale]['attributes'].get(k), 30)} → {show(v, 30)}" for k, v in diff.items()) or "as wanted"))
+            if diff:
+                asc.write("PATCH", f"/v1/appStoreVersionLocalizations/{current[locale]['id']}",
+                          {"data": {"type": "appStoreVersionLocalizations", "id": current[locale]["id"], "attributes": diff}},
+                          f"{locale} texts")
+        else:
+            print(f"  {locale}: missing")
+            made = asc.write("POST", "/v1/appStoreVersionLocalizations", {"data": {
+                "type": "appStoreVersionLocalizations", "attributes": {"locale": locale, **wanted},
+                "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": version["id"]}}},
+            }}, f"add {locale} texts")
+            if made:
+                current[locale] = made["data"]
 
     # MARK: Screenshots
 
