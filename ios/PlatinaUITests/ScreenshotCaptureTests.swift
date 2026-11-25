@@ -46,17 +46,11 @@ final class ScreenshotCaptureTests: XCTestCase {
             // The demo syncs its library and seeds the person's side in memory, then the screen
             // draws its art and settles its entrances.
             sleep(screen == "plati" || screen == "session" ? 10 : 8)
-            switch screen {
-            case "guide", "walkthrough":
-                // Past the game's art to the section itself.
-                drag(app, from: 0.75, to: 0.3)
-                sleep(2)
-            case "plati":
-                // The chat opens at its end: back a little, to the reply's first line.
+            // The guide scrolls to its chips by itself (`GameView`), the walkthrough is its own
+            // screen; the chat opens at its end: back a little, to the reply's first line.
+            if screen == "plati" {
                 drag(app, from: 0.35, to: 0.55)
                 sleep(2)
-            default:
-                break
             }
 
             let shot = XCUIScreen.main.screenshot()

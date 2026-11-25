@@ -82,6 +82,9 @@ struct GameView: View {
     /// The header shows the game's name; the bar's title stays empty until it scrolls away.
     @State private var isHeroUnderBar = true
 
+    /// The chips and the part under them, on a phone.
+    private static let sectionsAnchor = "sections"
+
     init(gameId: String) {
         self.gameId = gameId
         let id = gameId
@@ -99,48 +102,57 @@ struct GameView: View {
     var body: some View {
         Group {
             if let game = games.first {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                        GameHeader(
-                            game: game,
-                            status: status,
-                            isSessionRunning: app.sessions.current?.gameId == gameId,
-                            onPlan: { newStatus in _ = try? app.store.setPlan(newStatus, for: gameId) },
-                            onSession: {
-                                if app.sessions.current?.gameId == gameId {
-                                    app.isShowingSession = true
-                                } else {
-                                    Task { await app.startSession(gameId: gameId) }
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                            GameHeader(
+                                game: game,
+                                status: status,
+                                isSessionRunning: app.sessions.current?.gameId == gameId,
+                                onPlan: { newStatus in _ = try? app.store.setPlan(newStatus, for: gameId) },
+                                onSession: {
+                                    if app.sessions.current?.gameId == gameId {
+                                        app.isShowingSession = true
+                                    } else {
+                                        Task { await app.startSession(gameId: gameId) }
+                                    }
                                 }
-                            }
-                        )
-                        .gameArt(game)
+                            )
+                            .gameArt(game)
 
-                        // An iPad or a Mac window: the trophies, and beside them the guide, the
-                        // walkthrough and the sessions. Narrower (a phone, a panel open beside
-                        // the screen): chips over one part at a time.
-                        AdaptiveColumns {
-                            trophiesColumn(game)
-                        } side: {
-                            GuideSection(game: game)
-                            WalkthroughSection(game: game)
-                            sessionsSection(limit: Self.sideSessions)
-                        } narrow: {
-                            VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                                ChipPicker(
-                                    options: GameSection.allCases,
-                                    selection: Binding<GameSection?>(get: { section }, set: { if let new = $0 { section = new } }),
-                                    systemImage: { $0.systemImage }
-                                ) { $0.title }
-                                sectionContent(game)
+                            // An iPad or a Mac window: the trophies, and beside them the guide, the
+                            // walkthrough and the sessions. Narrower (a phone, a panel open beside
+                            // the screen): chips over one part at a time.
+                            AdaptiveColumns {
+                                trophiesColumn(game)
+                            } side: {
+                                GuideSection(game: game)
+                                WalkthroughSection(game: game)
+                                sessionsSection(limit: Self.sideSessions)
+                            } narrow: {
+                                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                                    ChipPicker(
+                                        options: GameSection.allCases,
+                                        selection: Binding<GameSection?>(get: { section }, set: { if let new = $0 { section = new } }),
+                                        systemImage: { $0.systemImage }
+                                    ) { $0.title }
+                                    sectionContent(game)
+                                }
+                                .id(Self.sectionsAnchor)
                             }
+                            .screenPadding()
+                            .readableWidth(AppLayout.wideWidth)
+                            .padding(.bottom, AppSpacing.xxl)
                         }
-                        .screenPadding()
-                        .readableWidth(AppLayout.wideWidth)
-                        .padding(.bottom, AppSpacing.xxl)
+                    }
+                    .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
+                    // The App Store's screenshot of the guide: its chips under the bar.
+                    .task {
+                        guard ScreenshotDemo.screen == .guide else { return }
+                        try? await Task.sleep(for: .seconds(1.5))
+                        proxy.scrollTo(Self.sectionsAnchor, anchor: .top)
                     }
                 }
-                .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
                 .navigationTitle(Text(verbatim: isHeroUnderBar ? "" : game.name))
                 // A panel beside the game on an iPad or a Mac window, a sheet on a phone.
                 .inspector(isPresented: $isShowingChat) {

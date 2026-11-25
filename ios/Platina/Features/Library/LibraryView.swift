@@ -38,8 +38,10 @@ struct LibraryView: View {
         } detail: {
             NavigationStack {
                 if ScreenshotDemo.screen == .chapter {
-                    // The App Store's screenshot of the current chapter.
+                    // The App Store's screenshots of the current chapter and of every chapter.
                     ChapterView(gameId: ScreenshotDemo.gameId, chapterId: ScreenshotDemo.chapterId)
+                } else if ScreenshotDemo.screen == .walkthrough {
+                    WalkthroughView(gameId: ScreenshotDemo.gameId)
                 } else if let openedGame {
                     // A game of its own each time: its sections, filters and loading start over.
                     GameView(gameId: openedGame)
