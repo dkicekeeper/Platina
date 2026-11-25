@@ -12,6 +12,7 @@ import PlatinaStore
 ///
 /// Run once from Xcode on a device signed in to iCloud: the "Platina CloudKit Schema" scheme
 /// (`-InitializeCloudKitSchema`), then watch the console for "CloudKit schema:". Debug builds only.
+@MainActor
 enum CloudKitSchema {
     static let isRequested = ProcessInfo.processInfo.arguments.contains("-InitializeCloudKitSchema")
 
