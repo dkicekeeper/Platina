@@ -5142,13 +5142,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati's server isn't set up yet: put its address in Config/Platina.xcconfig (docs/assistant.md)."
+            "value": "Plati isn't part of this build of the app. Trophies, sessions and everything else work without it."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сервер Плати ещё не настроен: впишите его адрес в Config/Platina.xcconfig (docs/assistant.md)."
+            "value": "Плати нет в этой сборке приложения. Трофеи, сессии и всё остальное работают без него."
           }
         }
       }
@@ -5489,6 +5489,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Плати"
+          }
+        }
+      }
+    },
+    "plati.unsupported.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plati isn't available on this device: its server answers only an app protected by App Attest, which this device doesn't offer (as on a Mac). Trophies, sessions and guides and walkthroughs already built work."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На этом устройстве Плати недоступен: его сервер отвечает только приложению с защитой App Attest, а здесь её нет (так бывает на Mac). Трофеи, сессии и уже собранные гайды и прохождения работают."
           }
         }
       }

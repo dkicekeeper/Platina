@@ -31,7 +31,7 @@ struct GuideSection: View {
                         Task { await guides.build(gameId: game.id) }
                     }
                 case .idle:
-                    if guides.isAvailable {
+                    if guides.isAvailable, PlatiAvailability.current.canWrite {
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
                             Text("guide.empty")
                                 .font(AppTypography.bodySmall)
@@ -43,7 +43,7 @@ struct GuideSection: View {
                         .padding(AppSpacing.lg)
                         .cardStyle()
                     } else {
-                        StatusBanner(String(localized: "plati.offline.message"), status: .neutral, systemImage: "wrench.and.screwdriver")
+                        StatusBanner(PlatiAvailability.current.message, status: .neutral, systemImage: "wrench.and.screwdriver")
                     }
                 }
             }

@@ -16,6 +16,9 @@ struct ChatView: View {
     @State private var photoItem: PhotosPickerItem?
     @FocusState private var isFocused: Bool
 
+    /// Plati answers here: the thread has its server, and the device signs requests.
+    private var canTalk: Bool { thread.isAvailable && PlatiAvailability.current.canWrite }
+
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -45,7 +48,7 @@ struct ChatView: View {
         .safeAreaBar(edge: .bottom) {
             MessageComposer(
                 text: $draft,
-                placeholder: thread.isAvailable ? String(localized: "plati.placeholder") : String(localized: "plati.offline.placeholder"),
+                placeholder: canTalk ? String(localized: "plati.placeholder") : String(localized: "plati.offline.placeholder"),
                 isSending: thread.isResponding,
                 focus: $isFocused,
                 leading: {
@@ -61,7 +64,7 @@ struct ChatView: View {
                     Task { await thread.send(text) }
                 }
             )
-            .disabled(!thread.isAvailable)
+            .disabled(!canTalk)
             .screenPadding()
             .readableWidth()
             .padding(.bottom, AppSpacing.sm)
@@ -156,13 +159,13 @@ struct ChatView: View {
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.Text.secondary)
                 .multilineTextAlignment(.center)
-            if thread.isAvailable, !suggestions.isEmpty {
+            if canTalk, !suggestions.isEmpty {
                 SuggestionChips(suggestions, systemImage: "sparkles", layout: .wrap) { suggestion in
                     Task { await thread.send(suggestion) }
                 }
             }
-            if !thread.isAvailable {
-                StatusBanner(String(localized: "plati.offline.message"), status: .neutral, systemImage: "wrench.and.screwdriver")
+            if !canTalk {
+                StatusBanner(PlatiAvailability.current.message, status: .neutral, systemImage: "wrench.and.screwdriver")
             }
         }
         .frame(maxWidth: .infinity)
@@ -191,8 +194,8 @@ struct ChatView: View {
         case "quota": String(localized: "plati.error.quota")
         case "region_unavailable": String(localized: "plati.error.region")
         case "disabled": String(localized: "plati.error.disabled")
-        case "not_configured": String(localized: "plati.offline.message")
-        case "attest": String(localized: "plati.error.attest")
+        case "not_configured": PlatiAvailability.current.message
+        case "attest": PlatiAvailability.current == .unsupportedDevice ? PlatiAvailability.current.message : String(localized: "plati.error.attest")
         case "offline": String(localized: "plati.error.offline")
         default: String(localized: "plati.error.generic")
         }

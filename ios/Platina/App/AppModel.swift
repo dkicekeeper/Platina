@@ -87,6 +87,7 @@ final class AppModel {
             guard let self else { return }
             endedSession = session
             // Plati writes the summary into the journal; the summary sheet shows it when it comes.
+            guard PlatiAvailability.current.canWrite else { return }
             Task { await self.assistant.summarizeSession(session) }
         }
         // The walkthrough's step to do now follows every tick: on the Live Activity too.
@@ -149,7 +150,7 @@ final class AppModel {
         await sessions.start(gameId: gameId)
         isShowingSession = sessions.current != nil
         // Plati plans the session: goals for today, the missables nearby.
-        if let session = sessions.current, session.goalTrophyIds.isEmpty {
+        if let session = sessions.current, session.goalTrophyIds.isEmpty, PlatiAvailability.current.canWrite {
             Task { await assistant.planSession(session) }
         }
     }

@@ -40,7 +40,7 @@ struct WalkthroughSection: View {
                         Task { await walkthroughs.build(gameId: game.id) }
                     }
                 case .idle:
-                    if walkthroughs.isAvailable {
+                    if walkthroughs.isAvailable, PlatiAvailability.current.canWrite {
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
                             Text("walkthrough.empty")
                                 .font(AppTypography.bodySmall)
@@ -51,6 +51,8 @@ struct WalkthroughSection: View {
                         }
                         .padding(AppSpacing.lg)
                         .cardStyle()
+                    } else {
+                        StatusBanner(PlatiAvailability.current.message, status: .neutral, systemImage: "wrench.and.screwdriver")
                     }
                 }
             }

@@ -98,7 +98,7 @@ enum WalkthroughText {
         case "offline", "timeout": String(localized: "walkthrough.failed.offline")
         case "region_unavailable": String(localized: "plati.error.region")
         case "disabled": String(localized: "plati.error.disabled")
-        case "attest": String(localized: "plati.error.attest")
+        case "attest": PlatiAvailability.current == .unsupportedDevice ? PlatiAvailability.current.message : String(localized: "plati.error.attest")
         case "no_walkthrough": String(localized: "walkthrough.failed.noPlan")
         default:
             steps
