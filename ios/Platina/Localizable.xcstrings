@@ -2024,7 +2024,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "пропускаемых"
+            "value": "пропус­каемых"
           }
         }
       }
@@ -2105,13 +2105,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "playthroughs"
+            "value": "play­throughs"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "прохождений"
+            "value": "прохож­дений"
           }
         }
       }
