@@ -1,0 +1,75 @@
+name: CloudKit schema
+
+# The iCloud schema of the person's own store (record types CD_… of LibraryStore.userModels) in
+# CloudKit's Development, by Apple's cktool on a Mac runner with the management token in the
+# repository's secret CLOUDKIT_MANAGEMENT_TOKEN (CloudKit Console → account → Settings → Tokens):
+#   export — prints Development's and Production's schemas (and keeps them as the "schema" artifact);
+#   import — validates ios/CloudKit/schema.ckdb and imports it into Development, then exports again.
+# Production takes the schema only from CloudKit Console's "Deploy Schema Changes…": Apple offers no
+# other way (docs/testflight.md).
+# Run: Actions → CloudKit schema → Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "export or import"
+        required: true
+        default: "export"
+        type: choice
+        options: [export, import]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudkit-schema
+  cancel-in-progress: false
+
+env:
+  TEAM_ID: SY2L2VMQP7
+  CONTAINER_ID: iCloud.dakacom.Platina
+
+jobs:
+  schema:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check the token
+        env:
+          CLOUDKIT_MANAGEMENT_TOKEN: ${{ secrets.CLOUDKIT_MANAGEMENT_TOKEN }}
+        run: |
+          if [ -z "$CLOUDKIT_MANAGEMENT_TOKEN" ]; then
+            echo "::error::No CLOUDKIT_MANAGEMENT_TOKEN secret (CloudKit Console → account → Settings → Tokens)"
+            exit 1
+          fi
+          xcrun cktool --version
+
+      - name: Validate and import into Development
+        if: inputs.action == 'import'
+        env:
+          CLOUDKIT_MANAGEMENT_TOKEN: ${{ secrets.CLOUDKIT_MANAGEMENT_TOKEN }}
+        run: |
+          xcrun cktool validate-schema --team-id "$TEAM_ID" --container-id "$CONTAINER_ID" \
+            --environment development --file ios/CloudKit/schema.ckdb
+          xcrun cktool import-schema --team-id "$TEAM_ID" --container-id "$CONTAINER_ID" \
+            --environment development --file ios/CloudKit/schema.ckdb
+          echo "Imported into Development: deploy it in CloudKit Console (Deploy Schema Changes…)."
+
+      - name: Export Development and Production
+        env:
+          CLOUDKIT_MANAGEMENT_TOKEN: ${{ secrets.CLOUDKIT_MANAGEMENT_TOKEN }}
+        run: |
+          mkdir -p schema
+          for environment in development production; do
+            xcrun cktool export-schema --team-id "$TEAM_ID" --container-id "$CONTAINER_ID" \
+              --environment "$environment" --output-file "schema/$environment.ckdb"
+            echo "━━ $environment"
+            cat "schema/$environment.ckdb"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schema
+          path: schema

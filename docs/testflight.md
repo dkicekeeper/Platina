@@ -78,5 +78,9 @@ CI на `main` зелёный.
   (`-InitializeCloudKitSchema`, `App/CloudKitSchema.swift`), в консоли — «CloudKit schema:
   done»; затем в CloudKit Console проверить типы `CD_…` (все модели данных человека из
   `LibraryStore.userModels`) и выкатить. Так же — после каждой новой модели или поля.
+  Без Xcode: Actions → **CloudKit schema** (`cktool` на Mac-раннере, секрет
+  `CLOUDKIT_MANAGEMENT_TOKEN` — токен управления из CloudKit Console): `export` печатает схемы
+  Development и Production, `import` заливает `ios/CloudKit/schema.ckdb` в Development. В
+  Production схему переносит только кнопка Deploy Schema Changes в CloudKit Console.
 - Плати: хост сервера — в `ios/Config/Platina.xcconfig`; переменная репозитория
   `PLATINA_ASSISTANT_HOST`, если задана, его заменяет (пустая — нет).
