@@ -1,0 +1,209 @@
+name: DesignKit update
+
+# Автообновление DesignKit, как в Tenra и Dalada. Раз в сутки (и вручную) смотрит последний релиз
+# DesignKit (тег X.Y.Z в github.com/dkicekeeper/DesignKit; его заметки — GitHub Release тега). Если
+# он новее версии в ios/project.yml — поднимает её, проверяет код линтом DesignKit новой версии,
+# переносит её строки (scripts/designkit_strings.py) и блок DesignKit в CLAUDE.md, собирает
+# приложение и прогоняет тесты пакета (как ios.yml) и, если всё зелёное, коммитит в main.
+#
+# Риск невелик: CI DesignKit собирает Platina с каждым своим изменением (его job platina), так что
+# релиз уже проверен на нашем main. Красный прогон main не трогает, в логе видно почему.
+# Токен не нужен: хватает GITHUB_TOKEN этого репозитория (contents: write). Коммит этим токеном не
+# запускает другие workflow (так устроен GitHub), поэтому проверки ios.yml идут здесь.
+on:
+  schedule:
+    - cron: "41 3 * * *" # 03:41 UTC, 08:41 в Алматы (Dalada — в 03:17)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: designkit-update
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Newer DesignKit?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      current: ${{ steps.versions.outputs.current }}
+      latest: ${{ steps.versions.outputs.latest }}
+      update: ${{ steps.versions.outputs.update }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - id: versions
+        run: |
+          # The pin as ios.yml's lint reads it: exactVersion under the DesignKit package.
+          CURRENT=$(python3 -c 'import re; m = re.search(r"DesignKit:\s*\n\s*url:.*\n\s*exactVersion:\s*\"([^\"]+)\"", open("ios/project.yml").read()); print(m.group(1) if m else "")')
+          LATEST=$(git ls-remote --tags --refs https://github.com/dkicekeeper/DesignKit \
+            | sed -E 's#.*refs/tags/##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          if [ -z "$CURRENT" ]; then
+            echo "::error::ios/project.yml has no DesignKit package with exactVersion: \"X.Y.Z\""
+            exit 1
+          fi
+          if [ -z "$LATEST" ]; then
+            echo "::error::No X.Y.Z tags in github.com/dkicekeeper/DesignKit"
+            exit 1
+          fi
+          if [ "$LATEST" != "$CURRENT" ] \
+             && [ "$(printf '%s\n%s\n' "$CURRENT" "$LATEST" | sort -V | tail -1)" = "$LATEST" ]; then
+            echo "update=true" >> "$GITHUB_OUTPUT"
+            echo "DesignKit $CURRENT → $LATEST ([release notes](https://github.com/dkicekeeper/DesignKit/releases/tag/$LATEST))" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "update=false" >> "$GITHUB_OUTPUT"
+            echo "DesignKit $CURRENT is the latest release: nothing to update." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  update:
+    name: Build and commit DesignKit ${{ needs.check.outputs.latest }}
+    needs: check
+    if: needs.check.outputs.update == 'true'
+    # As ios.yml's build: GitHub's Xcode 27 image, the iOS 27 SDK.
+    runs-on: xcode-27
+    timeout-minutes: 60
+    env:
+      CURRENT: ${{ needs.check.outputs.current }}
+      LATEST: ${{ needs.check.outputs.latest }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0 # for git pull --rebase before the push to main
+
+      - name: Move the pin
+        run: |
+          python3 - <<'PY'
+          import os, re
+          path = "ios/project.yml"
+          text = open(path, encoding="utf-8").read()
+          pattern = re.compile(r'(DesignKit:\s*\n\s*url:.*\n\s*exactVersion:\s*")([^"]+)(")')
+          match = pattern.search(text)
+          if not match or match.group(2) != os.environ["CURRENT"]:
+              raise SystemExit(f"ios/project.yml pins {match.group(2) if match else 'nothing'}, expected {os.environ['CURRENT']}")
+          text = pattern.sub(lambda m: m.group(1) + os.environ["LATEST"] + m.group(3), text, count=1)
+          open(path, "w", encoding="utf-8").write(text)
+          PY
+          grep -n -A2 '^  DesignKit:' ios/project.yml
+          grep -q "exactVersion: \"$LATEST\"" ios/project.yml
+
+      - name: DesignKit at the new tag
+        run: |
+          git clone --depth 1 --branch "$LATEST" https://github.com/dkicekeeper/DesignKit "$RUNNER_TEMP/DesignKit"
+          echo "DESIGNKIT=$RUNNER_TEMP/DesignKit" >> "$GITHUB_ENV"
+
+      # First, as it takes seconds: a rule the new version adds stops the update before the build.
+      - name: Design lint with the new DesignKit
+        run: python3 "$DESIGNKIT/scripts/designkit_lint.py" all --source ios/Platina --source ios/PlatinaWidgets
+
+      # DesignKit ships no strings: its keys go into our catalog, Russian from Dalada and Tenra
+      # (both public) or RU_OVERRIDES in the script (CLAUDE.md, «DesignKit»).
+      - name: DesignKit's strings in the catalog
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/Dalada.xcstrings" \
+            https://raw.githubusercontent.com/dkicekeeper/Dalada/main/ios/Dalada/Localizable.xcstrings
+          curl -fsSL -o "$RUNNER_TEMP/Tenra.strings" \
+            https://raw.githubusercontent.com/dkicekeeper/Tenra/main/Tenra/ru.lproj/Localizable.strings
+          if ! python3 scripts/designkit_strings.py --designkit "$DESIGNKIT" \
+               --ru "$RUNNER_TEMP/Dalada.xcstrings" --ru "$RUNNER_TEMP/Tenra.strings"; then
+            echo "::error::DesignKit $LATEST has keys with no Russian in Dalada, Tenra or RU_OVERRIDES: add them to RU_OVERRIDES in scripts/designkit_strings.py and run this workflow again."
+            exit 1
+          fi
+
+      # The block from docs/agents.md of the new version, so it never lags behind the pin.
+      - name: Update the DesignKit block in CLAUDE.md
+        run: python3 "$DESIGNKIT/scripts/sync_agents_block.py" CLAUDE.md
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "27"
+
+      - name: Xcode and SDK
+        run: |
+          xcodebuild -version
+          echo "iOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build app for iOS Simulator
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Platina.xcodeproj \
+            -scheme Platina \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/build.log" | grep -E "error:|warning: .*Platina/|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build.log"
+
+      - name: Run package tests on a simulator
+        working-directory: ios/Packages/PlatinaKit
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ids = [d["udid"] for runtime, items in sorted(devices.items(), reverse=True)
+                 if ".iOS-" in runtime for d in items if d["name"].startswith("iPhone")]
+          print(ids[0])
+          ')
+          echo "Simulator: $DEVICE_ID"
+          SCHEMES=$(xcodebuild -list -json | python3 -c 'import json, sys; print("\n".join(json.load(sys.stdin)["workspace"]["schemes"]))')
+          SCHEME=$(echo "$SCHEMES" | grep -x 'PlatinaKit-Package' || echo "$SCHEMES" | grep -x 'PSNKit' || echo "$SCHEMES" | head -1)
+          xcodebuild test \
+            -scheme "$SCHEME" \
+            -destination "id=$DEVICE_ID" \
+            -derivedDataPath build \
+            -resultBundlePath "$RUNNER_TEMP/PackageTests.xcresult" \
+            -quiet
+
+      - name: Commit to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ios/project.yml CLAUDE.md ios/Platina/Localizable.xcstrings
+          git commit -m "Update DesignKit to $LATEST" \
+            -m "Automatic update (workflow DesignKit update) from $CURRENT: DesignKit's lint is clean, the app builds and the PlatinaKit tests pass with DesignKit $LATEST. Release notes: https://github.com/dkicekeeper/DesignKit/releases/tag/$LATEST"
+          # main may have moved on during the build: replay on top of it; a conflict stops here.
+          for _ in 1 2 3; do
+            if git pull --rebase origin main; then
+              git push origin HEAD:main && {
+                echo "Committed DesignKit $CURRENT → $LATEST to main: $(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+                exit 0
+              }
+            else
+              git rebase --abort || true
+            fi
+            sleep 10
+          done
+          echo "::error::Could not push the update to main (a conflict or a race): move the pin by hand."
+          exit 1
+
+      - name: Build log on failure
+        if: failure()
+        run: |
+          [ -f "$RUNNER_TEMP/build.log" ] && grep -E -B2 -A6 "error:" "$RUNNER_TEMP/build.log" | head -200 || true
+
+      # With -quiet only the names of failed tests show. Here: what each failed check said.
+      - name: Test failures
+        if: failure()
+        run: |
+          RESULT="$RUNNER_TEMP/PackageTests.xcresult"
+          [ -d "$RESULT" ] || { echo "No test results"; exit 0; }
+          xcrun xcresulttool get test-results summary --path "$RESULT" --format json | python3 -c '
+          import json, sys
+          summary = json.load(sys.stdin)
+          for failure in summary.get("testFailures", []):
+              print("✘", failure.get("targetName", ""), failure.get("testName", ""))
+              print("  ", failure.get("failureText", "").replace("\n", "\n   "))
+          ' || true

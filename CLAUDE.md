@@ -173,6 +173,17 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
 `ios/project.yml`). Правила — ниже, в блоке DesignKit, и в `docs/components.md` DesignKit.
 Чего не хватает — добавляется в DesignKit отдельным PR, а не рисуется в приложении.
 
+- Версию двигает workflow **DesignKit update** (`.github/workflows/designkit.yml`), как в Tenra
+  и Dalada, а не человек. Раз в сутки (03:41 UTC) и вручную (Actions → DesignKit update) он
+  смотрит последний релиз DesignKit (тег `X.Y.Z`, его заметки — GitHub Release тега). Если тот
+  новее, workflow меняет `exactVersion` в `ios/project.yml`, проверяет код линтом DesignKit новой
+  версии, переносит её строки (`scripts/designkit_strings.py`) и блок DesignKit в этот файл,
+  собирает приложение, гоняет тесты PlatinaKit на симуляторе и коммитит «Update DesignKit to
+  X.Y.Z» в `main` от `github-actions[bot]`. Красный прогон `main` не трогает: причина — в его
+  логе. Версия уже последняя — в сводке прогона «is the latest release». Коммит бота не запускает
+  `ios.yml` (коммиты `GITHUB_TOKEN` других workflow не запускают): те же проверки идут в нём
+  самом. Новый компонент, которого ещё нет в релизе, — PR в DesignKit; после релиза workflow
+  поднимет версию сам (или запусти его вручную).
 - Акцент: `DesignKitTheme.accent = PlatinaColors.accent` в `PlatinaApp.init()`, тот же цвет в
   `AccentColor`.
 - Поверхности — серая заливка, не стекло: `DesignKitTheme.surface = .fill` там же (DesignKit
@@ -182,8 +193,11 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
   фигура внутри карточки — `.surfaceNeutral1` / `.surfaceNeutral2`, не `Background.neutral1`.
 - Цвета металлов трофеев — `TrophyType.color` в `Support/PlatinaColors.swift` (кандидат в
   токены DesignKit).
-- DesignKit не несёт строк: после подъёма версии DesignKit запусти
-  `python3 scripts/designkit_strings.py --designkit <DesignKit> --ru <Dalada>/ios/Dalada/Localizable.xcstrings --ru <Tenra>/Tenra/ru.lproj/Localizable.strings`.
+- DesignKit не несёт строк: его ключи в `Localizable.xcstrings` пишет
+  `scripts/designkit_strings.py` (английский — из Gallery DesignKit, русский — из Dalada и Tenra
+  или `RU_OVERRIDES` в скрипте). Workflow запускает его при каждом подъёме версии; ключ без
+  русского останавливает подъём — добавь перевод в `RU_OVERRIDES` и запусти workflow снова.
+  Вручную: `python3 scripts/designkit_strings.py --designkit <DesignKit> --ru <Dalada>/ios/Dalada/Localizable.xcstrings --ru <Tenra>/Tenra/ru.lproj/Localizable.strings`.
 
 ## Правила кода
 
