@@ -28,6 +28,15 @@ export interface Env {
   GUIDE_CALL_WEIGHT?: string;
   BLOCKED_COUNTRIES?: string;
   APP_ID?: string;
+  /** Trophy watchers, one per install (docs/assistant.md §9). */
+  WATCHERS?: DurableObjectNamespace;
+  /** Secret: 32 bytes in Base64 sealing the watchers' PSN tokens (made once by the deploy). */
+  TOKEN_KEY?: string;
+  /** Secrets: the APNs auth key (.p8) and its id. */
+  APNS_KEY_P8?: string;
+  APNS_KEY_ID?: string;
+  APNS_TEAM_ID?: string;
+  APNS_TOPIC?: string;
 }
 
 export type Effort = "low" | "medium" | "high" | "xhigh" | "max";

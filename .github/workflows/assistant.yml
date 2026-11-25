@@ -15,6 +15,8 @@ name: Assistant server
 #   PLATINA_DEV_TOKEN                            optional: uploaded as the Worker's DEV_TOKEN on
 #                                                deploy (the simulator's way past App Attest);
 #                                                when it is empty, deploy removes DEV_TOKEN
+#   APNS_KEY_P8, APNS_KEY_ID                     uploaded on deploy: the APNs auth key (.p8, its
+#                                                whole text) and its id, for trophy notifications
 #   ANTHROPIC_EVAL_API_KEY                       eval: a key of a separate Anthropic workspace
 #                                                with its own spend limit, so an eval never
 #                                                spends the limit that keeps Plati talking
@@ -127,6 +129,29 @@ jobs:
           else
             echo "No PLATINA_DEV_TOKEN: the Worker keeps no DEV_TOKEN (App Attest only)."
             npx wrangler secret delete DEV_TOKEN 2>/dev/null || true
+          fi
+      - name: Trophy notifications' secrets
+        env:
+          APNS_KEY_P8: ${{ secrets.APNS_KEY_P8 }}
+          APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
+        run: |
+          # The key sealing the watchers' PSN tokens: made once, here, and never shown. A new one
+          # would make every stored grant unreadable (each watcher asks its person to sign in again).
+          # Only a clear "not there" makes one: a failed listing stops the deploy instead.
+          secrets=$(npx wrangler secret list --format json) || { echo "::error::Could not list the Worker's secrets."; exit 1; }
+          state=$(printf '%s' "$secrets" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).some(x=>x.name==="TOKEN_KEY")?"set":"missing")}catch{console.log("unknown")}})')
+          case "$state" in
+            set) echo "TOKEN_KEY is set." ;;
+            missing)
+              openssl rand -base64 32 | tr -d '\n' | npx wrangler secret put TOKEN_KEY
+              echo "TOKEN_KEY created." ;;
+            *) echo "::error::Could not read the Worker's secrets list."; exit 1 ;;
+          esac
+          if [ -n "$APNS_KEY_P8" ] && [ -n "$APNS_KEY_ID" ]; then
+            printf '%s' "$APNS_KEY_P8" | npx wrangler secret put APNS_KEY_P8
+            printf '%s' "$APNS_KEY_ID" | npx wrangler secret put APNS_KEY_ID
+          else
+            echo "::warning::No APNS_KEY_P8 / APNS_KEY_ID: trophy notifications answer 503 alerts_unavailable (docs/assistant.md §9)."
           fi
       - name: The Worker's address
         run: |

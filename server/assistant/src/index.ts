@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { handleAlerts } from "./alerts";
 import { AttestError, checkAssertion, isValidKeyId, issueChallenge, registerKey } from "./appattest";
 import { buildParams, donePayload, errorPayload, normalizeForEcho, TurnEventMapper } from "./claude";
 import { readConfig, type Config, type Env } from "./config";
@@ -43,6 +44,8 @@ import {
 //   POST /v1/walkthrough/chapter       one chapter's steps: cached, or built now (SSE)
 //   GET  /v1/walkthrough/{id}?language=ru                 a cached plan, or 404
 //   GET  /v1/walkthrough/{id}/chapter/{cid}?language=ru   a chapter's cached steps, or 404
+//   POST /v1/alerts, PUT /v1/alerts/token, DELETE /v1/alerts   trophy notifications (alerts.ts,
+//                                      watcher.ts): on, a new device token, off
 //
 // /v1/turn and the POSTs that build come only from the real app: each carries an App Attest
 // assertion over its body (x-platina-key, x-platina-assertion), or, while the DEV_TOKEN secret
@@ -64,7 +67,9 @@ export default {
     const config = readConfig(env);
 
     if (url.pathname === "/v1/health") {
-      return json({ ok: true, protocol: PROTOCOL_VERSION, prompt: PROMPT_VERSION, guide_prompt: GUIDE_PROMPT_VERSION, walkthrough_prompt: WALKTHROUGH_PROMPT_VERSION });
+      // `alerts`: trophy notifications can be turned on (the watchers and their secrets are there).
+      const alerts = Boolean(env.WATCHERS && env.TOKEN_KEY && env.APNS_KEY_P8 && env.APNS_KEY_ID);
+      return json({ ok: true, protocol: PROTOCOL_VERSION, prompt: PROMPT_VERSION, guide_prompt: GUIDE_PROMPT_VERSION, walkthrough_prompt: WALKTHROUGH_PROMPT_VERSION, alerts });
     }
 
     // Registering a key calls no model: it answers everywhere, always.
@@ -76,6 +81,10 @@ export default {
       if (request.method !== "POST") return fail(405, "method");
       return attest(request, env, config.appId);
     }
+
+    // Trophy notifications call no model: they answer whatever ASSISTANT_ENABLED says.
+    const alerts = await handleAlerts(request, env, (req, bytes) => authenticate(req, env, config, bytes));
+    if (alerts) return alerts;
 
     const guidePath = /^\/v1\/guide\/([^/]+)$/.exec(url.pathname);
     const walkthroughPath = /^\/v1\/walkthrough\/([^/]+)(?:\/chapter\/([^/]+))?$/.exec(url.pathname);
@@ -117,6 +126,8 @@ export default {
     return guide(request, env, ctx, config);
   },
 } satisfies ExportedHandler<Env>;
+
+export { TrophyWatcher } from "./watcher";
 
 // MARK: - The caller
 

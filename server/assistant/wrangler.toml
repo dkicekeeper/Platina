@@ -68,3 +68,14 @@ id = "REPLACE_WITH_GUIDES_NAMESPACE_ID"
 
 # Secrets (never in this file), uploaded by the deploy action from the repository's secrets:
 # ANTHROPIC_API_KEY, and optionally DEV_TOKEN (the simulator's way past App Attest).
+
+# Trophy watchers (docs/assistant.md §9): one SQLite-backed Durable Object per install that turned
+# trophy notifications on. Secrets uploaded by the deploy action: TOKEN_KEY (made once), and
+# APNS_KEY_P8, APNS_KEY_ID from the repository's secrets.
+[[durable_objects.bindings]]
+name = "WATCHERS"
+class_name = "TrophyWatcher"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TrophyWatcher"]
