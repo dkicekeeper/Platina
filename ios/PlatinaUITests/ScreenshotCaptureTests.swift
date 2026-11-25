@@ -28,7 +28,10 @@ final class ScreenshotCaptureTests: XCTestCase {
         let environment = ProcessInfo.processInfo.environment
         let language = environment["SCREENSHOT_LANGUAGE"] ?? "ru"
         let locale = environment["SCREENSHOT_LOCALE"] ?? "ru_RU"
-        let only = environment["SCREENSHOT_SCREENS"].map { Set($0.split(separator: ",").map(String.init)) }
+        // Empty (the workflow's default): every screen.
+        let only = environment["SCREENSHOT_SCREENS"]
+            .map { Set($0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }) }
+            .flatMap { $0.isEmpty ? nil : $0 }
 
         for (index, screen) in Self.screens.enumerated() where only?.contains(screen) ?? true {
             let app = XCUIApplication()
