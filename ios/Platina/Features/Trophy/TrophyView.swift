@@ -90,9 +90,13 @@ struct TrophyView: View {
     private func facts(of trophy: TrophyRecord) -> [StatsStrip.Item] {
         var items: [StatsStrip.Item] = [.init(value: trophy.type.title, title: String(localized: "trophy.fact.type"))]
         if let rate = trophy.earnedRate {
+            // The one place on the screen the share of players is explained; the rarity beside it
+            // is PlayStation's tier of the same share, which the tip names.
             items.append(.init(
                 value: "\(rate.formatted(.number.precision(.fractionLength(1))))%",
-                title: String(localized: "trophy.fact.rate")
+                title: String(localized: "trophy.fact.rate"),
+                info: TrophyMeta.rateInfoMessage,
+                infoTitle: TrophyMeta.rateInfoTitle
             ))
         }
         if let rarity = trophy.rarity {
