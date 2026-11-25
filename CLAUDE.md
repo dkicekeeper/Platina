@@ -218,7 +218,7 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
   чата, Live Activity, Siri), и Плати видит это в `<app_context>`.
 
 <!-- designkit:agents:start -->
-<!-- From DesignKit 8.18.1, docs/agents.md. Do not edit here: the DesignKit update workflow rewrites it. -->
+<!-- From DesignKit 8.19.0, docs/agents.md. Do not edit here: the DesignKit update workflow rewrites it. -->
 
 ## DesignKit for an app's agent
 
