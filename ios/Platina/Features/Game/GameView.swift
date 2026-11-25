@@ -581,12 +581,14 @@ struct TrophyRow: View {
 
 enum TrophyMeta {
     static func items(for trophy: TrophyRecord) -> [MetaItem] {
-        var items: [MetaItem] = [.label(trophy.type.title, systemImage: trophy.type.systemImage, tint: trophy.type.color)]
+        // Text in a colour reads at 4.5:1 on the grey card (DesignKit 8.9.0): the solid metals were
+        // 2.1–3.6:1 as text, the system green 2.2:1.
+        var items: [MetaItem] = [.label(trophy.type.title, systemImage: trophy.type.systemImage, tint: AppColors.readable(trophy.type.color))]
         if let rate = trophy.earnedRate {
             items.append(.text(rateText(rate)))
         }
         if let earnedAt = trophy.earnedAt {
-            items.append(.label(earnedAt.formatted(date: .abbreviated, time: .omitted), systemImage: "checkmark.circle.fill", tint: AppColors.success))
+            items.append(.label(earnedAt.formatted(date: .abbreviated, time: .omitted), systemImage: "checkmark.circle.fill", tint: AppColors.Status.positiveText))
         }
         return items
     }
@@ -599,4 +601,9 @@ enum TrophyMeta {
     static func rateText(_ rate: Double) -> String {
         String(localized: "trophy.rate \(rate.formatted(.number.precision(.fractionLength(1))))")
     }
+
+    /// The `InfoTip` on the share of players, where a screen explains it once (the rarest
+    /// trophies' header), not on every row of a list.
+    static var rateInfoTitle: String { String(localized: "trophy.rate.info.title") }
+    static var rateInfoMessage: String { String(localized: "trophy.rate.info.message") }
 }

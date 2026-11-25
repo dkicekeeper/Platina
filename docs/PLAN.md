@@ -188,7 +188,8 @@ Store потребует (App Attest, квоты ассистента, вход 
 
 ### 3.7 Статистика и профиль
 
-- Полка платин (голографические медали), редчайшие трофеи.
+- Полка платин (голографические медали), редчайшие трофеи (у заголовка `InfoTip`: что такое доля
+  игроков и откуда она; в строках только число).
 - Трофеи по месяцам, время по играм, средний процент завершения.
 - «Платина за N часов» против оценки гайда.
 - Серии: дни подряд с трофеями.
@@ -201,7 +202,7 @@ Store потребует (App Attest, квоты ассистента, вход 
 | Кнопки, формы, настройки | `DSButton`, `FormSection` + `UniversalRow` |
 | Библиотека игр | `CardList`, `ThumbnailCard`, `RemotePhoto`, `ChipPicker`, `UniversalFilterButton`, `.dsSearchSuggestions` |
 | Прогресс | `ProgressRing`, `LinearProgressBar`, `ProgressRingTileGrid`, `ProportionBar` (доли типов трофеев) |
-| Трофеи | `AchievementMedal`, `AchievementTile`, `AchievementProgressRow`, `.holographic` + `.interactiveTilt` для платины |
+| Трофеи | `AchievementMedal`, `AchievementTile`, `AchievementProgressRow`, `.holographic` + `.interactiveTilt` для платины; тип и дата получения текстом — `AppColors.readable` / `Status.positiveText` (металлы на серой карточке читались 2,1–3,6:1) |
 | Экран игры | `.heroBackground(clearHeight:picture:)` + `.heroScrollEdge(isHeroUnderBar:)`, `ChipPicker` (разделы), `ScoreCard` (сложность), `InfoTip` (откуда цифра) |
 | Дорожная карта | `StepTracker`, `ChecklistRow`, `ChecklistSummaryRow` |
 | Подсказки и гайды | `ArticleBody`, `ExpandableText`, `StatusBanner` (пропускаемый), `RecommendationBox` |

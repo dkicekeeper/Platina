@@ -8028,6 +8028,40 @@
         }
       }
     },
+    "trophy.rate.info.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The percentage of the game’s players who have earned the trophy. PlayStation counts it and sorts trophies by it into common, rare, very rare and ultra rare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сколько процентов игроков в эту игру получили трофей. Это данные PlayStation: по ним же она делит трофеи на обычные, редкие, очень редкие и ультраредкие."
+          }
+        }
+      }
+    },
+    "trophy.rate.info.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share of players"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доля игроков"
+          }
+        }
+      }
+    },
     "trophy.tip.header": {
       "extractionState": "manual",
       "localizations": {
