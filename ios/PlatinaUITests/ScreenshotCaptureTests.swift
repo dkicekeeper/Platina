@@ -41,11 +41,19 @@ final class ScreenshotCaptureTests: XCTestCase {
                 "-AppleLanguages", "(\(language))",
                 "-AppleLocale", locale,
             ]
-            app.launch()
-            XCTAssertTrue(app.wait(for: .runningForeground, timeout: 60), "\(screen): the app did not start")
-            // The demo syncs its library and seeds the person's side in memory, then the screen
-            // draws its art and settles its entrances.
-            sleep(screen == "plati" || screen == "session" ? 10 : 8)
+            // Once in 36 (2026-11-25, the iPhone's English Path) the picture caught the app on its
+            // onboarding: an instance not in the demo, signed out. Such a launch goes again.
+            for attempt in 1...3 {
+                app.launch()
+                XCTAssertTrue(app.wait(for: .runningForeground, timeout: 60), "\(screen): the app did not start")
+                // The demo syncs its library and seeds the person's side in memory, then the
+                // screen draws its art and settles its entrances.
+                sleep(screen == "plati" || screen == "session" ? 10 : 8)
+                let onboarding = app.descendants(matching: .any).matching(identifier: "onboarding").firstMatch
+                guard onboarding.exists, attempt < 3 else { break }
+                print("\(screen): the onboarding, not the demo; launching again")
+                app.terminate()
+            }
             // The guide scrolls to its chips by itself (`GameView`), the walkthrough is its own
             // screen; the chat opens at its end: back a little, to the reply's first line.
             if screen == "plati" {

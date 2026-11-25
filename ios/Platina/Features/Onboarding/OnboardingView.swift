@@ -73,6 +73,8 @@ struct OnboardingView: View {
             }
         }
         .background(AppColors.Background.base)
+        // The screenshots' UI test relaunches an app that opened here instead of its demo.
+        .accessibilityIdentifier("onboarding")
     }
 
     private func next(after page: Page) -> Page {
