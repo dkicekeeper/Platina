@@ -4,8 +4,8 @@ import PlatinaShared
 
 /// The app's own colours. Everything else is DesignKit's tokens.
 enum PlatinaColors {
-    /// Cool platinum blue, #3573BA (PlatinaPalette). The asset catalog's AccentColor is the same
-    /// colour (system chrome reads that one).
+    /// Plasma, #D6006F in light mode and #FF4FA0 in dark (PlatinaPalette). The asset catalog's
+    /// AccentColor is the same pair (system chrome reads that one).
     static let accent = PlatinaPalette.accent
 }
 

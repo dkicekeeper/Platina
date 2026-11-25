@@ -204,7 +204,7 @@ enum DemoArt {
 
     private static func avatar() -> UIImage {
         render(CGSize(width: 512, height: 512), opaque: true) { context, size in
-            let gradient = CGGradient(colorsSpace: nil, colors: [rgb(0x3573BA).cgColor, rgb(0x7B4FD6).cgColor] as CFArray, locations: [0, 1])!
+            let gradient = CGGradient(colorsSpace: nil, colors: [rgb(0xD6006F).cgColor, rgb(0x6B2FD6).cgColor] as CFArray, locations: [0, 1])!
             context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: size.width, y: size.height), options: [])
             let config = UIImage.SymbolConfiguration(pointSize: 260, weight: .bold)
             if let symbol = UIImage(systemName: "gamecontroller.fill", withConfiguration: config)?.withTintColor(.white, renderingMode: .alwaysOriginal) {
