@@ -173,6 +173,17 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
 `ios/project.yml`). Правила — ниже, в блоке DesignKit, и в `docs/components.md` DesignKit.
 Чего не хватает — добавляется в DesignKit отдельным PR, а не рисуется в приложении.
 
+- Версию двигает workflow **DesignKit update** (`.github/workflows/designkit.yml`), как в Tenra
+  и Dalada, а не человек. Раз в сутки (03:41 UTC) и вручную (Actions → DesignKit update) он
+  смотрит последний релиз DesignKit (тег `X.Y.Z`, его заметки — GitHub Release тега). Если тот
+  новее, workflow меняет `exactVersion` в `ios/project.yml`, проверяет код линтом DesignKit новой
+  версии, переносит её строки (`scripts/designkit_strings.py`) и блок DesignKit в этот файл,
+  собирает приложение, гоняет тесты PlatinaKit на симуляторе и коммитит «Update DesignKit to
+  X.Y.Z» в `main` от `github-actions[bot]`. Красный прогон `main` не трогает: причина — в его
+  логе. Версия уже последняя — в сводке прогона «is the latest release». Коммит бота не запускает
+  `ios.yml` (коммиты `GITHUB_TOKEN` других workflow не запускают): те же проверки идут в нём
+  самом. Новый компонент, которого ещё нет в релизе, — PR в DesignKit; после релиза workflow
+  поднимет версию сам (или запусти его вручную).
 - Акцент: `DesignKitTheme.accent = PlatinaColors.accent` в `PlatinaApp.init()`, тот же цвет в
   `AccentColor`.
 - Поверхности — серая заливка, не стекло: `DesignKitTheme.surface = .fill` там же (DesignKit
@@ -182,8 +193,11 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
   фигура внутри карточки — `.surfaceNeutral1` / `.surfaceNeutral2`, не `Background.neutral1`.
 - Цвета металлов трофеев — `TrophyType.color` в `Support/PlatinaColors.swift` (кандидат в
   токены DesignKit).
-- DesignKit не несёт строк: после подъёма версии DesignKit запусти
-  `python3 scripts/designkit_strings.py --designkit <DesignKit> --ru <Dalada>/ios/Dalada/Localizable.xcstrings --ru <Tenra>/Tenra/ru.lproj/Localizable.strings`.
+- DesignKit не несёт строк: его ключи в `Localizable.xcstrings` пишет
+  `scripts/designkit_strings.py` (английский — из Gallery DesignKit, русский — из Dalada и Tenra
+  или `RU_OVERRIDES` в скрипте). Workflow запускает его при каждом подъёме версии; ключ без
+  русского останавливает подъём — добавь перевод в `RU_OVERRIDES` и запусти workflow снова.
+  Вручную: `python3 scripts/designkit_strings.py --designkit <DesignKit> --ru <Dalada>/ios/Dalada/Localizable.xcstrings --ru <Tenra>/Tenra/ru.lproj/Localizable.strings`.
 
 ## Правила кода
 
@@ -204,7 +218,7 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
   чата, Live Activity, Siri), и Плати видит это в `<app_context>`.
 
 <!-- designkit:agents:start -->
-<!-- From DesignKit 8.17.0, docs/agents.md. Do not edit here: the DesignKit update workflow rewrites it. -->
+<!-- From DesignKit 8.17.2, docs/agents.md. Do not edit here: the DesignKit update workflow rewrites it. -->
 
 ## DesignKit for an app's agent
 
@@ -212,7 +226,8 @@ The short version of DesignKit's rules for a session working in Tenra, Dalada or
 round 4: Astryx's `init`, which writes such a block into an app's AGENTS.md). Each app's
 **DesignKit update** workflow puts this file into the app's CLAUDE.md between the
 `designkit:agents` markers when it moves the pin (`scripts/sync_agents_block.py`), so it always
-matches the version the app builds with. Do not edit the block in the app; change it here.
+matches the version the app builds with; an app that moves its pin by hand (Platina) runs the
+script with the bump. Do not edit the block in the app; change it here.
 
 ### Look a component up
 
@@ -271,6 +286,7 @@ matches the version the app builds with. Do not edit the block in the app; chang
 | People | `Avatar`, `AvatarGroup`, `PersonRow`, `CommentRow` |
 | Photos | `RemotePhoto`, `PhotoTile`, `PhotoGrid`, `PhotoCarousel`, `PhotoViewer` |
 | Edit sheet | `EditSheetContainer`, `EditableHero`, `AmountEntrySheet` |
+| The top of a detail screen | `HeroSection`; on colour `.heroBackground(color)`, on a picture `.heroBackground(clearHeight:picture:)` (8.14.0), with `.heroScrollEdge()` on the scroll view |
 | A moment of success | `.celebration`, `.completionMoment` |
 | A screen on an iPad or a Mac | `.readableWidth()`; cards side by side in `CardList(layout: .grid)` (8.15.0) or `LazyVGrid(columns: AppLayout.cardColumns())` under `.readableWidth(AppLayout.wideWidth)`; a main column with summaries beside it in `AdaptiveColumns` (the phone's layout in `narrow:`); list and detail in `NavigationSplitView` |
 

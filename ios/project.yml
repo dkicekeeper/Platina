@@ -20,10 +20,10 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
 
 packages:
-  # Точная версия; поднимается отдельным коммитом (docs/PLAN.md §6).
+  # Точная версия; её поднимает workflow DesignKit update (.github/workflows/designkit.yml).
   DesignKit:
     url: https://github.com/dkicekeeper/DesignKit
-    exactVersion: "8.17.0"
+    exactVersion: "8.17.2"
   PlatinaKit:
     path: Packages/PlatinaKit
 
