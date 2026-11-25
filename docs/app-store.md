@@ -32,10 +32,21 @@
 - PSN-данные (трофеи, профиль) берутся у Sony с телефона и на наш сервер уходят только кусками,
   которые Плати попросил для ответа, — это входит в «Other User Content».
 
-## 3. Политика конфиденциальности (черновик)
+## 3. Политика конфиденциальности и поддержка
 
-Нужна по ссылке (App Store Connect → App Privacy → Privacy Policy URL). Можно опубликовать
-страницей (GitHub Pages, сайт) — текст ниже, русский и английский.
+Опубликованы на GitHub Pages, как у Dalada и Tenra (решение владельца 2026-11-25): `docs/public`
+→ workflow `Pages` на каждый пуш в `main`, который их меняет.
+
+- Privacy Policy URL: https://dkicekeeper.github.io/Platina/privacy-policy.html
+- Support URL: https://dkicekeeper.github.io/Platina/support.html
+- Marketing URL (по желанию): https://dkicekeeper.github.io/Platina/
+
+Один раз владельцу: Settings → Pages → Build and deployment → Source: GitHub Actions, затем
+Actions → Pages → Run workflow. Страницы — на английском и русском на одной странице; связь —
+та же почта, что у Dalada и Tenra. Хранение у Anthropic сверено 2026-11-25 (privacy.claude.com:
+API — удаление в течение 30 дней, без обучения; до 2 лет — если запрос отмечен как нарушение
+правил использования). Черновик ниже — история; опубликованный текст — в
+`docs/public/privacy-policy.html`.
 
 ### Русский
 
@@ -222,7 +233,8 @@
 
 ## 7. Перед отправкой (чек-лист)
 
-- [ ] Политика конфиденциальности опубликована, ссылка в App Store Connect.
+- [x] Политика конфиденциальности и поддержка — в `docs/public` (GitHub Pages); осталось включить
+      Pages в настройках и вставить ссылки в App Store Connect.
 - [ ] App Privacy заполнен (раздел 2).
 - [ ] Отдельный аккаунт PSN для ревью, заметки (раздел 4).
 - [ ] Письма отправлены (раздел 5); ответы — в `IMAGE_SOURCES`.
