@@ -131,3 +131,16 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Platina
         TARGETED_DEVICE_FAMILY: "1,2"
+
+schemes:
+  # Once after a new model of the person's data: Run on a device signed in to iCloud; the app writes
+  # the whole schema to CloudKit's Development, then deploy it in CloudKit Console
+  # (docs/testflight.md, App/CloudKitSchema.swift).
+  Platina CloudKit Schema:
+    build:
+      targets:
+        Platina: all
+    run:
+      config: Debug
+      commandLineArguments:
+        "-InitializeCloudKitSchema": true

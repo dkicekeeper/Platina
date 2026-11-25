@@ -32,6 +32,13 @@ struct PlatinaApp: App {
             return
         }
 
+        #if DEBUG
+        // Once, from Xcode: the whole iCloud schema into CloudKit's Development (CloudKitSchema).
+        if CloudKitSchema.isRequested {
+            CloudKitSchema.initialize()
+        }
+        #endif
+
         let container: ModelContainer
         do {
             container = try LibraryStore.makeContainer()

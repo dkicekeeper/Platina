@@ -71,7 +71,12 @@ CI на `main` зелёный.
   `xcode-version: "27"` — последний стабильный 27.x. С апреля 2027 App Store Connect
   принимает только такие.
 - iCloud в сборках TestFlight работает с продакшен-окружением CloudKit: схему из
-  Development нужно один раз выкатить в CloudKit Console (Deploy Schema Changes), иначе свои
-  данные не синхронизируются (приложение при этом работает).
+  Development нужно выкатить в CloudKit Console (Deploy Schema Changes), иначе свои
+  данные не синхронизируются (приложение при этом работает). Development узнаёт тип записи или
+  поле, только когда Debug-сборка впервые сохранит такую запись, поэтому сначала — схема
+  целиком: в Xcode схема **Platina CloudKit Schema** → Run на устройстве с iCloud
+  (`-InitializeCloudKitSchema`, `App/CloudKitSchema.swift`), в консоли — «CloudKit schema:
+  done»; затем в CloudKit Console проверить типы `CD_…` (все модели данных человека из
+  `LibraryStore.userModels`) и выкатить. Так же — после каждой новой модели или поля.
 - Плати: хост сервера — в `ios/Config/Platina.xcconfig`; переменная репозитория
   `PLATINA_ASSISTANT_HOST`, если задана, его заменяет (пустая — нет).
