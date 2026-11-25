@@ -191,6 +191,33 @@ public actor PSNClient {
         return response.presence
     }
 
+    // MARK: Friends
+
+    /// The account ids on the person's friends list.
+    public func friendIds() async throws -> [String] {
+        try await allPages(FriendsPage.self, limit: 1000) { limit, offset in
+            ("userProfile/v1/internal/users/me/friends", [
+                URLQueryItem(name: "limit", value: String(limit)),
+                URLQueryItem(name: "offset", value: String(offset)),
+            ])
+        }
+    }
+
+    /// A friend's trophy lists, newest change first, read like the person's own; nil when the
+    /// friend hides their trophies (PSN answers 403 "Not permitted by access control").
+    public func trophyTitles(of accountId: String) async throws -> [TrophyTitle]? {
+        do {
+            return try await allPages(TrophyTitlesPage.self, limit: 200) { limit, offset in
+                ("trophy/v1/users/\(accountId)/trophyTitles", [
+                    URLQueryItem(name: "limit", value: String(limit)),
+                    URLQueryItem(name: "offset", value: String(offset)),
+                ])
+            }
+        } catch PSNError.http(status: 403, code: _, message: _) {
+            return nil
+        }
+    }
+
     // MARK: Requests
 
     static func merge(definitions: [TrophyDefinition], earnings: [TrophyEarning]) -> [Trophy] {

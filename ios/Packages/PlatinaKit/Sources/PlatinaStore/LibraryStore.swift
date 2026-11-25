@@ -12,7 +12,7 @@ import PlatinaAssistant
 public final class LibraryStore {
     public static let cacheModels: [any PersistentModel.Type] = [
         GameRecord.self, TrophyRecord.self, TrophyGroupRecord.self, ProfileRecord.self, TitleLinkRecord.self,
-        GuideRecord.self, WalkthroughRecord.self, ChapterRecord.self,
+        GuideRecord.self, WalkthroughRecord.self, ChapterRecord.self, FriendRecord.self, FriendTitleRecord.self,
     ]
     public static let userModels: [any PersistentModel.Type] = [
         GamePlanRecord.self, PlaySessionRecord.self, NoteRecord.self, ConversationRecord.self,
@@ -252,7 +252,70 @@ public final class LibraryStore {
         for guide in try context.fetch(FetchDescriptor<GuideRecord>()) { context.delete(guide) }
         for plan in try context.fetch(FetchDescriptor<WalkthroughRecord>()) { context.delete(plan) }
         for chapter in try context.fetch(FetchDescriptor<ChapterRecord>()) { context.delete(chapter) }
+        for friend in try context.fetch(FetchDescriptor<FriendRecord>()) { context.delete(friend) }
+        for title in try context.fetch(FetchDescriptor<FriendTitleRecord>()) { context.delete(title) }
         try context.save()
+    }
+
+    // MARK: Friends
+
+    public func friends() throws -> [FriendRecord] {
+        try context.fetch(FetchDescriptor<FriendRecord>(sortBy: [SortDescriptor(\.onlineId)]))
+    }
+
+    public func friend(_ accountId: String) throws -> FriendRecord? {
+        var descriptor = FetchDescriptor<FriendRecord>(predicate: #Predicate { $0.accountId == accountId })
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    /// The friends list as PSN has it now: new friends added, former ones forgotten with their lists.
+    public func keepFriends(_ accountIds: [String]) throws {
+        let wanted = Set(accountIds)
+        let stored = try friends()
+        for friend in stored where !wanted.contains(friend.accountId) {
+            context.delete(friend)
+        }
+        for title in try context.fetch(FetchDescriptor<FriendTitleRecord>()) where !wanted.contains(title.friendId) {
+            context.delete(title)
+        }
+        let known = Set(stored.map(\.accountId))
+        for id in accountIds where !known.contains(id) {
+            context.insert(FriendRecord(accountId: id))
+        }
+        try context.save()
+    }
+
+    public func saveFriendProfile(_ profile: PSNProfile, accountId: String, at date: Date) throws {
+        guard let friend = try friend(accountId) else { return }
+        friend.onlineId = profile.onlineId
+        friend.avatarURLString = profile.avatarURL?.absoluteString
+        friend.profileUpdatedAt = date
+        try context.save()
+    }
+
+    /// A friend's trophy lists in place of the ones kept; nil: the friend hides them.
+    public func saveFriendTitles(_ titles: [TrophyTitle]?, accountId: String, at date: Date) throws {
+        guard let friend = try friend(accountId) else { return }
+        let descriptor = FetchDescriptor<FriendTitleRecord>(predicate: #Predicate { $0.friendId == accountId })
+        for title in try context.fetch(descriptor) { context.delete(title) }
+        friend.isHidden = titles == nil
+        for title in titles ?? [] where title.isSupported {
+            context.insert(FriendTitleRecord(friendId: accountId, title: title))
+        }
+        friend.titlesUpdatedAt = date
+        try context.save()
+    }
+
+    /// A friend's progress by game (trophy list id → percent).
+    public func friendProgress(_ accountId: String) throws -> [String: Int] {
+        let descriptor = FetchDescriptor<FriendTitleRecord>(predicate: #Predicate { $0.friendId == accountId })
+        return Dictionary(try context.fetch(descriptor).map { ($0.gameId, $0.progress) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// The person's own progress by game (trophy list id → percent).
+    public func myProgress() throws -> [String: Int] {
+        Dictionary(try games().map { ($0.id, $0.progress) }, uniquingKeysWith: { first, _ in first })
     }
 
     // MARK: The person's own data

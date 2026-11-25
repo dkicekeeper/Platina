@@ -6,7 +6,7 @@ import PSNKit
 import PlatinaCore
 @testable import PlatinaStore
 
-/// PSN as the fixtures describe it: two PS5 games and a PS4 one, one game played.
+/// PSN as the fixtures describe it: two PS5 games and a Vita one (not followed), one game played.
 final class FakePSN: HTTPTransport, @unchecked Sendable {
     private let lock = NSLock()
     private var paths: [String] = []
@@ -48,6 +48,13 @@ final class FakePSN: HTTPTransport, @unchecked Sendable {
             (status, body) = (401, Data())
         case path.hasSuffix("/trophySummary"):
             (status, body) = (200, try fixture("trophySummary"))
+        case path.hasSuffix("/users/me/friends"):
+            (status, body) = (200, Data(#"{"friends":["111","222"],"totalItemCount":2}"#.utf8))
+        case path.hasSuffix("/users/111/trophyTitles"):
+            (status, body) = (200, try fixture(offset == "0" ? "trophyTitles-page1" : "trophyTitles-page2"))
+        case path.hasSuffix("/users/222/trophyTitles"):
+            // This friend hides their trophies.
+            (status, body) = (403, Data(#"{"error":{"code":2240526,"message":"Not permitted by access control"}}"#.utf8))
         case path.hasSuffix("/profiles"):
             (status, body) = (200, try fixture("profile"))
         case path.hasSuffix("/users/me/trophyTitles"):
@@ -325,6 +332,61 @@ struct StoreTests {
         #expect(try store.note(gameId: "NPWR28536_00", trophyId: nil)?.text == "Иду на платину летом")
         try store.setNote("  ", gameId: "NPWR28536_00", trophyId: 12)
         #expect(try store.note(gameId: "NPWR28536_00", trophyId: 12) == nil)
+    }
+}
+
+@MainActor
+@Suite("Friends")
+struct FriendsStoreTests {
+    private func make() async throws -> (FriendsSync, LibraryStore, FakePSN, TestClock) {
+        let store = LibraryStore(container: try LibraryStore.makeContainer(inMemory: true))
+        let psn = FakePSN()
+        let client = PSNClient(store: InMemoryTokenStore(validTokens), transport: psn, language: "ru-RU")
+        await LibrarySync(client: client, store: store, requestBudget: 60, minimumInterval: 600).sync()
+        let clock = TestClock()
+        return (FriendsSync(client: client, store: store, now: { clock.now }), store, psn, clock)
+    }
+
+    @Test("A refresh keeps the friends, marks the one who hides trophies, and compares shared games")
+    func refresh() async throws {
+        let (friends, store, _, _) = try await make()
+        await friends.refresh()
+
+        #expect(friends.status == .idle)
+        #expect(Set(try store.friends().map(\.accountId)) == ["111", "222"])
+        #expect(try store.friend("111")?.onlineId == "trophy_hunter")
+        #expect(try store.friend("111")?.isHidden == false)
+        #expect(try store.friend("222")?.isHidden == true)
+        #expect(try store.friendProgress("222").isEmpty)
+
+        // The Vita list is not followed, so it is not shared either.
+        let shared = FriendComparison.shared(mine: try store.myProgress(), theirs: try store.friendProgress("111"))
+        #expect(Set(shared.keys) == ["NPWR28536_00", "NPWR20188_00"])
+    }
+
+    @Test("Within 12 hours nothing is asked; forced, the lists are, the week-old profiles are not")
+    func throttle() async throws {
+        let (friends, _, psn, clock) = try await make()
+        await friends.refresh()
+
+        psn.resetLog()
+        clock.advance(3600)
+        await friends.refresh()
+        #expect(psn.requestedPaths.isEmpty)
+
+        await friends.refresh(force: true)
+        #expect(psn.requestedPaths.contains { $0.hasSuffix("/users/111/trophyTitles") })
+        #expect(!psn.requestedPaths.contains { $0.hasSuffix("/profiles") })
+    }
+
+    @Test("A friend who left the list is forgotten with their lists")
+    func formerFriend() async throws {
+        let (_, store, _, _) = try await make()
+        try store.keepFriends(["111", "222"])
+        try store.saveFriendTitles([], accountId: "222", at: Date())
+        try store.keepFriends(["111"])
+        #expect(try store.friend("222") == nil)
+        #expect(try store.friendProgress("222").isEmpty)
     }
 }
 #endif

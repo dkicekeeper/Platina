@@ -307,6 +307,52 @@ public final class TitleLinkRecord {
     }
 }
 
+/// A PSN friend of the person, for comparing progress in shared games (cache: FriendsSync
+/// rebuilds it).
+@Model
+public final class FriendRecord {
+    @Attribute(.unique) public var accountId: String
+    public var onlineId: String
+    public var avatarURLString: String?
+    /// The friend hides their trophies from others: nothing to compare.
+    public var isHidden: Bool
+    /// When the profile was read (online id and avatar change rarely: weekly).
+    public var profileUpdatedAt: Date?
+    /// When the trophy lists were read.
+    public var titlesUpdatedAt: Date?
+
+    public init(accountId: String) {
+        self.accountId = accountId
+        onlineId = ""
+        isHidden = false
+    }
+
+    public var avatarURL: URL? { PSNImageURL.from(avatarURLString) }
+}
+
+/// One trophy list of a friend: progress only (the owner's decision, 2026-11-25).
+@Model
+public final class FriendTitleRecord {
+    /// `accountId#NPWR…`.
+    @Attribute(.unique) public var key: String
+    public var friendId: String
+    public var gameId: String
+    public var progress: Int
+    public var earnedTotal: Int
+    public var hasPlatinum: Bool
+    public var lastUpdated: Date
+
+    public init(friendId: String, title: TrophyTitle) {
+        key = "\(friendId)#\(title.npCommunicationId)"
+        self.friendId = friendId
+        gameId = title.npCommunicationId
+        progress = title.progress
+        earnedTotal = title.earnedTrophies.total
+        hasPlatinum = title.isPlatinumEarned
+        lastUpdated = title.lastUpdatedDateTime
+    }
+}
+
 /// A game's guide as the server built it (docs/assistant.md §4), kept for offline reading.
 @Model
 public final class GuideRecord {

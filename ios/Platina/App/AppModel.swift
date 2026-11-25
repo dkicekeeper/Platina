@@ -26,6 +26,8 @@ final class AppModel {
     let sessions: SessionTracker
     let assistant: AssistantService
     let gameHelp: GameHelpService
+    /// The person's PSN friends and their progress in shared games.
+    let friends: FriendsSync
 
     /// The session screen is open.
     var isShowingSession = false
@@ -60,6 +62,7 @@ final class AppModel {
             (try? store.game(gameId))?.isPS4 != true
         }
         self.gameHelp = gameHelp
+        friends = FriendsSync(client: client, store: store)
         assistant = AssistantService(
             store: store,
             sessions: sessions,
@@ -68,6 +71,9 @@ final class AppModel {
             gameHelp: gameHelp
         )
         sync.onError = { [weak self] error in
+            self?.handle(error)
+        }
+        friends.onError = { [weak self] error in
             self?.handle(error)
         }
         sync.onNewTrophies = { [weak self] trophies in
@@ -246,6 +252,7 @@ final class AppModel {
         try? await client.signOut()
         try? store.eraseCache()
         sync.reset()
+        friends.reset()
         phase = .signedOut
     }
 

@@ -5,7 +5,8 @@ import UIKit
 /// logo, an icon, and trophy badges in its colours. Nothing comes from a real game or a store.
 /// `ScreenshotDemo` hands them to `RemotePhoto` through `DesignKitPhotoLoader`.
 enum DemoArt {
-    /// `demo://art/<slug>/hub|icon|logo|dlc`, `demo://trophy/<slug>/<id>`, `demo://art/avatar`.
+    /// `demo://art/<slug>/hub|icon|logo|dlc`, `demo://trophy/<slug>/<id>`, `demo://art/avatar`,
+    /// `demo://art/friend/<n>`.
     static func image(for url: URL) -> UIImage? {
         if let image = cache.image(url.absoluteString) { return image }
         guard url.scheme == "demo", let image = draw(url) else { return nil }
@@ -20,6 +21,8 @@ enum DemoArt {
         switch url.host() ?? "" {
         case "art" where parts == ["avatar"]:
             return avatar()
+        case "art" where parts.count == 2 && parts[0] == "friend":
+            return friendAvatar(Int(parts[1]) ?? 0)
         case "art" where parts.count == 2:
             let theme = Theme.named(parts[0])
             switch parts[1] {
@@ -208,6 +211,24 @@ enum DemoArt {
             context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: size.width, y: size.height), options: [])
             let config = UIImage.SymbolConfiguration(pointSize: 260, weight: .bold)
             if let symbol = UIImage(systemName: "gamecontroller.fill", withConfiguration: config)?.withTintColor(.white, renderingMode: .alwaysOriginal) {
+                symbol.draw(at: CGPoint(x: (size.width - symbol.size.width) / 2, y: (size.height - symbol.size.height) / 2))
+            }
+        }
+    }
+
+    /// A demo friend's picture: a gradient of their own and a symbol.
+    private static func friendAvatar(_ number: Int) -> UIImage {
+        let looks: [(UInt32, UInt32, String)] = [
+            (0x0F9D8A, 0x1D4ED8, "hare.fill"),
+            (0xF59E0B, 0xDC2626, "flame.fill"),
+            (0x64748B, 0x1E293B, "moon.stars.fill"),
+        ]
+        let look = looks[abs(number) % looks.count]
+        return render(CGSize(width: 512, height: 512), opaque: true) { context, size in
+            let gradient = CGGradient(colorsSpace: nil, colors: [rgb(look.0).cgColor, rgb(look.1).cgColor] as CFArray, locations: [0, 1])!
+            context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: size.width, y: size.height), options: [])
+            let config = UIImage.SymbolConfiguration(pointSize: 240, weight: .bold)
+            if let symbol = UIImage(systemName: look.2, withConfiguration: config)?.withTintColor(.white, renderingMode: .alwaysOriginal) {
                 symbol.draw(at: CGPoint(x: (size.width - symbol.size.width) / 2, y: (size.height - symbol.size.height) / 2))
             }
         }

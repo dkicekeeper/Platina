@@ -22,7 +22,7 @@
       "trophyTitleName": "Bloodborne",
       "trophyTitleDetail": "Bloodborne Trophies",
       "trophyTitleIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR10600_00/icon.png",
-      "trophyTitlePlatform": "PS4",
+      "trophyTitlePlatform": "PSVITA",
       "hasTrophyGroups": true,
       "definedTrophies": { "bronze": 26, "silver": 11, "gold": 2, "platinum": 1 },
       "progress": 100,

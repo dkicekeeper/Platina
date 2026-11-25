@@ -121,6 +121,15 @@ struct TrophyTitlesPage: Decodable, PSNPage {
     var items: [TrophyTitle] { trophyTitles }
 }
 
+/// A page of the friends list: account ids only.
+struct FriendsPage: Decodable, PSNPage {
+    let friends: [String]
+    let totalItemCount: Int
+    let nextOffset: Int?
+
+    var items: [String] { friends }
+}
+
 // MARK: - Trophy groups (the base game and its DLC)
 
 public struct TrophyGroup: Decodable, Sendable, Hashable, Identifiable {

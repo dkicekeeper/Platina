@@ -81,6 +81,31 @@ public enum PSNDemo {
         }
     }
 
+    // MARK: Friends
+
+    /// A friend of the demo account: their progress in some of its games, given as a change from
+    /// the person's own, and one game the person does not have; `nil` hides their trophies.
+    public struct Friend: Sendable {
+        public let accountId: String
+        public let onlineId: String
+        /// Their picture, `demo://art/friend/<avatar>`.
+        let avatar: Int
+        let progress: [(slug: String, change: Int)]?
+    }
+
+    /// Two friends who show their trophies (ahead in some shared games, behind in others) and one
+    /// who hides them.
+    public static let friends: [Friend] = [
+        Friend(accountId: "7700000000000000002", onlineId: "mira_lumen", avatar: 0, progress: [
+            ("emberfall", 14), ("starwake", 0), ("neonrally", -22), ("hollowmere", 31),
+            ("mosswick", -38), ("skyforge", 12), ("glasswing", 0),
+        ]),
+        Friend(accountId: "7700000000000000003", onlineId: "kostya_trophies", avatar: 1, progress: [
+            ("emberfall", -19), ("neonrally", 27), ("lumentide", 0), ("ironclad", 45), ("starwake", -46),
+        ]),
+        Friend(accountId: "7700000000000000004", onlineId: "night_owl_07", avatar: 2, progress: nil),
+    ]
+
     // MARK: The games
 
     static let games: [Game] = [
@@ -257,6 +282,10 @@ public struct PSNDemoTransport: HTTPTransport {
         let english = (request.value(forHTTPHeaderField: "Accept-Language") ?? "").hasPrefix("en")
         let path = url.path.replacingOccurrences(of: "/api/", with: "")
         let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        // A friend who hides their trophies: PSN's refusal.
+        if PSNDemo.friends.contains(where: { $0.progress == nil && path == "trophy/v1/users/\($0.accountId)/trophyTitles" }) {
+            return (Data(#"{"error":{"code":2240526,"message":"Not permitted by access control"}}"#.utf8), Self.response(url, status: 403))
+        }
         guard let body = answer(path: path, query: query, english: english),
               let data = try? JSONSerialization.data(withJSONObject: body) else {
             return (Data(#"{"error":{"code":404,"message":"Not found"}}"#.utf8), Self.response(url, status: 404))
@@ -278,8 +307,17 @@ public struct PSNDemoTransport: HTTPTransport {
             return ["trophyTitles": titles, "totalItemCount": titles.count]
         case ["trophy", "v1", "users", "me", "trophySummary"]:
             return summary()
+        case ["userProfile", "v1", "internal", "users", "me", "friends"]:
+            return ["friends": PSNDemo.friends.map(\.accountId), "totalItemCount": PSNDemo.friends.count]
         case let p where p.count == 6 && p[0] == "userProfile" && p[5] == "profiles":
+            if let friend = PSNDemo.friends.first(where: { $0.accountId == p[4] }) {
+                return friendProfile(friend)
+            }
             return profile()
+        case let p where p.count == 5 && p[0] == "trophy" && p[2] == "users" && p[3] != "me" && p[4] == "trophyTitles":
+            guard let friend = PSNDemo.friends.first(where: { $0.accountId == p[3] }) else { return nil }
+            let titles = friendTitles(friend)
+            return ["trophyTitles": titles, "totalItemCount": titles.count]
         case let p where p.count == 6 && p[0] == "userProfile" && p[5] == "basicPresences":
             return ["basicPresence": ["availability": "unavailable", "primaryPlatformInfo": ["onlineStatus": "offline", "platform": "PS5"]]]
         case let p where p.count == 5 && p[2] == "npCommunicationIds" && p[4] == "trophyGroups":
@@ -474,6 +512,53 @@ public struct PSNDemoTransport: HTTPTransport {
             "isOfficiallyVerified": false,
             "isMe": true,
         ]
+    }
+
+    private func friendProfile(_ friend: PSNDemo.Friend) -> [String: Any] {
+        [
+            "onlineId": friend.onlineId,
+            "aboutMe": "",
+            "avatars": [["size": "xl", "url": "demo://art/friend/\(friend.avatar)"]],
+            "languages": ["ru-RU"],
+            "isPlus": true,
+            "isOfficiallyVerified": false,
+            "isMe": false,
+        ]
+    }
+
+    /// A friend's lists: the person's games at the friend's progress, and the game the person
+    /// does not have.
+    private func friendTitles(_ friend: PSNDemo.Friend) -> [[String: Any]] {
+        (friend.progress ?? []).map { entry -> [String: Any] in
+            guard let game = library.games.first(where: { $0.slug == entry.slug }) else {
+                return [
+                    "npServiceName": "trophy2",
+                    "npCommunicationId": "NPWR90099_00",
+                    "trophySetVersion": "01.00",
+                    "trophyTitleName": "Glasswing",
+                    "trophyTitleIconUrl": "demo://art/\(entry.slug)/icon",
+                    "trophyTitlePlatform": "PS5",
+                    "hasTrophyGroups": false,
+                    "definedTrophies": ["bronze": 30, "silver": 8, "gold": 3, "platinum": 1],
+                    "progress": 52,
+                    "earnedTrophies": ["bronze": 18, "silver": 4, "gold": 1, "platinum": 0],
+                    "hiddenFlag": false,
+                    "lastUpdatedDateTime": Self.text(library.date(daysAgo: 4)),
+                ]
+            }
+            let progress = min(100, max(0, Self.progress(of: game.trophies) + entry.change))
+            var body = title(game)
+            let defined = counts(game.trophies)
+            let share = Double(progress) / 100
+            body["progress"] = progress
+            body["earnedTrophies"] = [
+                "bronze": Int((Double(defined["bronze"] ?? 0) * share).rounded()),
+                "silver": Int((Double(defined["silver"] ?? 0) * share).rounded()),
+                "gold": Int((Double(defined["gold"] ?? 0) * share).rounded()),
+                "platinum": progress == 100 ? 1 : 0,
+            ]
+            return body
+        }
     }
 
     // MARK: Helpers

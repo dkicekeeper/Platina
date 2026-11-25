@@ -38,7 +38,7 @@ enum TrophySort: String, CaseIterable, Hashable {
 
 /// The parts of a game's screen under its header, picked by the chips.
 enum GameSection: String, CaseIterable, Hashable {
-    case trophies, guide, walkthrough, sessions
+    case trophies, guide, walkthrough, sessions, friends
 
     var title: String {
         switch self {
@@ -46,6 +46,7 @@ enum GameSection: String, CaseIterable, Hashable {
         case .guide: String(localized: "game.section.guide")
         case .walkthrough: String(localized: "game.section.walkthrough")
         case .sessions: String(localized: "game.section.sessions")
+        case .friends: String(localized: "game.section.friends")
         }
     }
 
@@ -55,13 +56,14 @@ enum GameSection: String, CaseIterable, Hashable {
         case .guide: "map"
         case .walkthrough: "point.bottomleft.forward.to.point.topright.scurvepath"
         case .sessions: "clock.arrow.circlepath"
+        case .friends: "person.2"
         }
     }
 }
 
 /// A game (docs/PLAN.md §3.3): its header on the game's cover (progress, trophy counts, time
 /// played, the session button and the person's plan), then chips for its parts: the trophies,
-/// the guide, the walkthrough and the sessions.
+/// the guide, the walkthrough, the sessions and the friends who play it.
 struct GameView: View {
     let gameId: String
 
@@ -130,6 +132,7 @@ struct GameView: View {
                                 GuideSection(game: game)
                                 WalkthroughSection(game: game)
                                 sessionsSection(limit: Self.sideSessions)
+                                GameFriendsSection(game: game, limit: Self.sideFriends)
                             } narrow: {
                                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
                                     ChipPicker(
@@ -219,6 +222,8 @@ struct GameView: View {
 
     /// How many sessions the side column shows; the chips' Sessions shows them all.
     private static let sideSessions = 5
+    /// How many of the ranking the side column shows; the chips' Friends shows it all.
+    private static let sideFriends = 5
 
     /// The part the chips picked.
     @ViewBuilder
@@ -232,6 +237,8 @@ struct GameView: View {
             WalkthroughSection(game: game)
         case .sessions:
             sessionsSection(limit: nil)
+        case .friends:
+            GameFriendsSection(game: game)
         }
     }
 

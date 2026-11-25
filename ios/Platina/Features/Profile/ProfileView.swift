@@ -8,7 +8,8 @@ import PlatinaCore
 import PlatinaStore
 
 /// The person and their numbers (docs/PLAN.md §3.7): level, platinums, months, activity, the
-/// platinum shelf, the rarest trophies. The account and the rest are in Settings (the gear).
+/// platinum shelf, the rarest trophies. Friends are behind the people button; the account and the
+/// rest are in Settings (the gear).
 struct ProfileView: View {
     @Environment(AppModel.self) private var app
     @Query private var profiles: [ProfileRecord]
@@ -83,6 +84,13 @@ struct ProfileView: View {
                 GameView(gameId: gameId)
             }
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        FriendsView()
+                    } label: {
+                        Label(String(localized: "friends.title"), systemImage: "person.2")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
                         SettingsView()

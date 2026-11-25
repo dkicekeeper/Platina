@@ -46,20 +46,32 @@ struct GameRow: View {
 /// The game's progress in a ring with the percent inside; platinum-coloured once it has the
 /// platinum.
 struct GameProgressRing: View {
-    let game: GameRecord
+    let progress: Int
+    let isPlatinum: Bool
     var size: CGFloat = AppIconSize.Tile.sm
+
+    init(game: GameRecord, size: CGFloat = AppIconSize.Tile.sm) {
+        self.init(progress: game.progress, isPlatinum: game.isPlatinumEarned, size: size)
+    }
+
+    /// Someone else's progress in a game: a friend's.
+    init(progress: Int, isPlatinum: Bool, size: CGFloat = AppIconSize.Tile.sm) {
+        self.progress = progress
+        self.isPlatinum = isPlatinum
+        self.size = size
+    }
 
     var body: some View {
         ProgressRing(
-            progress: Double(game.progress) / 100,
+            progress: Double(progress) / 100,
             size: size,
             lineWidth: 4,
-            overrideColor: game.isPlatinumEarned ? TrophyType.platinum.color : nil,
-            accessibilityLabel: String(localized: "game.progress \(game.progress)"),
+            overrideColor: isPlatinum ? TrophyType.platinum.color : nil,
+            accessibilityLabel: String(localized: "game.progress \(progress)"),
             showsTrack: true
         )
         .overlay {
-            Text(verbatim: "\(game.progress)%")
+            Text(verbatim: "\(progress)%")
                 .font(AppTypography.caption2)
                 .monospacedDigit()
                 .foregroundStyle(AppColors.Text.secondary)
