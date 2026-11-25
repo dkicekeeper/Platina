@@ -150,7 +150,9 @@ struct ProfileView: View {
     private func rarestSection(_ stats: LibraryStats) -> some View {
         if !stats.rarest.isEmpty {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
+                // The rows show each trophy's share of players; the header says once what it is.
                 SectionHeader(String(localized: "profile.rarest.header"), systemImage: "sparkles")
+                    .infoTip(TrophyMeta.rateInfoMessage, title: TrophyMeta.rateInfoTitle)
                 CardList(stats.rarest, layout: .section, onOpen: { openedGame = $0.gameId }) { (trophy: EarnedTrophy) in
                     EarnedTrophyRow(
                         trophy: trophy,
