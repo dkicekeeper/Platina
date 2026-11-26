@@ -45,8 +45,41 @@ jobs:
         working-directory: ios/Packages/PlatinaKit
         run: swift test
 
+  # The account runs a few macOS jobs at a time, shared by Platina, Tenra, Dalada and DesignKit.
+  # A commit pushed to a branch with a PR (or to a branch and to main) starts this workflow more
+  # than once: the earliest run of the commit that is not cancelled builds it, a later one skips
+  # the build and names that run in its summary. A manual run always builds; an API error builds.
+  once:
+    name: First run of this commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - name: Look for an earlier run of this commit
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          EARLIER=""
+          if [ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ]; then
+            EARLIER=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ios.yml/runs?head_sha=$SHA&per_page=100" \
+              --jq "[.workflow_runs[] | select(.id < $GITHUB_RUN_ID and .conclusion != \"cancelled\")] | min_by(.id) | .html_url // empty") || EARLIER=""
+          fi
+          if [ -n "$EARLIER" ]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "**Build skipped:** $EARLIER builds this commit." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     name: Build app and run package tests
+    needs: once
+    if: needs.once.outputs.build == 'true'
     # GitHub's Xcode 27 image (public preview); the newest stable 27.x, the iOS 27 SDK.
     runs-on: xcode-27
     timeout-minutes: 60

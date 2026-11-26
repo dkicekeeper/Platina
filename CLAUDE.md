@@ -22,7 +22,10 @@ xcodebuild build -project ios/Platina.xcodeproj -scheme Platina \
 
 Код часто пишется в контейнере на Linux, где SwiftUI не собирается. **Компилятор — CI**
 (`.github/workflows/ios.yml`): на каждый пуш в `main` и `claude/**` тесты PSNKit на Linux,
-сборка приложения и тесты пакета на macOS. Запушил — прочитай логи.
+сборка приложения и тесты пакета на macOS. Запушил — прочитай логи. macOS-раннеров у аккаунта
+несколько на всех (Platina, Tenra, Dalada, DesignKit), поэтому коммит собирается один раз: пуш в
+ветку и её PR (или тот же коммит в `main`) не собирают его дважды, второй прогон пропускает сборку и
+называет первый в итоге (задача «First run of this commit»).
 
 **TestFlight** — workflow `.github/workflows/testflight.yml` (ручной запуск; секреты ключа App
 Store Connect уже в репозитории). Запускай его на `main` после зелёного CI, когда владелец
