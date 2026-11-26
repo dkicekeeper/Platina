@@ -150,6 +150,11 @@ struct GameView: View {
                             .padding(.bottom, AppSpacing.xxl)
                         }
                     }
+                    // On the scroll view itself: it reads the pull (not the Group, whose missing
+                    // game has nothing to pull).
+                    .dsRefreshable {
+                        await app.sync.sync(force: true, priority: gameId)
+                    }
                     .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
                     // The App Store's screenshot of the guide: its chips under the bar.
                     .task {
@@ -206,9 +211,6 @@ struct GameView: View {
         }
         .navigationDestination(item: $openedTrophy) { key in
             TrophyView(trophyKey: key)
-        }
-        .refreshable {
-            await app.sync.sync(force: true, priority: gameId)
         }
         .task {
             isLoadingTrophies = true

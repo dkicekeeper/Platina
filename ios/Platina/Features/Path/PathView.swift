@@ -63,12 +63,12 @@ struct PathView: View {
                 .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
-            .background(AppColors.Background.base)
-            .navigationTitle(Text("path.title"))
-            .refreshable {
+            .dsRefreshable {
                 await app.sync.sync(force: true)
                 runningGameId = await app.sync.runningGame(force: true)
             }
+            .background(AppColors.Background.base)
+            .navigationTitle(Text("path.title"))
             .navigationDestination(item: $openedGame) { gameId in
                 GameView(gameId: gameId)
             }

@@ -25,9 +25,9 @@ struct FriendsView: View {
             .readableWidth()
             .padding(.bottom, AppSpacing.xxl)
         }
+        .dsRefreshable { await app.friends.refresh(force: true) }
         .background(AppColors.Background.base)
         .navigationTitle(Text("friends.title"))
-        .refreshable { await app.friends.refresh(force: true) }
         .task { await app.friends.refresh() }
         .navigationDestination(item: $openedFriend) { accountId in
             FriendView(accountId: accountId)
