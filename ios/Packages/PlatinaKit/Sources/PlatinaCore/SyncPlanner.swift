@@ -19,7 +19,7 @@ public struct DetailState: Sendable, Hashable {
 
 /// One sync's share of trophy fetching. Sony limits requests without saying how much, so a sync
 /// fetches at most `requestBudget` requests' worth of games; the rest wait for the next one
-/// (the first sync of a big library takes a few). docs/PLAN.md §6.
+/// (the first sync of a big library takes a few). docs/architecture.md.
 public struct SyncPlan: Sendable, Equatable {
     public struct Item: Sendable, Equatable {
         public let title: TrophyTitle

@@ -7,7 +7,7 @@ import PSNKit
 private let log = Logger(subsystem: "dakacom.Platina", category: "Sync")
 
 /// The person's PSN friends and their trophy lists, for comparing progress in shared games
-/// (docs/superpowers/specs/2026-11-25-platina-1.1-design.md). Sony's request limits are spared:
+/// (docs/plans/2026-11-25-platina-1.1-design.md). Sony's request limits are spared:
 /// a refresh happens when a friends screen opens and the lists are older than 12 hours, or on
 /// pull to refresh; profiles are read again weekly; requests go one at a time.
 @MainActor

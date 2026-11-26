@@ -2,7 +2,7 @@
 import PackageDescription
 
 // PlatinaKit: the app's code that needs no UI.
-// - PSNKit: the only door to the PlayStation Network (docs/PLAN.md §2): sign-in, tokens, the API
+// - PSNKit: the only door to the PlayStation Network (docs/domains/psn.md): sign-in, tokens, the API
 //   client and its models.
 // - PlatinaCore: the logic over them: what a sync fetches, time played, statistics, the
 //   library's filters.

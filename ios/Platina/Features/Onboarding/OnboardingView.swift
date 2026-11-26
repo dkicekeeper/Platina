@@ -2,7 +2,7 @@ import SwiftUI
 import DesignTokens
 import DesignComponents
 
-/// The first launch (docs/PLAN.md §9, stage 4): what the app does, then notifications, then
+/// The first launch (docs/archive/plans/2026-11-20-stages.md, stage 4): what the app does, then notifications, then
 /// the sign-in.
 struct OnboardingView: View {
     enum Page: Hashable, CaseIterable {

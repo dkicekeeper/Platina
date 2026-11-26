@@ -139,7 +139,7 @@ export async function recentLists(accessToken: string, fetcher: Fetcher, limit =
     const id = title.npCommunicationId;
     if (typeof id !== "string") return [];
     const platform = typeof title.trophyTitlePlatform === "string" ? title.trophyTitlePlatform : "";
-    // The app follows PS5 and PS4 games (docs/superpowers/specs/2026-11-25-platina-1.1-design.md).
+    // The app follows PS5 and PS4 games (docs/plans/2026-11-25-platina-1.1-design.md).
     if (!/PS5|PS4/.test(platform)) return [];
     return [
       {

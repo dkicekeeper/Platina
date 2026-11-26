@@ -108,7 +108,7 @@ final class AppModel {
             guard let self else { return }
             updateLiveActivity(sessions.current)
         }
-        // The Live Activity's ✓ and Siri (docs/PLAN.md, stage 8).
+        // The Live Activity's ✓ and Siri (docs/archive/plans/2026-11-20-stages.md, stage 8).
         StepIntentHandler.complete = { [weak self] gameId, chapterId, stepId in
             self?.assistant.walkthroughs.setStep(stepId, done: true, gameId: gameId, chapterId: chapterId)
         }

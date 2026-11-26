@@ -1,7 +1,7 @@
 import AppIntents
 import Foundation
 
-// Plati without hands (docs/PLAN.md, stage 8): "What's next in Platina" and "Done in Platina"
+// Plati without hands (docs/archive/plans/2026-11-20-stages.md, stage 8): "What's next in Platina" and "Done in Platina"
 // through Siri, the Shortcuts app and the Action button. Siri says the walkthrough's step to do
 // now: in the running session's game, or else in the game played last that has a walkthrough.
 

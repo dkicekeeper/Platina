@@ -5,7 +5,7 @@ import DesignComponents
 import PSNKit
 import PlatinaStore
 
-/// A game's progress as a picture for Stories or a chat (docs/PLAN.md §3.5): the platinum, or
+/// A game's progress as a picture for Stories or a chat (docs/domains/screens.md §3.5): the platinum, or
 /// how far along the road it is.
 struct GameShareSheet: View {
     let game: GameRecord

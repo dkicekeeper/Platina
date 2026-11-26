@@ -4,7 +4,7 @@ import Observation
 import PSNKit
 
 /// PlayStation's Game Help for the trophy screen, the game's trophy list and Plati's
-/// `get_game_help` (docs/PLAN.md §5). Which trophies of a game have help is asked once per game a
+/// `get_game_help` (docs/domains/plati.md). Which trophies of a game have help is asked once per game a
 /// launch; a trophy's help once per trophy a launch: its video's token is short-lived, so nothing
 /// is kept longer. A failure is quiet: the help is a bonus.
 @MainActor

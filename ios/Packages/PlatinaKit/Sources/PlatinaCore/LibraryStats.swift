@@ -37,7 +37,7 @@ public struct MonthCount: Sendable, Hashable, Identifiable {
     public var id: Date { month }
 }
 
-/// The profile screen's numbers (docs/PLAN.md §3.7).
+/// The profile screen's numbers (docs/domains/screens.md §3.7).
 public struct LibraryStats: Sendable, Equatable {
     public let gameCount: Int
     public let platinumCount: Int

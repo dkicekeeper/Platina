@@ -8,7 +8,7 @@ import PlatinaCore
 import PlatinaStore
 
 /// The person's PSN friends and where they stand against each one in the games they share
-/// (docs/superpowers/specs/2026-11-25-platina-1.1-design.md): progress only.
+/// (docs/plans/2026-11-25-platina-1.1-design.md): progress only.
 struct FriendsView: View {
     @Environment(AppModel.self) private var app
     @Query(sort: \FriendRecord.onlineId) private var friends: [FriendRecord]

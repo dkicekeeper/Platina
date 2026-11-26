@@ -6,7 +6,7 @@ import PSNKit
 import PlatinaAssistant
 import PlatinaStore
 
-/// The guide on a game's screen (docs/PLAN.md §3.3): difficulty, hours, playthroughs,
+/// The guide on a game's screen (docs/domains/screens.md §3.3): difficulty, hours, playthroughs,
 /// missables, the road map by steps and the sources. Built by Plati's server from Stratege.ru
 /// and the web; the person starts the build (it costs a model call), or Plati does when it needs
 /// the guide.

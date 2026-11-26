@@ -35,7 +35,7 @@ enum AppTab: Hashable {
     case profile
 }
 
-/// The tabs (docs/PLAN.md §3): the path, the games, Plati, the profile.
+/// The tabs (docs/domains/screens.md): the path, the games, Plati, the profile.
 struct MainTabView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.scenePhase) private var scenePhase

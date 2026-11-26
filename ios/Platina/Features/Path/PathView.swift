@@ -7,7 +7,7 @@ import PSNKit
 import PlatinaCore
 import PlatinaStore
 
-/// "The path" (docs/PLAN.md §3.1): what is running on the console, the session, the games the
+/// "The path" (docs/domains/screens.md §3.1): what is running on the console, the session, the games the
 /// person goes for, the trophies almost earned, the latest trophies and sessions.
 struct PathView: View {
     @Environment(AppModel.self) private var app

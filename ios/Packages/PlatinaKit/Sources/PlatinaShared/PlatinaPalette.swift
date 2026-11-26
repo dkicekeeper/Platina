@@ -6,7 +6,7 @@ import UIKit
 
 /// Platina's own colours, the one place they are written, for the app and its widgets: the
 /// brand accent (DesignKitTheme.accent) and the four trophy metals. The metals are candidates
-/// for DesignKit tokens (docs/PLAN.md §4).
+/// for DesignKit tokens (docs/domains/design.md).
 public enum PlatinaPalette {
     /// Plasma, the owner's choice (2026-11-25, over the platinum blue #3573BA): a deep magenta in
     /// light mode, #D6006F (5.1:1 on white, 4.6:1 on a grey card), a brighter one in dark mode,
