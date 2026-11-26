@@ -10,7 +10,7 @@ struct RootView: View {
         Group {
             switch model.phase {
             case .launching:
-                AppColors.Background.base.ignoresSafeArea()
+                AppColors.Background.page.ignoresSafeArea()
             case .signedOut:
                 if isOnboardingDone {
                     SignInView()

@@ -63,7 +63,7 @@ struct PathView: View {
                 .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("path.title"))
             .dsRefreshable {
                 await app.sync.sync(force: true)
@@ -107,7 +107,7 @@ struct PathView: View {
                 app.isShowingSession = true
             } label: {
                 HStack(spacing: AppSpacing.md) {
-                    Icon("record.circle", size: AppIconSize.lg, tint: .monochrome(AppColors.destructive))
+                    Icon("record.circle", size: AppIconSize.lg, tint: .monochrome(AppColors.Status.negative))
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text("path.session.title")
                             .font(AppTypography.caption)

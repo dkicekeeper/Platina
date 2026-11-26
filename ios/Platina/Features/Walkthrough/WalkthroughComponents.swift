@@ -41,9 +41,9 @@ extension ChapterSteps.Step.Kind {
         switch self {
         case .path, .tip: AppColors.accent
         case .collectible: AppColors.Status.info
-        case .choice, .pointOfNoReturn: AppColors.warning
-        case .trophy: AppColors.success
-        case .boss: AppColors.destructive
+        case .choice, .pointOfNoReturn: AppColors.Status.warning
+        case .trophy: AppColors.Status.positive
+        case .boss: AppColors.Status.negative
         }
     }
 }
@@ -67,7 +67,7 @@ extension WalkthroughPosition.ChapterState {
 
     var tint: Color {
         switch self {
-        case .done: AppColors.success
+        case .done: AppColors.Status.positive
         case .current: AppColors.accent
         case .ahead: AppColors.Text.tertiary
         }
@@ -342,7 +342,7 @@ struct YouTubeVideoSheet: View {
             }
             .screenPadding()
             .padding(.top, AppSpacing.lg)
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("walkthrough.video.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

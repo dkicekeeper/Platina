@@ -25,7 +25,7 @@ struct SessionView: View {
                         .screenPadding()
                 }
             }
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("session.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -161,7 +161,7 @@ private struct SessionHeader: View {
                 .font(AppTypography.numbers(AppTypography.h2))
                 .foregroundStyle(session.isPaused ? AppColors.Text.secondary : AppColors.Text.primary)
                 if session.isPaused {
-                    Badge(String(localized: "session.paused"), systemImage: "pause.fill", color: AppColors.warning)
+                    Badge(String(localized: "session.paused"), systemImage: "pause.fill", color: AppColors.Status.warning)
                 }
                 Text("session.progress \(session.startProgress) \(game?.progress ?? session.startProgress)")
                     .font(AppTypography.caption)
@@ -321,7 +321,7 @@ struct SessionSummaryView: View {
                 .readableWidth()
                 .padding(.vertical, AppSpacing.lg)
             }
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("session.summary.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

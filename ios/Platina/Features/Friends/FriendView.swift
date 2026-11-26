@@ -38,7 +38,7 @@ struct FriendView: View {
             .readableWidth()
             .padding(.bottom, AppSpacing.xxl)
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationTitle(Text(verbatim: friends.first?.displayName ?? ""))
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $openedGame) { gameId in

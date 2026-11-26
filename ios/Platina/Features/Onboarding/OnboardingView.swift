@@ -72,7 +72,7 @@ struct OnboardingView: View {
                 }
             }
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         // The screenshots' UI test relaunches an app that opened here instead of its demo.
         .accessibilityIdentifier("onboarding")
     }

@@ -63,7 +63,7 @@ struct SettingsView: View {
             .readableWidth()
             .padding(.vertical, AppSpacing.lg)
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationTitle(Text("settings.title"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isShowingAlertsSignIn) {
