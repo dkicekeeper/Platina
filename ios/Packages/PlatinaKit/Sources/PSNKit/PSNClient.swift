@@ -15,6 +15,10 @@ public actor PSNClient {
     private let now: @Sendable () -> Date
     private var tokens: PSNTokens?
     private var refreshing: Task<PSNTokens, any Error>?
+    /// PSN ended the session (it no longer takes the refresh token). Every request after that
+    /// throws `.sessionExpired`, as the one that found out did, not `.notSignedIn`: the requests
+    /// of one sync run together, and the sync reports whichever it awaits first.
+    private var sessionEnded = false
     /// The person's account id, from the trophy summary: the profile and presence endpoints
     /// answer 400 to `me`.
     private var accountId: String?
@@ -70,12 +74,26 @@ public actor PSNClient {
     }
 
     public func signOut() throws {
+        try clearSession(ended: false)
+    }
+
+    /// PSN no longer takes the refresh token: the tokens go, and the requests after it say the
+    /// session expired.
+    private func endSession() {
+        try? clearSession(ended: true)
+    }
+
+    private func clearSession(ended: Bool) throws {
         refreshing?.cancel()
         refreshing = nil
         tokens = nil
         accountId = nil
+        sessionEnded = ended
         try store.clear()
     }
+
+    /// The error of a request without tokens: the session PSN ended, or no sign-in at all.
+    private var noTokens: PSNError { sessionEnded ? .sessionExpired : .notSignedIn }
 
     // MARK: Endpoints
 
@@ -293,7 +311,7 @@ public actor PSNClient {
 
     /// A valid access token, refreshed first when it runs out within a minute.
     private func accessToken() async throws -> String {
-        guard let tokens else { throw PSNError.notSignedIn }
+        guard let tokens else { throw noTokens }
         if tokens.accessTokenExpires(within: 60, at: now()) {
             return try await refreshedTokens(force: false).accessToken
         }
@@ -304,12 +322,12 @@ public actor PSNClient {
         if let refreshing {
             return try await refreshing.value
         }
-        guard let current = tokens else { throw PSNError.notSignedIn }
+        guard let current = tokens else { throw noTokens }
         if !force, !current.accessTokenExpires(within: 60, at: now()) {
             return current
         }
         guard current.refreshTokenExpiresAt > now() else {
-            try? signOut()
+            endSession()
             throw PSNError.sessionExpired
         }
         let authenticator = authenticator
@@ -321,13 +339,14 @@ public actor PSNClient {
             try save(fresh)
             return fresh
         } catch PSNError.sessionExpired {
-            try? signOut()
+            endSession()
             throw PSNError.sessionExpired
         }
     }
 
     private func save(_ tokens: PSNTokens) throws {
         self.tokens = tokens
+        sessionEnded = false
         try store.save(tokens)
     }
 }

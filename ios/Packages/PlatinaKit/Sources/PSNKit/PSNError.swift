@@ -4,7 +4,8 @@ import Foundation
 public enum PSNError: Error, Sendable, Equatable {
     /// No tokens: the person has not signed in, or signed out.
     case notSignedIn
-    /// The refresh token expired or was revoked: sign in again.
+    /// The refresh token expired or was revoked: sign in again. Every request after it says the
+    /// same until the next sign-in, not `.notSignedIn`.
     case sessionExpired
     /// Sony did not accept the NPSSO token (wrong, expired, or the session behind it ended).
     case invalidNPSSO
