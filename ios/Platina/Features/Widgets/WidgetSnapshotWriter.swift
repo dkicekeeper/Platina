@@ -5,7 +5,7 @@ import PlatinaCore
 import PlatinaShared
 import PlatinaStore
 
-/// Writes what the home screen widgets show (docs/PLAN.md §9, stage 4) after every sync and
+/// Writes what the home screen widgets show (docs/archive/plans/2026-11-20-stages.md, stage 4) after every sync and
 /// session, and asks WidgetKit to redraw them.
 @MainActor
 enum WidgetSnapshotWriter {

@@ -5,7 +5,7 @@ import os
 import PSNKit
 import PlatinaCore
 
-/// Fills the store from PSN, sparing Sony's limits (docs/PLAN.md §6):
+/// Fills the store from PSN, sparing Sony's limits (docs/architecture.md):
 /// - the trophy lists, the level and the profile every sync (three requests);
 /// - trophies only for games that changed, newest first, `requestBudget` requests a sync; a big
 ///   library's first fill takes a few syncs;

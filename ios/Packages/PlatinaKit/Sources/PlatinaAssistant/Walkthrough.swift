@@ -1,6 +1,6 @@
 import Foundation
 
-// The walkthrough "by the hand" (docs/assistant.md §8, docs/PLAN.md §5): a game's chapters, built
+// The walkthrough "by the hand" (docs/assistant.md §8, docs/domains/plati.md): a game's chapters, built
 // once on the server and kept there for everyone, then each chapter's steps when the player
 // gets there. Here: the wire format, the requests, and where the player is (pure logic, so it is
 // tested on Linux too).

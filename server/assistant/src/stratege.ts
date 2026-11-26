@@ -1,4 +1,4 @@
-// Stratege.ru, the first source of a guide (docs/assistant.md §4, docs/PLAN.md §5): finds a
+// Stratege.ru, the first source of a guide (docs/assistant.md §4, docs/domains/plati.md): finds a
 // game's trophy list page and reads it without a model. The page is big (about 700 KB of HTML
 // for 57 trophies); what the guide needs from it is small: the game's numbers, the summary in
 // the platinum's top tip, and players' tips per trophy.

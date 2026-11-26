@@ -27,7 +27,7 @@ GUIDE_MAX_SEARCHES = "5"
 # about 20k tokens of text. "0" builds walkthroughs from search results alone.
 WALKTHROUGH_MAX_FETCHES = "4"
 # Sites whose pictures a walkthrough step may show: loaded from the site by the app, with the
-# source's name and a link (docs/PLAN.md §10). Remove a site on its owner's request; "" turns
+# source's name and a link (docs/decisions/). Remove a site on its owner's request; "" turns
 # pictures from guides off.
 IMAGE_SOURCES = "powerpyx.com,psnprofiles.com,stratege.ru,playstationtrophies.org"
 # The chat's own web search (server-side), and the searches one chat call may make.

@@ -7,7 +7,7 @@ import PSNKit
 import PlatinaAssistant
 import PlatinaStore
 
-/// One chapter of the walkthrough (docs/PLAN.md §5): what can be lost here first, then the steps
+/// One chapter of the walkthrough (docs/domains/plati.md): what can be lost here first, then the steps
 /// in the order of play as a checklist, each with its picture and video, then the chapter's
 /// sources. The current chapter's steps are built when it opens; another chapter's, on a tap
 /// (a build costs a model call).

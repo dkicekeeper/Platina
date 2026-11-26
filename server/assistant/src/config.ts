@@ -58,7 +58,7 @@ export interface Config {
   /** Pages one walkthrough model call may read with web fetch ("0": search results only). */
   walkthroughMaxFetches: number;
   /** Sites whose pictures a walkthrough step may show, loaded from there with credit and a
-   * link (docs/PLAN.md §10). Empty: no pictures from guides. */
+   * link (docs/decisions/). Empty: no pictures from guides. */
   imageSources: string[];
   /** The chat gets the server-side web_search tool. */
   webSearch: boolean;

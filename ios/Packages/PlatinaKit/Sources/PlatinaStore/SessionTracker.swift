@@ -4,7 +4,7 @@ import Observation
 import PSNKit
 import PlatinaCore
 
-/// The running session (docs/PLAN.md §3.5): start, pause, goals, the check for new trophies,
+/// The running session (docs/domains/screens.md §3.5): start, pause, goals, the check for new trophies,
 /// the end. The app shows it, mirrors it into the Live Activity (`onChange`) and celebrates
 /// (`onEarned`); this class keeps it in the store.
 @MainActor

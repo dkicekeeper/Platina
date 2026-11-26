@@ -7,7 +7,7 @@ import PlatinaAssistant
 
 private let log = Logger(subsystem: "dakacom.Platina", category: "Plati")
 
-/// The walkthrough "by the hand" (docs/assistant.md §8, docs/PLAN.md §5): a game's chapters,
+/// The walkthrough "by the hand" (docs/assistant.md §8, docs/domains/plati.md): a game's chapters,
 /// then each chapter's steps, each the stored copy first, then the server's cache (free), then a
 /// build (a minute or two, and money: it runs when the person or Plati asks for it). Where the
 /// player is comes from their trophies and their own marks (`WalkthroughProgressRecord`).

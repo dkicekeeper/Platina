@@ -6,7 +6,7 @@ import DesignComponents
 import PSNKit
 import PlatinaStore
 
-/// The running session (docs/PLAN.md §3.5): the clock, the goals, the trophies it brought, a
+/// The running session (docs/domains/screens.md §3.5): the clock, the goals, the trophies it brought, a
 /// note for next time; a check for new trophies; the end.
 struct SessionView: View {
     @Environment(AppModel.self) private var app

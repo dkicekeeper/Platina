@@ -7,7 +7,7 @@ import PSNKit
 import PlatinaAssistant
 import PlatinaStore
 
-/// A game's walkthrough on its screen (docs/PLAN.md §5): the chapter to play now, how far along
+/// A game's walkthrough on its screen (docs/domains/plati.md): the chapter to play now, how far along
 /// the person is, what this chapter can lose, and the way to every chapter. Built by Plati's
 /// server when the person asks for it (a model call), or when Plati needs it.
 struct WalkthroughSection: View {

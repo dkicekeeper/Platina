@@ -3,7 +3,7 @@ import ActivityKit
 import Foundation
 
 /// The Live Activity of a play session: the lock screen and the Dynamic Island
-/// (docs/PLAN.md §3.5). The app prepares every text in its own language, so the extension needs
+/// (docs/domains/screens.md §3.5). The app prepares every text in its own language, so the extension needs
 /// no strings of its own; the clock runs by itself (`Text(timerInterval:)`).
 public struct SessionActivityAttributes: ActivityAttributes, Sendable {
     public struct ContentState: Codable, Hashable, Sendable {
@@ -20,7 +20,7 @@ public struct SessionActivityAttributes: ActivityAttributes, Sendable {
         public var nextGoal: String?
         /// "Paused", or the last trophy earned: "New trophy: …".
         public var statusText: String?
-        /// The walkthrough's step to do now, ticked with the activity's ✓ (docs/PLAN.md, stage 8).
+        /// The walkthrough's step to do now, ticked with the activity's ✓ (docs/archive/plans/2026-11-20-stages.md, stage 8).
         public var step: Step?
 
         public struct Step: Codable, Hashable, Sendable {

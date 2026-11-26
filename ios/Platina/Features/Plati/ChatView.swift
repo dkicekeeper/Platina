@@ -6,7 +6,7 @@ import DesignComponents
 import PlatinaStore
 import PlatinaAssistant
 
-/// A conversation with Plati (docs/PLAN.md §3.6): the messages, the "thinking" line while a tool
+/// A conversation with Plati (docs/domains/screens.md §3.6): the messages, the "thinking" line while a tool
 /// runs, the reply as it streams, suggestions on an empty chat, the field.
 struct ChatView: View {
     let thread: ChatThread

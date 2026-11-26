@@ -6,7 +6,7 @@ import PSNKit
 import PlatinaCore
 import PlatinaStore
 
-/// The PS5 games: shelves, an order, search (docs/PLAN.md §3.2). On an iPad or in a Mac window
+/// The PS5 games: shelves, an order, search (docs/domains/screens.md §3.2). On an iPad or in a Mac window
 /// the list and the open game stand side by side (`NavigationSplitView`, stage 10); on a phone the
 /// split view collapses into a stack, the list first.
 struct LibraryView: View {

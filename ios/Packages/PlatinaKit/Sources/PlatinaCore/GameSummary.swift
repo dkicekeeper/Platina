@@ -2,7 +2,7 @@ import Foundation
 import PSNKit
 
 /// What the person plans for a game, beyond what PSN knows. Kept on the device (and in iCloud
-/// later, docs/PLAN.md §6).
+/// later, docs/architecture.md).
 public enum GamePlanStatus: String, Codable, Sendable, CaseIterable {
     /// Nothing said: the game counts as in progress or not started by its trophies.
     case none
@@ -17,7 +17,7 @@ public enum GamePlanStatus: String, Codable, Sendable, CaseIterable {
     public var isShelved: Bool { self == .later || self == .skip }
 }
 
-/// The library's filters (docs/PLAN.md §3.2).
+/// The library's filters (docs/domains/screens.md §3.2).
 public enum GameShelf: String, CaseIterable, Sendable, Identifiable {
     case all, inProgress, platinum, completed, notStarted, shelved
 
