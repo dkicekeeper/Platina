@@ -115,6 +115,29 @@ jobs:
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/build.log" | grep -E "error:|warning: .*Platina/|BUILD (SUCCEEDED|FAILED)" || true
           grep -q "BUILD SUCCEEDED" "$RUNNER_TEMP/build.log"
 
+      # Whether the app still answers after a game opens from the Path, and from the library for
+      # comparison (2026-11-26: a game opened from the Path froze the app on the owner's phone).
+      # scripts/hang_probe.py launches the demo at each screen and samples the main thread; a hang
+      # prints its heaviest frames and SwiftUI's warnings. Not blocking until the Path answers.
+      - name: Hang probe (a game opened from the Path and from the library)
+        working-directory: ios
+        timeout-minutes: 10
+        continue-on-error: true
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available --json | python3 -c '
+          import json, re, sys
+          devices = json.load(sys.stdin)["devices"]
+          phones = [(runtime, d) for runtime, items in sorted(devices.items(), reverse=True)
+                    if ".iOS-" in runtime for d in items if d["name"].startswith("iPhone")]
+          regular = [d for _, d in phones if not re.search(r"Duo|Fold|Flip", d["name"])]
+          pro = [d for d in regular if re.fullmatch(r"iPhone \d+ Pro", d["name"])]
+          print((pro or regular or [d for _, d in phones])[0]["udid"])
+          ')
+          xcrun simctl list devices | grep "$DEVICE_ID" || true
+          python3 ../scripts/hang_probe.py --device "$DEVICE_ID" \
+            --app build/Build/Products/Debug-iphonesimulator/Platina.app \
+            --out "$RUNNER_TEMP/hang-probe" pathGame game path
+
       - name: Run package tests on a simulator
         working-directory: ios/Packages/PlatinaKit
         run: |
@@ -135,48 +158,6 @@ jobs:
             -derivedDataPath build \
             -resultBundlePath "$RUNNER_TEMP/PackageTests.xcresult" \
             -quiet
-
-      # The ways into a game's screen in the demo (PlatinaUITests/NavigationTests): a screen that
-      # hangs the app fails here, not on a phone. On a phone-sized iPhone (an unfolded iPhone Duo
-      # shows the iPad's sidebar, not the tab bar). Not blocking yet: the first runs could not
-      # tell a hang from XCUITest waiting for the app's endless ambient animations to settle
-      # (2026-11-26). Its failures are printed below either way.
-      - name: UI tests (open a game from the Path and the library)
-        working-directory: ios
-        timeout-minutes: 25
-        continue-on-error: true
-        run: |
-          DEVICE_ID=$(xcrun simctl list devices available --json | python3 -c '
-          import json, re, sys
-          devices = json.load(sys.stdin)["devices"]
-          phones = [(runtime, d) for runtime, items in sorted(devices.items(), reverse=True)
-                    if ".iOS-" in runtime for d in items if d["name"].startswith("iPhone")]
-          regular = [d for _, d in phones if not re.search(r"Duo|Fold|Flip", d["name"])]
-          pro = [d for d in regular if re.fullmatch(r"iPhone \d+ Pro", d["name"])]
-          print((pro or regular or [d for _, d in phones])[0]["udid"])
-          ')
-          xcrun simctl list devices | grep "$DEVICE_ID" || true
-          STATUS=0
-          xcodebuild test \
-            -project Platina.xcodeproj \
-            -scheme Platina \
-            -destination "id=$DEVICE_ID" \
-            -only-testing:PlatinaUITests/NavigationTests \
-            -parallel-testing-enabled NO \
-            -test-timeouts-enabled YES \
-            -default-test-execution-time-allowance 180 \
-            -derivedDataPath build \
-            -resultBundlePath "$RUNNER_TEMP/UITests.xcresult" \
-            CODE_SIGNING_ALLOWED=NO > "$RUNNER_TEMP/uitests.log" 2>&1 || STATUS=$?
-          grep -aE "Test [Cc]ase .* (passed|failed)|error:|\*\* TEST (SUCCEEDED|FAILED)|[Ww]ait for .* to idle|not received" "$RUNNER_TEMP/uitests.log" | head -60 || true
-          if [ -d "$RUNNER_TEMP/UITests.xcresult" ]; then
-            xcrun xcresulttool get test-results summary --path "$RUNNER_TEMP/UITests.xcresult" --format json | python3 -c '
-          import json, sys
-          for failure in json.load(sys.stdin).get("testFailures", []):
-              print("✘", failure.get("testName", ""), "::", failure.get("failureText", ""))
-          ' || true
-          fi
-          exit $STATUS
 
       - name: Build log on failure
         if: failure()

@@ -22,10 +22,13 @@ enum ScreenshotDemo {
     /// the same on a phone and an iPad, so the UI test only waits and takes the picture.
     enum Screen: String {
         case path, library, game, guide, walkthrough, chapter, plati, session, profile
+        /// Not a screenshot: CI's hang probe (scripts/hang_probe.py) opens the game from the Path,
+        /// as a tap on its card would.
+        case pathGame
 
         var tab: AppTab {
             switch self {
-            case .path, .session: .path
+            case .path, .session, .pathGame: .path
             case .library, .game, .guide, .walkthrough, .chapter: .games
             case .plati: .plati
             case .profile: .profile

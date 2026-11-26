@@ -65,9 +65,9 @@ struct PathView: View {
             }
             .background(AppColors.Background.base)
             .navigationTitle(Text("path.title"))
-            // The system's pull to refresh, not DesignKit's `.dsRefreshable`: with it, a game
-            // opened from here froze the app (build 31, 2026-11-26). The library, whose game lives
-            // in its own stack, did not freeze. PlatinaUITests/NavigationTests guards it.
+            // The system's pull to refresh for now: build 32 tried it against a game opened from
+            // here freezing the app, and it still froze (2026-11-26). CI's hang probe looks for
+            // the cause (scripts/hang_probe.py).
             .refreshable {
                 await app.sync.sync(force: true)
                 runningGameId = await app.sync.runningGame(force: true)
@@ -77,6 +77,11 @@ struct PathView: View {
             }
             .task {
                 runningGameId = await app.sync.runningGame()
+                // CI's hang probe: the demo opens its game from here, as a tap on its card would.
+                if ScreenshotDemo.screen == .pathGame {
+                    try? await Task.sleep(for: .seconds(8))
+                    openedGame = ScreenshotDemo.gameId
+                }
             }
         }
     }

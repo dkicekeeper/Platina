@@ -151,8 +151,6 @@ struct GameView: View {
                         }
                     }
                     .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
-                    // PlatinaUITests/NavigationTests finds the game's screen by it.
-                    .accessibilityIdentifier("game-screen")
                     // DesignKit's mercury out of the island, on the scroll view itself: it reads
                     // the pull from its scroll geometry (8.21.0).
                     .dsRefreshable {
