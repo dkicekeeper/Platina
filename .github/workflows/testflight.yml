@@ -1,6 +1,6 @@
 name: TestFlight
 
-# Archives the app and uploads it to TestFlight (docs/PLAN.md §9, stage 4). Manual only.
+# Archives the app and uploads it to TestFlight (docs/archive/plans/2026-11-20-stages.md, stage 4). Manual only.
 #
 # One-time setup (docs/testflight.md):
 #   - an app record in App Store Connect for the bundle id dakacom.Platina;

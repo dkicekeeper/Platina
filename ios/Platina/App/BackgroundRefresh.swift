@@ -3,7 +3,7 @@ import Foundation
 import UserNotifications
 import PlatinaStore
 
-/// The sync while the app is away (docs/PLAN.md §9, stage 4): iOS wakes the app now and then
+/// The sync while the app is away (docs/archive/plans/2026-11-20-stages.md, stage 4): iOS wakes the app now and then
 /// (`BGAppRefreshTask`, every few hours at best), it syncs, and a trophy earned since the last
 /// look becomes a notification.
 enum BackgroundRefresh {

@@ -4,7 +4,7 @@ import FoundationNetworking
 #endif
 
 /// Sony's OAuth constants: the ones the PlayStation App uses, as every PSN client does
-/// (psn-api, PSNAWP). docs/PLAN.md §2.
+/// (psn-api, PSNAWP). docs/domains/psn.md.
 public enum PSNAuth {
     static let clientID = "09515159-7237-4370-9b40-3806e67c0891"
     /// `clientID:clientSecret` in Base64, as the PlayStation App sends it.
@@ -26,8 +26,8 @@ public enum PSNAuth {
     public static let webSignInURL = URL(string: "https://store.playstation.com/en-us/")!
 
     /// The PlayStation Store's own sign-in, what its "Sign In" button opens: Sony's sign-in page
-    /// for the web client, which loads where the PlayStation App client's page does not (§2 of
-    /// docs/PLAN.md). Its session service takes only playstation.com addresses to return to.
+    /// for the web client, which loads where the PlayStation App client's page does not
+    /// (docs/domains/psn.md). Its session service takes only playstation.com addresses to return to.
     public static let storeSignInURL = URL(
         string: "https://web.np.playstation.com/api/session/v1/signin?redirect_uri=https%3A%2F%2Fstore.playstation.com%2Fen-us%2Fpages%2Flatest"
     )!

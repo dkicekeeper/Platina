@@ -4,7 +4,7 @@ import SwiftData
 import PSNKit
 import PlatinaCore
 
-// Two stores (docs/PLAN.md §6):
+// Two stores (docs/architecture.md):
 // - the cache: what PSN says (games, trophies, the profile). A sync can rebuild it, so a version
 //   that cannot open it simply starts it over;
 // - the person's own data (plans for games, later notes and sessions). Built for iCloud: every
@@ -428,7 +428,7 @@ public final class GamePlanRecord {
     public var status: GamePlanStatus { GamePlanStatus(rawValue: statusRaw) ?? .none }
 }
 
-/// A play session: a step on the way to a game's platinum (docs/PLAN.md §3.5).
+/// A play session: a step on the way to a game's platinum (docs/domains/screens.md §3.5).
 @Model
 public final class PlaySessionRecord {
     public var sessionId: String = ""

@@ -57,7 +57,7 @@ struct SignInView: View {
             .padding(.vertical, AppSpacing.xxxl)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .overlay(alignment: .top) {
             if let message = errorMessage ?? model.signOutReason {
                 MessageBanner(message: message, type: .error)

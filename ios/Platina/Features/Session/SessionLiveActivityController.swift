@@ -3,7 +3,7 @@ import Foundation
 import PlatinaShared
 import PlatinaStore
 
-/// Starts, updates and ends the session's Live Activity (docs/PLAN.md §3.5). The clock on the
+/// Starts, updates and ends the session's Live Activity (docs/domains/screens.md §3.5). The clock on the
 /// lock screen runs by itself; the app pushes a new state when the session changes: a pause, a
 /// goal, a trophy.
 @MainActor

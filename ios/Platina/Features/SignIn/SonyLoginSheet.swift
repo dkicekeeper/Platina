@@ -12,7 +12,7 @@ enum SonyLoginResult: Equatable {
     case failed
 }
 
-/// The PlayStation Store's sign-in in a web view (docs/PLAN.md §2). The page of the PlayStation
+/// The PlayStation Store's sign-in in a web view (docs/domains/psn.md). The page of the PlayStation
 /// App's client, which the app's tokens belong to, does not load for some people ("the connection
 /// to the server timed out"), the store's does. When the store's sign-in is over, the app takes
 /// Sony's session token (`npsso`) the way a person would by hand, and exchanges it for its own.

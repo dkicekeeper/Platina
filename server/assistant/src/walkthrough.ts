@@ -8,7 +8,7 @@ import { fetchPageMedia, type PageMedia } from "./pagemedia";
 import { webFetchTool, webSearchTool } from "./tools";
 import type { GuideGame, GuideTrophy } from "./validate";
 
-// The walkthrough "by the hand" (docs/PLAN.md §5, "Прохождение по главам"; docs/assistant.md
+// The walkthrough "by the hand" (docs/domains/plati.md, "Прохождение по главам"; docs/assistant.md
 // §8): Plati leads the player through a game chapter by chapter. Two builds, both on the guide
 // model with web search and web fetch, both kept in KV for 30 days:
 //   - the overview: the game's chapters in order, what each can lose (missable things, choices),

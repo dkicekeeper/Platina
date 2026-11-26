@@ -7,7 +7,7 @@ import PSNKit
 import PlatinaCore
 import PlatinaStore
 
-/// "The path" (docs/PLAN.md §3.1): what is running on the console, the session, the games the
+/// "The path" (docs/domains/screens.md §3.1): what is running on the console, the session, the games the
 /// person goes for, the trophies almost earned, the latest trophies and sessions.
 struct PathView: View {
     @Environment(AppModel.self) private var app
@@ -63,7 +63,7 @@ struct PathView: View {
                 .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("path.title"))
             // The system's pull to refresh for now: build 32 tried it against a game opened from
             // here freezing the app, and it still froze (2026-11-26). CI's hang probe looks for
@@ -115,7 +115,7 @@ struct PathView: View {
                 app.isShowingSession = true
             } label: {
                 HStack(spacing: AppSpacing.md) {
-                    Icon("record.circle", size: AppIconSize.lg, tint: .monochrome(AppColors.destructive))
+                    Icon("record.circle", size: AppIconSize.lg, tint: .monochrome(AppColors.Status.negative))
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text("path.session.title")
                             .font(AppTypography.caption)

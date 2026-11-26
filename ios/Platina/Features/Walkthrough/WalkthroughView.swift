@@ -7,7 +7,7 @@ import PSNKit
 import PlatinaAssistant
 import PlatinaStore
 
-/// A game's walkthrough on its screen (docs/PLAN.md §5): the chapter to play now, how far along
+/// A game's walkthrough on its screen (docs/domains/plati.md): the chapter to play now, how far along
 /// the person is, what this chapter can lose, and the way to every chapter. Built by Plati's
 /// server when the person asks for it (a model call), or when Plati needs it.
 struct WalkthroughSection: View {
@@ -206,7 +206,7 @@ struct WalkthroughView: View {
                     .screenPadding()
             }
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationTitle(Text("walkthrough.header"))
         .navigationBarTitleDisplayMode(.inline)
         .modifier(WalkthroughBanner(message: $banner))
@@ -287,7 +287,7 @@ struct WalkthroughView: View {
         var items: [MetaItem] = [.label(state.title, systemImage: state.systemImage, tint: state.tint)]
         let warnings = chapter.missable.count + chapter.choices.count
         if warnings > 0 {
-            items.append(.label(String(localized: "walkthrough.chapter.warnings \(warnings)"), systemImage: "exclamationmark.triangle.fill", tint: AppColors.warning))
+            items.append(.label(String(localized: "walkthrough.chapter.warnings \(warnings)"), systemImage: "exclamationmark.triangle.fill", tint: AppColors.Status.warning))
         }
         let collectibles = chapter.collectibles.reduce(0) { $0 + $1.count }
         if collectibles > 0 {

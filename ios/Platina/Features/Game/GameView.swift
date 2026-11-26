@@ -61,7 +61,7 @@ enum GameSection: String, CaseIterable, Hashable {
     }
 }
 
-/// A game (docs/PLAN.md §3.3): its header on the game's cover (progress, trophy counts, time
+/// A game (docs/domains/screens.md §3.3): its header on the game's cover (progress, trophy counts, time
 /// played, the session button and the person's plan), then chips for its parts: the trophies,
 /// the guide, the walkthrough, the sessions and the friends who play it.
 struct GameView: View {
@@ -172,7 +172,7 @@ struct GameView: View {
                     .screenPadding()
             }
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

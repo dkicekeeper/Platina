@@ -1,6 +1,6 @@
 import Foundation
 
-/// What the home screen widgets show (docs/PLAN.md §9, stage 4): the app writes it after every
+/// What the home screen widgets show (docs/archive/plans/2026-11-20-stages.md, stage 4): the app writes it after every
 /// sync into the App Group's container; the widget extension reads it. Texts are prepared by the
 /// app in its language, so the extension needs no strings of its own.
 public struct WidgetSnapshot: Codable, Sendable, Equatable {

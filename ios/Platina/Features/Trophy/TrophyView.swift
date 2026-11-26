@@ -6,7 +6,7 @@ import DesignComponents
 import PSNKit
 import PlatinaStore
 
-/// One trophy (docs/PLAN.md §3.4): the icon (a holographic foil for the platinum), how rare it
+/// One trophy (docs/domains/screens.md §3.4): the icon (a holographic foil for the platinum), how rare it
 /// is, when it was earned, its progress, PlayStation's Game Help, Plati's tip and the person's note.
 struct TrophyView: View {
     @Environment(AppModel.self) private var app
@@ -83,7 +83,7 @@ struct TrophyView: View {
                     .screenPadding()
             }
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationBarTitleDisplayMode(.inline)
     }
 

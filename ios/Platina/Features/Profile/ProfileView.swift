@@ -7,7 +7,7 @@ import PSNKit
 import PlatinaCore
 import PlatinaStore
 
-/// The person and their numbers (docs/PLAN.md §3.7): level, platinums, months, activity, the
+/// The person and their numbers (docs/domains/screens.md §3.7): level, platinums, months, activity, the
 /// platinum shelf, the rarest trophies. Friends are behind the people button; the account and the
 /// rest are in Settings (the gear).
 struct ProfileView: View {
@@ -77,7 +77,7 @@ struct ProfileView: View {
                 .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("profile.title"))
             .dsRefreshable { await app.sync.sync(force: true) }
             .navigationDestination(item: $openedGame) { gameId in
