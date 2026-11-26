@@ -23,7 +23,8 @@ packages:
   # Точная версия; её поднимает workflow DesignKit update (.github/workflows/designkit.yml).
   DesignKit:
     url: https://github.com/dkicekeeper/DesignKit
-    exactVersion: "8.22.0"
+    # Temporary: DesignKit PR #132 (the gate that hung the Path) for CI's hang probe; 8.22.1 next.
+    revision: "481fc5c754db6d422a5aef4ec3fe02182b3d789b"
   PlatinaKit:
     path: Packages/PlatinaKit
 
