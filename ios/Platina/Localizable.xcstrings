@@ -58,13 +58,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "iOS didn’t give an address for pushes. Check the connection and try again."
+            "value": "Couldn’t turn on notifications. Check your connection."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "iOS не выдала адрес для пушей. Проверьте интернет и попробуйте ещё раз."
+            "value": "Не удалось включить уведомления. Проверьте интернет."
           }
         }
       }
@@ -75,13 +75,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trophy notifications aren’t available yet: the server isn’t ready."
+            "value": "Trophy notifications aren’t available yet."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Уведомления о трофеях пока недоступны: сервер ещё не готов."
+            "value": "Уведомления о трофеях пока недоступны."
           }
         }
       }
@@ -1440,13 +1440,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sony didn’t accept the token. Get a new one and paste it again."
+            "value": "The token didn’t work. Get a new one and paste it again."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sony не приняла токен. Получите новый и вставьте ещё раз."
+            "value": "Токен не подошёл. Получите новый и вставьте снова."
           }
         }
       }
@@ -1474,13 +1474,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "PlayStation Network didn’t answer as usual. Try again a little later."
+            "value": "PSN returned an error. Try again later."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "PlayStation Network ответила не так, как обычно. Попробуйте чуть позже."
+            "value": "PSN ответил с ошибкой. Попробуйте позже."
           }
         }
       }
@@ -1542,13 +1542,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn’t sign in to PSN. Try again, or sign in with an NPSSO token."
+            "value": "Couldn’t sign in to PSN. Try again."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не получилось войти в PSN. Попробуйте ещё раз или войдите с токеном NPSSO."
+            "value": "Не удалось войти в PSN. Попробуйте ещё раз."
           }
         }
       }
@@ -1576,13 +1576,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ hides their trophies in PlayStation privacy settings, so progress can’t be compared."
+            "value": "%@ hides their trophies, so there’s nothing to compare."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ скрывает трофеи в настройках приватности PlayStation, поэтому сравнить прогресс нельзя."
+            "value": "%@ скрывает трофеи, сравнить прогресс нельзя."
           }
         }
       }
@@ -1661,13 +1661,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add friends on PlayStation to see who is ahead in the games you share."
+            "value": "Add friends on PlayStation to compare progress."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Добавьте друзей на PlayStation, и здесь будет видно, кто впереди в общих играх."
+            "value": "Добавьте друзей в PlayStation, чтобы сравнивать прогресс."
           }
         }
       }
@@ -1916,13 +1916,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When a friend starts this game, you’ll see who is further along here."
+            "value": "Friends who play this game will show up here."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Когда кто-то из друзей начнёт эту игру, здесь будет видно, кто дальше."
+            "value": "Здесь появятся друзья, которые играют в эту игру."
           }
         }
       }
@@ -2171,13 +2171,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start a session when you sit down to play: Platina keeps the time, the trophies and the walkthrough's steps."
+            "value": "Start a session when you sit down to play."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Начните сессию, когда сядете играть: Платина запишет время, трофеи и шаги прохождения."
+            "value": "Начните сессию, когда садитесь играть."
           }
         }
       }
@@ -2341,13 +2341,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati will build a guide: players' tips from Stratege.ru, road maps from PowerPyx, PSNProfiles and PlayStationTrophies — difficulty, time, missables and the steps to platinum."
+            "value": "Plati will put together a guide: difficulty, time and the steps to platinum."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Плати соберёт гайд: подсказки игроков со Stratege.ru, дорожные карты PowerPyx, PSNProfiles и PlayStationTrophies — сложность, время, пропускаемые трофеи и шаги к платине."
+            "value": "Плати соберёт гайд: сложность, время и шаги к платине."
           }
         }
       }
@@ -2358,13 +2358,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The guide didn't build. Tap to try again."
+            "value": "Couldn’t build the guide. Tap to retry."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Гайд не собрался. Нажмите, чтобы попробовать ещё раз."
+            "value": "Не удалось собрать гайд. Нажмите, чтобы повторить."
           }
         }
       }
@@ -2446,25 +2446,25 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld трофей можно пропустить — не пройдите мимо"
+                  "value": "%lld трофей можно пропустить"
                 }
               },
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld трофея можно пропустить — не пройдите мимо"
+                  "value": "%lld трофея можно пропустить"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld трофеев можно пропустить — не пройдите мимо"
+                  "value": "%lld трофеев можно пропустить"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld трофея можно пропустить — не пройдите мимо"
+                  "value": "%lld трофея можно пропустить"
                 }
               }
             }
@@ -2476,13 +2476,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld trophy can be missed — don't walk past it"
+                  "value": "%lld trophy can be missed"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld trophies can be missed — don't walk past them"
+                  "value": "%lld trophies can be missed"
                 }
               }
             }
@@ -3566,13 +3566,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ticked. This chapter’s steps are done — open the next chapter in Platina."
+            "value": "Done. The chapter is finished, open the next one in Platina."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отметил. Шаги этой главы пройдены — откройте следующую главу в Platina."
+            "value": "Отметил. Глава пройдена, откройте следующую в Platina."
           }
         }
       }
@@ -3787,13 +3787,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "There’s no walkthrough step right now. Open a game in Platina and ask Plati to lead you chapter by chapter."
+            "value": "There’s no walkthrough step right now. Open a game in Platina."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сейчас нет шага прохождения. Откройте игру в Platina и попросите Плати вести по главам."
+            "value": "Сейчас нет шага прохождения. Откройте игру в Platina."
           }
         }
       }
@@ -3804,13 +3804,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "the next step is a spoiler; it’s in the app"
+            "value": "the next step has a spoiler, it’s in the app"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "следующий шаг — спойлер, он в приложении"
+            "value": "следующий шаг со спойлером, он в приложении"
           }
         }
       }
@@ -3821,13 +3821,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Once you have trophies in PS5 games, they’ll show up here."
+            "value": "Your PS5 and PS4 games with trophies will show up here."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Когда в PSN появятся трофеи в играх PS5, они будут здесь."
+            "value": "Здесь появятся игры PS5 и PS4 с трофеями."
           }
         }
       }
@@ -3838,13 +3838,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No PS5 games yet"
+            "value": "No games yet"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пока нет игр PS5"
+            "value": "Пока нет игр"
           }
         }
       }
@@ -3974,13 +3974,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign out of your PSN account? You can sign in again any time."
+            "value": "Sign out of PSN?"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выйти из аккаунта PSN? Войти снова можно в любой момент."
+            "value": "Выйти из PSN?"
           }
         }
       }
@@ -4328,13 +4328,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ — %2$@"
+            "value": "%1$@ · %2$@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ — %2$@"
+            "value": "%1$@ · %2$@"
           }
         }
       }
@@ -4362,13 +4362,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The token is 64 characters. You can paste the page’s whole answer."
+            "value": "64 characters. You can paste the whole page."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Токен — 64 символа. Можно вставить весь ответ страницы целиком."
+            "value": "64 символа. Можно вставить весь ответ страницы."
           }
         }
       }
@@ -4584,13 +4584,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "I'll tell you when a new trophy shows up on PSN — even with the app closed."
+            "value": "I’ll tell you when you earn a new trophy."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Скажу, когда в PSN появится новый трофей — даже если приложение закрыто."
+            "value": "Скажу, когда вы получите новый трофей."
           }
         }
       }
@@ -4618,13 +4618,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati reads guides and players' tips from Stratege.ru and other sites, knows your trophies and leads you to the platinum step by step."
+            "value": "Plati knows your trophies, reads guides and leads you to platinum step by step."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Плати читает гайды и подсказки игроков со Stratege.ru и других сайтов, знает ваши трофеи и ведёт к платине шаг за шагом."
+            "value": "Плати знает ваши трофеи, читает гайды и ведёт к платине шаг за шагом."
           }
         }
       }
@@ -4652,13 +4652,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start a session — time, goals and new trophies stay on the lock screen, and the summary goes into the game's journal."
+            "value": "Time, goals and new trophies stay on the lock screen."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Начните сессию — время, цели и новые трофеи будут на экране блокировки, а итог попадёт в журнал игры."
+            "value": "Время, цели и новые трофеи видны на экране блокировки."
           }
         }
       }
@@ -4669,13 +4669,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every session is a step"
+            "value": "Play in sessions"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Каждая сессия — шаг"
+            "value": "Играйте сессиями"
           }
         }
       }
@@ -4721,13 +4721,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every PS5 game, trophies, rarity, time played and progress to platinum and 100% — in one place."
+            "value": "All your games, trophies and progress to platinum in one place."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Все игры PS5, трофеи, редкость, время в игре и прогресс к платине и 100% — в одном месте."
+            "value": "Все игры, трофеи и прогресс к платине в одном месте."
           }
         }
       }
@@ -4808,13 +4808,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mark a game “Going for platinum” on its screen and it will show up here."
+            "value": "Mark a game “Going for platinum” and it will show up here."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отметьте игру «Иду на платину» на её экране — она появится здесь."
+            "value": "Отметьте игру «Иду на платину», и она появится здесь."
           }
         }
       }
@@ -4963,13 +4963,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start a session? Time, goals and new trophies stay in sight."
+            "value": "Start a session?"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Начать сессию? Время, цели и новые трофеи будут на виду."
+            "value": "Начать сессию?"
           }
         }
       }
@@ -5120,13 +5120,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Waiting to upload: it goes once you’re online"
+            "value": "Will upload when you’re online"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ожидает отправки — уйдёт, когда появится сеть"
+            "value": "Отправится, когда появится сеть"
           }
         }
       }
@@ -5499,13 +5499,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hi! I'm Plati. I know your trophies and read guides and players' tips — I'll help you get to platinum."
+            "value": "Hi! I’m Plati. I’ll help you get to platinum."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Привет! Я Плати. Знаю твои трофеи, читаю гайды и подсказки игроков — помогу дойти до платины."
+            "value": "Привет! Я Плати. Помогу дойти до платины."
           }
         }
       }
@@ -5550,13 +5550,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati isn't part of this build of the app. Trophies, sessions and everything else work without it."
+            "value": "Plati isn’t in this build of the app."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Плати нет в этой сборке приложения. Трофеи, сессии и всё остальное работают без него."
+            "value": "Плати нет в этой сборке приложения."
           }
         }
       }
@@ -5907,13 +5907,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati isn't available on this device: its server answers only an app protected by App Attest, which this device doesn't offer (as on a Mac). Trophies, sessions and guides and walkthroughs already built work."
+            "value": "Plati isn’t available on this device."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "На этом устройстве Плати недоступен: его сервер отвечает только приложению с защитой App Attest, а здесь её нет (так бывает на Mac). Трофеи, сессии и уже собранные гайды и прохождения работают."
+            "value": "Плати недоступен на этом устройстве."
           }
         }
       }
@@ -6060,13 +6060,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your first platinum will show up here — Plati will help you get there."
+            "value": "Your first platinum will show up here."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Первая платина появится здесь — Плати поможет до неё дойти."
+            "value": "Здесь появится ваша первая платина."
           }
         }
       }
@@ -6562,13 +6562,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "End the session? Its time and trophies go into the game's journal."
+            "value": "End the session?"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Завершить сессию? Время и трофеи попадут в журнал игры."
+            "value": "Завершить сессию?"
           }
         }
       }
@@ -7004,13 +7004,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "None yet — the app checks every couple of minutes."
+            "value": "No trophies yet"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пока без трофеев — приложение проверяет каждые пару минут."
+            "value": "Пока без трофеев"
           }
         }
       }
@@ -7055,13 +7055,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A push for every new trophy, even when Platina is closed; the platinum gets its own. For this, Plati’s server gets access of its own to your PSN trophies: sign in to PSN once more when you turn it on. The app’s own tokens stay on the phone. Turn it off and the server forgets everything."
+            "value": "Turn on to get a notification for every trophy you earn."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пуш о каждом новом трофее, даже когда Platina закрыта; платина — отдельно. Для этого сервер Плати получает свой доступ к вашим трофеям PSN: при включении войдите в PSN ещё раз. Токены приложения остаются на телефоне. Выключите — сервер всё забудет."
+            "value": "Включите, чтобы получать уведомления о полученных трофеях."
           }
         }
       }
@@ -7089,13 +7089,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notifications are paused: PSN asked to sign in again. Turn them on once more."
+            "value": "Notifications are paused. Turn them on again."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Уведомления на паузе: PSN попросил войти снова. Включите их ещё раз."
+            "value": "Уведомления на паузе. Включите их снова."
           }
         }
       }
@@ -7157,13 +7157,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On — hidden trophies and spoiler steps of the walkthrough show at once, without a tap, and Plati names them plainly. Plati still tells the story beyond a step only when asked."
+            "value": "Hidden trophies and spoilers show right away."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Включено — скрытые трофеи и спойлеры в шагах прохождения видны сразу, без нажатия, и Плати говорит о них прямо. Сюжет за пределами шага Плати всё равно рассказывает, только если спросите."
+            "value": "Скрытые трофеи и спойлеры будут видны сразу."
           }
         }
       }
@@ -7554,13 +7554,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You type your password on Sony’s page — the app never sees it. The sign-in key stays on this iPhone."
+            "value": "You enter your password on Sony’s page. The app never sees it."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пароль вы вводите на странице Sony — приложение его не видит. Ключ входа хранится только на этом iPhone."
+            "value": "Пароль вводится на странице Sony, приложение его не видит."
           }
         }
       }
@@ -7605,13 +7605,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The road to platinum in every game. Plati will help you walk it to the end."
+            "value": "The road to platinum in every game."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Путь к платине в каждой игре. Плати поможет пройти его до конца."
+            "value": "Путь к платине в каждой игре."
           }
         }
       }
@@ -8323,13 +8323,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hidden trophy. Tap to reveal it."
+            "value": "Hidden trophy. Tap to reveal."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Скрытый трофей. Нажмите, чтобы открыть описание."
+            "value": "Скрытый трофей. Нажмите, чтобы открыть."
           }
         }
       }
@@ -8527,13 +8527,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The percentage of the game’s players who have earned the trophy. PlayStation counts it and sorts trophies by it into common, rare, very rare and ultra rare."
+            "value": "The share of players who earned this trophy. Data from PlayStation."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сколько процентов игроков в эту игру получили трофей. Это данные PlayStation: по ним же она делит трофеи на обычные, редкие, очень редкие и ультраредкие."
+            "value": "Доля игроков, получивших этот трофей. Данные PlayStation."
           }
         }
       }
@@ -9091,13 +9091,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A collectible counts as found when its step is ticked or its trophy is earned. Chapters whose steps aren’t built yet don’t count yet."
+            "value": "An item counts as found when its step is ticked or its trophy is earned."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Найденным считается отмеченный шаг или полученный трофей. Шаги глав, которые ещё не собраны, пока не в счёт."
+            "value": "Предмет найден, если шаг отмечен или трофей получен."
           }
         }
       }
@@ -9195,13 +9195,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati will split the game into chapters and lead you step by step: where to go, what to pick up, which choice not to miss for the platinum. Your progress is kept."
+            "value": "Plati will split the game into chapters and lead you step by step."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Плати разобьёт игру на главы и поведёт по шагам: куда идти, что подобрать, какой выбор не упустить ради платины. Прогресс запоминается."
+            "value": "Плати разобьёт игру на главы и поведёт по шагам."
           }
         }
       }
@@ -9212,13 +9212,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The walkthrough didn’t come together. Tap to try again."
+            "value": "Couldn’t build the walkthrough. Tap to retry."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Прохождение не собралось. Нажмите, чтобы попробовать ещё раз."
+            "value": "Не удалось собрать прохождение. Нажмите, чтобы повторить."
           }
         }
       }
@@ -9229,13 +9229,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The walkthrough didn’t come together (%@). Tap to try again."
+            "value": "Couldn’t build the walkthrough (%@). Tap to retry."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Прохождение не собралось (%@). Нажмите, чтобы попробовать ещё раз."
+            "value": "Не удалось собрать прохождение (%@). Нажмите, чтобы повторить."
           }
         }
       }
@@ -9246,13 +9246,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The game’s chapter plan is needed first. Tap to build it again."
+            "value": "The chapter plan comes first. Tap to build it."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сначала нужен план игры по главам. Нажмите, чтобы собрать его заново."
+            "value": "Сначала нужен план по главам. Нажмите, чтобы собрать."
           }
         }
       }
@@ -9263,13 +9263,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati’s server didn’t answer. Tap to try again."
+            "value": "Plati’s server didn’t answer. Tap to retry."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сервер Плати не ответил. Нажмите, чтобы попробовать ещё раз."
+            "value": "Сервер Плати не ответил. Нажмите, чтобы повторить."
           }
         }
       }
@@ -9280,13 +9280,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No more walkthrough builds today — try again tomorrow."
+            "value": "Today’s build limit is used up. Try again tomorrow."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "На сегодня сборки прохождений закончились — завтра можно снова."
+            "value": "Лимит сборок на сегодня исчерпан. Попробуйте завтра."
           }
         }
       }
@@ -9552,13 +9552,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati reads the guides again and lays out the chapters, which takes a minute or two. Each chapter's steps are built again when you open it."
+            "value": "Plati will lay out the chapters again. It takes a minute or two."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Плати заново прочитает гайды и составит главы, это минута-две. Шаги глав соберутся заново, когда вы их откроете."
+            "value": "Плати заново составит главы. Это займёт минуту-две."
           }
         }
       }
@@ -9620,13 +9620,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The chapter’s steps aren’t built yet: open the chapter or ask Plati."
+            "value": "The chapter’s steps aren’t built yet."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Шаги главы ещё не собраны: откройте главу или спросите Плати."
+            "value": "Шаги главы ещё не собраны."
           }
         }
       }
@@ -9654,13 +9654,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The steps are retold in Plati’s own words; details and pictures are on the sources’ pages."
+            "value": "Steps are retold in our own words. Details are on the sources’ pages."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Шаги пересказаны своими словами; подробности и картинки — на страницах источников."
+            "value": "Шаги пересказаны своими словами. Подробности на страницах источников."
           }
         }
       }
@@ -9790,13 +9790,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spoiler — tap Show"
+            "value": "Spoiler. Tap Show"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Спойлер — нажмите «Показать»"
+            "value": "Спойлер. Нажмите «Показать»"
           }
         }
       }
@@ -9858,13 +9858,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This chapter’s steps aren’t built yet. Plati will read the guides and lay the chapter out step by step — a minute or two."
+            "value": "This chapter’s steps aren’t built yet. It takes a minute or two."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Шаги этой главы ещё не собраны. Плати прочитает гайды и разложит главу по шагам — минута-две."
+            "value": "Шаги этой главы ещё не собраны. Это займёт минуту-две."
           }
         }
       }
@@ -9875,13 +9875,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The chapter’s steps didn’t come together. Tap to try again."
+            "value": "Couldn’t build the chapter’s steps. Tap to retry."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Шаги главы не собрались. Нажмите, чтобы попробовать ещё раз."
+            "value": "Не удалось собрать шаги главы. Нажмите, чтобы повторить."
           }
         }
       }
@@ -9892,13 +9892,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The chapter’s steps didn’t come together (%@). Tap to try again."
+            "value": "Couldn’t build the chapter’s steps (%@). Tap to retry."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Шаги главы не собрались (%@). Нажмите, чтобы попробовать ещё раз."
+            "value": "Не удалось собрать шаги главы (%@). Нажмите, чтобы повторить."
           }
         }
       }
@@ -9960,13 +9960,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plati reads the chapter's page again, which takes about a minute. This chapter's ticks are cleared: the steps will be new."
+            "value": "Plati will rebuild the steps. This chapter’s ticks will be cleared."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Плати заново прочитает страницу главы, это около минуты. Галочки этой главы снимутся: шаги будут новые."
+            "value": "Плати соберёт шаги заново. Отметки в этой главе сбросятся."
           }
         }
       }
@@ -10011,13 +10011,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every chapter is behind you — the cleanup is left"
+            "value": "All chapters done. Cleanup is left"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Все главы позади — осталась зачистка"
+            "value": "Все главы пройдены. Осталась зачистка"
           }
         }
       }
