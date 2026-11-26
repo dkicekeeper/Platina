@@ -65,10 +65,7 @@ struct PathView: View {
             }
             .background(AppColors.Background.page)
             .navigationTitle(Text("path.title"))
-            // The system's pull to refresh for now: build 32 tried it against a game opened from
-            // here freezing the app, and it still froze (2026-11-26). CI's hang probe looks for
-            // the cause (scripts/hang_probe.py).
-            .refreshable {
+            .dsRefreshable {
                 await app.sync.sync(force: true)
                 runningGameId = await app.sync.runningGame(force: true)
             }
