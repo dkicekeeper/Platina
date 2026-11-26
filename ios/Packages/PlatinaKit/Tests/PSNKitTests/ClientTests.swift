@@ -110,6 +110,60 @@ struct ClientTests {
         #expect(try store.load() == nil)
     }
 
+    @Test("After PSN ends the session, the next request says so too, not signed out")
+    func sessionExpiredStays() async throws {
+        let transport = MockTransport { request in
+            if request.url?.path == "/api/authz/v3/oauth/token" {
+                return .init(status: 400, body: Data(#"{"error":"invalid_grant"}"#.utf8))
+            }
+            return .init(status: 401)
+        }
+        let client = PSNClient(store: InMemoryTokenStore(validTokens), transport: transport, language: "ru-RU", now: { fixedNow })
+        await #expect(throws: PSNError.sessionExpired) {
+            _ = try await client.trophySummary()
+        }
+        // A sync's other request, reaching the client after the sign-out: it sends nothing and
+        // reports the same as the first.
+        let sent = transport.requestCount
+        await #expect(throws: PSNError.sessionExpired) {
+            _ = try await client.trophyTitles()
+        }
+        #expect(transport.requestCount == sent)
+    }
+
+    @Test("Both requests of a sync fail the same way when the session ends")
+    func sessionExpiredConcurrent() async throws {
+        let transport = MockTransport { request in
+            if request.url?.path == "/api/authz/v3/oauth/token" {
+                return .init(status: 400, body: Data(#"{"error":"invalid_grant"}"#.utf8))
+            }
+            return .init(status: 401)
+        }
+        let client = PSNClient(store: InMemoryTokenStore(validTokens), transport: transport, language: "ru-RU", now: { fixedNow })
+        async let summary = failure { _ = try await client.trophySummary() }
+        async let titles = failure { _ = try await client.trophyTitles() }
+        #expect(await summary == .sessionExpired)
+        #expect(await titles == .sessionExpired)
+    }
+
+    @Test("A sign-out after an ended session is a sign-out")
+    func signOutAfterEndedSession() async throws {
+        let transport = MockTransport { request in
+            if request.url?.path == "/api/authz/v3/oauth/token" {
+                return .init(status: 400, body: Data(#"{"error":"invalid_grant"}"#.utf8))
+            }
+            return .init(status: 401)
+        }
+        let client = PSNClient(store: InMemoryTokenStore(validTokens), transport: transport, language: "ru-RU", now: { fixedNow })
+        await #expect(throws: PSNError.sessionExpired) {
+            _ = try await client.trophySummary()
+        }
+        try await client.signOut()
+        await #expect(throws: PSNError.notSignedIn) {
+            _ = try await client.trophySummary()
+        }
+    }
+
     @Test("Concurrent requests share one refresh")
     func singleRefresh() async throws {
         var expiring = validTokens
@@ -187,5 +241,15 @@ struct ClientTests {
         #expect(earnings.count == 3)
         #expect(earnings.first { $0.trophyId == 12 }?.progressCurrent == 3)
         #expect(earnings.first { $0.trophyId == 0 }?.earnedRate == 1.8)
+    }
+}
+
+/// The PSN error a call throws, or nil when it returns.
+private func failure(_ call: @Sendable () async throws -> Void) async -> PSNError? {
+    do {
+        try await call()
+        return nil
+    } catch {
+        return error as? PSNError
     }
 }
