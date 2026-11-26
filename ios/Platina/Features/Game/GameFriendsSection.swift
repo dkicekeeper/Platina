@@ -9,20 +9,26 @@ import PlatinaStore
 
 /// The friends who play a game, and the person among them, the furthest first: a ring of
 /// progress each, platinum-coloured once they have the platinum. A tap opens the friend.
+///
+/// The friend's screen is pushed by `GameView`, not here: this section lives inside
+/// `AdaptiveColumns`, whose `ViewThatFits` builds both layouts, and a `navigationDestination` in
+/// there froze the app when the game itself had been pushed (from the Path, 2026-11-26).
 struct GameFriendsSection: View {
     let game: GameRecord
     /// Beside the trophies on a wide screen: a header and the first few; under the chips, all.
     var limit: Int?
+    /// A friend was tapped: their account id.
+    let onOpenFriend: (String) -> Void
 
     @Environment(AppModel.self) private var app
     @Query private var titles: [FriendTitleRecord]
     @Query private var friends: [FriendRecord]
     @Query private var profiles: [ProfileRecord]
-    @State private var openedFriend: String?
 
-    init(game: GameRecord, limit: Int? = nil) {
+    init(game: GameRecord, limit: Int? = nil, onOpenFriend: @escaping (String) -> Void) {
         self.game = game
         self.limit = limit
+        self.onOpenFriend = onOpenFriend
         let id = game.id
         _titles = Query(filter: #Predicate<FriendTitleRecord> { $0.gameId == id })
     }
@@ -35,9 +41,6 @@ struct GameFriendsSection: View {
             content
         }
         .task { await app.friends.refresh() }
-        .navigationDestination(item: $openedFriend) { accountId in
-            FriendView(accountId: accountId)
-        }
     }
 
     @ViewBuilder
@@ -46,7 +49,7 @@ struct GameFriendsSection: View {
         if entries.count > 1 {
             let shown = limit.map { Array(entries.prefix($0)) } ?? entries
             CardList(shown, layout: .section, onOpen: { entry in
-                if case .friend(let friend, _) = entry { openedFriend = friend.accountId }
+                if case .friend(let friend, _) = entry { onOpenFriend(friend.accountId) }
             }) { (entry: Entry) in
                 EntryRow(entry: entry)
             }

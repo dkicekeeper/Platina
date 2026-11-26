@@ -78,6 +78,9 @@ struct GameView: View {
     /// The trophies PlayStation's Game Help covers: a mark in the list.
     @State private var helpedTrophies: Set<Int> = []
     @State private var openedTrophy: String?
+    /// A friend tapped in the Friends section. Pushed from here, outside the columns'
+    /// `ViewThatFits` (see `GameFriendsSection`).
+    @State private var openedFriend: String?
     @State private var isLoadingTrophies = false
     @State private var isShowingChat = false
     @State private var isShowingShare = false
@@ -132,7 +135,7 @@ struct GameView: View {
                                 GuideSection(game: game)
                                 WalkthroughSection(game: game)
                                 sessionsSection(limit: Self.sideSessions)
-                                GameFriendsSection(game: game, limit: Self.sideFriends)
+                                GameFriendsSection(game: game, limit: Self.sideFriends) { openedFriend = $0 }
                             } narrow: {
                                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
                                     ChipPicker(
@@ -214,6 +217,9 @@ struct GameView: View {
         .navigationDestination(item: $openedTrophy) { key in
             TrophyView(trophyKey: key)
         }
+        .navigationDestination(item: $openedFriend) { accountId in
+            FriendView(accountId: accountId)
+        }
         .task {
             isLoadingTrophies = true
             await app.sync.refreshGame(gameId)
@@ -242,7 +248,7 @@ struct GameView: View {
         case .sessions:
             sessionsSection(limit: nil)
         case .friends:
-            GameFriendsSection(game: game)
+            GameFriendsSection(game: game) { openedFriend = $0 }
         }
     }
 
