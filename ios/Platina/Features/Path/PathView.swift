@@ -65,7 +65,10 @@ struct PathView: View {
             }
             .background(AppColors.Background.base)
             .navigationTitle(Text("path.title"))
-            .dsRefreshable {
+            // The system's pull to refresh, not DesignKit's `.dsRefreshable`: with it, a game
+            // opened from here froze the app (build 31, 2026-11-26). The library, whose game lives
+            // in its own stack, did not freeze. PlatinaUITests/NavigationTests guards it.
+            .refreshable {
                 await app.sync.sync(force: true)
                 runningGameId = await app.sync.runningGame(force: true)
             }
