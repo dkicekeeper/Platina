@@ -69,7 +69,7 @@ struct ChatView: View {
             .readableWidth()
             .padding(.bottom, AppSpacing.sm)
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
             photoItem = nil

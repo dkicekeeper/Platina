@@ -55,7 +55,7 @@ struct ChapterView: View {
                     .screenPadding()
             }
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -116,7 +116,7 @@ struct ChapterView: View {
                         Badge(
                             String(localized: "walkthrough.collectibles.found \(item.kind) \(item.found) \(item.total)"),
                             systemImage: item.found >= item.total ? "checkmark.seal.fill" : "sparkles",
-                            color: item.found >= item.total ? AppColors.success : AppColors.Status.info
+                            color: item.found >= item.total ? AppColors.Status.positive : AppColors.Status.info
                         )
                     }
                 }
@@ -139,7 +139,7 @@ struct ChapterView: View {
                                 Text(verbatim: trophy.isHidden && !trophy.isEarned && !showsHiddenTrophies ? String(localized: "trophy.hidden.title") : trophy.name)
                                     .strikethrough(trophy.isEarned)
                             } icon: {
-                                Icon(trophy.isEarned ? "checkmark.circle.fill" : trophy.type.systemImage, size: AppIconSize.sm, tint: .monochrome(trophy.isEarned ? AppColors.success : trophy.type.color))
+                                Icon(trophy.isEarned ? "checkmark.circle.fill" : trophy.type.systemImage, size: AppIconSize.sm, tint: .monochrome(trophy.isEarned ? AppColors.Status.positive : trophy.type.color))
                             }
                             .font(AppTypography.bodyEmphasis)
                         }
@@ -152,7 +152,7 @@ struct ChapterView: View {
                     Label {
                         Text(verbatim: choice)
                     } icon: {
-                        Icon("arrow.triangle.branch", size: AppIconSize.sm, tint: .monochrome(AppColors.warning))
+                        Icon("arrow.triangle.branch", size: AppIconSize.sm, tint: .monochrome(AppColors.Status.warning))
                     }
                     .font(AppTypography.bodySmall)
                 }

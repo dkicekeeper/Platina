@@ -60,7 +60,7 @@ struct LibraryView: View {
                     )
                     .screenPadding()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(AppColors.Background.base)
+                    .background(AppColors.Background.page)
                 }
             }
         }
@@ -76,7 +76,7 @@ struct LibraryView: View {
             .readableWidth()
             .padding(.bottom, AppSpacing.xxl)
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationTitle(Text("library.title"))
         .searchable(text: $query, prompt: Text("library.search"))
         .dsRefreshable { await app.sync.sync(force: true) }

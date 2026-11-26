@@ -33,7 +33,7 @@ struct PlatinumProgressWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "PlatinumProgress", provider: SnapshotProvider()) { entry in
             PlatinumProgressView(entry: entry)
-                .containerBackground(AppColors.Background.base, for: .widget)
+                .containerBackground(AppColors.Background.page, for: .widget)
         }
         .configurationDisplayName(Text(verbatim: "Platina"))
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular])
@@ -165,7 +165,7 @@ struct LatestTrophyWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "LatestTrophy", provider: SnapshotProvider()) { entry in
             LatestTrophyView(entry: entry)
-                .containerBackground(AppColors.Background.base, for: .widget)
+                .containerBackground(AppColors.Background.page, for: .widget)
         }
         .configurationDisplayName(Text(verbatim: "Platina"))
         .supportedFamilies([.systemSmall, .accessoryRectangular])

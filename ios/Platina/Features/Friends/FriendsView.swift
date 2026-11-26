@@ -25,7 +25,7 @@ struct FriendsView: View {
             .readableWidth()
             .padding(.bottom, AppSpacing.xxl)
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationTitle(Text("friends.title"))
         .dsRefreshable { await app.friends.refresh(force: true) }
         .task { await app.friends.refresh() }

@@ -77,7 +77,7 @@ struct ProfileView: View {
                 .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("profile.title"))
             .dsRefreshable { await app.sync.sync(force: true) }
             .navigationDestination(item: $openedGame) { gameId in

@@ -206,7 +206,7 @@ struct WalkthroughView: View {
                     .screenPadding()
             }
         }
-        .background(AppColors.Background.base)
+        .background(AppColors.Background.page)
         .navigationTitle(Text("walkthrough.header"))
         .navigationBarTitleDisplayMode(.inline)
         .modifier(WalkthroughBanner(message: $banner))
@@ -287,7 +287,7 @@ struct WalkthroughView: View {
         var items: [MetaItem] = [.label(state.title, systemImage: state.systemImage, tint: state.tint)]
         let warnings = chapter.missable.count + chapter.choices.count
         if warnings > 0 {
-            items.append(.label(String(localized: "walkthrough.chapter.warnings \(warnings)"), systemImage: "exclamationmark.triangle.fill", tint: AppColors.warning))
+            items.append(.label(String(localized: "walkthrough.chapter.warnings \(warnings)"), systemImage: "exclamationmark.triangle.fill", tint: AppColors.Status.warning))
         }
         let collectibles = chapter.collectibles.reduce(0) { $0 + $1.count }
         if collectibles > 0 {

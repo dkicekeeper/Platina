@@ -86,7 +86,7 @@ struct GuideSection: View {
                     ChecklistRow(
                         trophy.map { $0.isHidden && !$0.isEarned && !showsHiddenTrophies ? String(localized: "trophy.hidden.title") : $0.name } ?? "#\(missable.trophyId)",
                         isChecked: trophy?.isEarned ?? false,
-                        tint: trophy?.type.color ?? AppColors.warning,
+                        tint: trophy?.type.color ?? AppColors.Status.warning,
                         verticalPadding: AppSpacing.xs
                     ) {}
                     .disabled(true)
@@ -161,7 +161,7 @@ struct GuideSection: View {
                     Badge(String(localized: "guide.online \(online)"), systemImage: "wifi", color: AppColors.Status.info)
                 }
                 if glitched > 0 {
-                    Badge(String(localized: "guide.glitched \(glitched)"), systemImage: "ladybug", color: AppColors.warning)
+                    Badge(String(localized: "guide.glitched \(glitched)"), systemImage: "ladybug", color: AppColors.Status.warning)
                 }
                 if summary.difficultyAffects == true {
                     Badge(String(localized: "guide.difficultyAffects"), systemImage: "dial.high", color: AppColors.Status.neutral)

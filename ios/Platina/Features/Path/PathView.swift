@@ -63,7 +63,7 @@ struct PathView: View {
                 .readableWidth(AppLayout.wideWidth)
                 .padding(.bottom, AppSpacing.xxl)
             }
-            .background(AppColors.Background.base)
+            .background(AppColors.Background.page)
             .navigationTitle(Text("path.title"))
             // The system's pull to refresh, not DesignKit's `.dsRefreshable`: with it, a game
             // opened from here froze the app (build 31, 2026-11-26). The library, whose game lives
@@ -110,7 +110,7 @@ struct PathView: View {
                 app.isShowingSession = true
             } label: {
                 HStack(spacing: AppSpacing.md) {
-                    Icon("record.circle", size: AppIconSize.lg, tint: .monochrome(AppColors.destructive))
+                    Icon("record.circle", size: AppIconSize.lg, tint: .monochrome(AppColors.Status.negative))
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text("path.session.title")
                             .font(AppTypography.caption)
