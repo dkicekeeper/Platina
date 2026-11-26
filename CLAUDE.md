@@ -195,8 +195,14 @@ Cloudflare и Anthropic уже в репозитории); запускай ег
 - Поверхности — серая заливка, не стекло: `DesignKitTheme.surface = .fill` там же (DesignKit
   8.12.0, решение владельца 2026-11-23: меньше Liquid Glass). Карточки, секции, чипы, плитки и
   плашки иконок — серые на белой странице; кнопки, таб-бар и поле чата остаются стеклом. Фон
-  экранов — `AppColors.Background.base` (белый): на сером фоне карточки сольются. Своя серая
-  фигура внутри карточки — `.surfaceNeutral1` / `.surfaceNeutral2`, не `Background.neutral1`.
+  экранов — `AppColors.Background.page` (белый; до DesignKit 8.21.0 `base`): на сером фоне
+  карточки сольются. Своя серая фигура внутри карточки — `AppColors.Background.container` /
+  `.containerStrong` (8.21.0; до неё `.surfaceNeutral1` / `.surfaceNeutral2`), не `Background.card`.
+- Обновить потягиванием — `.dsRefreshable { … }` (DesignKit 8.21.0): то же замыкание, что у
+  `.refreshable`, но над экраном из Dynamic Island вытекает ртуть и становится акцентом. Ставится
+  на сам `ScrollView` или `List` (читает его прокрутку), не на `NavigationStack` или контейнер
+  вокруг него (`ScrollViewReader` в `GameView`); системный `.refreshable` линт DesignKit
+  отмечает предупреждением.
 - Цвета металлов трофеев — `TrophyType.color` в `Support/PlatinaColors.swift` (кандидат в
   токены DesignKit).
 - DesignKit не несёт строк: его ключи в `Localizable.xcstrings` пишет

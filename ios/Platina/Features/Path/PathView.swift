@@ -65,7 +65,7 @@ struct PathView: View {
             }
             .background(AppColors.Background.base)
             .navigationTitle(Text("path.title"))
-            .refreshable {
+            .dsRefreshable {
                 await app.sync.sync(force: true)
                 runningGameId = await app.sync.runningGame(force: true)
             }
