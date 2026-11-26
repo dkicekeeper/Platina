@@ -151,6 +151,11 @@ struct GameView: View {
                         }
                     }
                     .heroScrollEdge(isHeroUnderBar: $isHeroUnderBar)
+                    // DesignKit's mercury out of the island, on the scroll view itself: it reads
+                    // the pull from its scroll geometry (8.21.0).
+                    .dsRefreshable {
+                        await app.sync.sync(force: true, priority: gameId)
+                    }
                     // The App Store's screenshot of the guide: its chips under the bar.
                     .task {
                         guard ScreenshotDemo.screen == .guide, horizontalSizeClass == .compact else { return }
@@ -206,9 +211,6 @@ struct GameView: View {
         }
         .navigationDestination(item: $openedTrophy) { key in
             TrophyView(trophyKey: key)
-        }
-        .refreshable {
-            await app.sync.sync(force: true, priority: gameId)
         }
         .task {
             isLoadingTrophies = true

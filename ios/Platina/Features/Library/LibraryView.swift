@@ -79,7 +79,7 @@ struct LibraryView: View {
         .background(AppColors.Background.base)
         .navigationTitle(Text("library.title"))
         .searchable(text: $query, prompt: Text("library.search"))
-        .refreshable { await app.sync.sync(force: true) }
+        .dsRefreshable { await app.sync.sync(force: true) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
