@@ -121,7 +121,7 @@ jobs:
       # prints its heaviest frames and SwiftUI's warnings. Not blocking until the Path answers.
       - name: Hang probe (a game opened from the Path and from the library)
         working-directory: ios
-        timeout-minutes: 10
+        timeout-minutes: 25
         continue-on-error: true
         run: |
           DEVICE_ID=$(xcrun simctl list devices available --json | python3 -c '
@@ -136,7 +136,7 @@ jobs:
           xcrun simctl list devices | grep "$DEVICE_ID" || true
           python3 ../scripts/hang_probe.py --device "$DEVICE_ID" \
             --app build/Build/Products/Debug-iphonesimulator/Platina.app \
-            --out "$RUNNER_TEMP/hang-probe" pathGame game path
+            --out "$RUNNER_TEMP/hang-probe" pathGame+loop pathGame game
 
       - name: Run package tests on a simulator
         working-directory: ios/Packages/PlatinaKit

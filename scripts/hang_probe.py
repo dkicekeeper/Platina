@@ -8,12 +8,15 @@ spends its time anywhere but waiting in its run loop is a hang, and its heaviest
 where. It also prints the app's CPU and SwiftUI's warnings from the system log (an update loop
 shows there as "... tried to update multiple times per frame").
 
-    python3 scripts/hang_probe.py --device <udid> --app <Platina.app> pathGame game
+    python3 scripts/hang_probe.py --device <udid> --app <Platina.app> pathGame game pathGame+loop
 
+`pathGame+loop` launches with UIKit's layout feedback loop debugging: UIKit names the views of
+a layout that never settles and stops the app; the step prints its log and the crash report.
 Exit status 1 when any screen hung.
 """
 import argparse
 import collections
+import json
 import re
 import subprocess
 import sys
@@ -58,10 +61,36 @@ def main_thread(sample: str) -> list[tuple[int, int, str]]:
     return frames
 
 
+def crash_report(since: float) -> None:
+    """The newest crash report of the app since `since`: its exception, reason and backtrace."""
+    folder = Path.home() / "Library/Logs/DiagnosticReports"
+    reports = sorted((path for path in folder.glob(f"{PROCESS}*.ips") if path.stat().st_mtime >= since),
+                     key=lambda path: path.stat().st_mtime)
+    if not reports:
+        print("No crash report.")
+        return
+    text = reports[-1].read_text(errors="replace")
+    body = json.loads(text[text.index("\n") + 1:])
+    print("Crash:", json.dumps(body.get("exception", {}))[:300])
+    for line in json.dumps(body.get("asi", {}), ensure_ascii=False)[:3000].split("\\n"):
+        print("  ", line)
+    frames = body.get("lastExceptionBacktrace") or next(
+        (thread.get("frames", []) for thread in body.get("threads", []) if thread.get("triggered")), [])
+    images = body.get("usedImages", [])
+    for frame in frames[:70]:
+        image = images[frame.get("imageIndex", 0)].get("name", "?") if images else "?"
+        print(f"   {image}: {frame.get('symbol', hex(frame.get('imageOffset', 0)))}")
+
+
 def probe(device: str, screen: str, out: Path, wait: float) -> bool:
     print(f"\n=== {screen} ===", flush=True)
+    # `name+loop`: UIKit's layout feedback loop debugging, which names the views of a layout
+    # that does not settle and stops the app with an exception.
+    screen, _, mode = screen.partition("+")
+    extra = ["-UIViewLayoutFeedbackLoopDebuggingThreshold", "50"] if mode == "loop" else []
+    started = time.time()
     run("xcrun", "simctl", "terminate", device, BUNDLE)
-    log_path = out / f"log-{screen}.txt"
+    log_path = out / f"log-{screen}{'-' + mode if mode else ''}.txt"
     log_file = log_path.open("w")
     stream = subprocess.Popen(
         ["xcrun", "simctl", "spawn", device, "log", "stream", "--style", "compact", "--level", "debug",
@@ -70,7 +99,7 @@ def probe(device: str, screen: str, out: Path, wait: float) -> bool:
     )
     launched = run("xcrun", "simctl", "launch", device, BUNDLE,
                    "-ScreenshotDemo", "-ScreenshotScreen", screen,
-                   "-AppleLanguages", "(ru)", "-AppleLocale", "ru_RU")
+                   "-AppleLanguages", "(ru)", "-AppleLocale", "ru_RU", *extra)
     match = re.search(r":\s*(\d+)\s*$", launched.strip())
     if not match:
         print(f"Did not launch: {launched.strip()}")
@@ -86,8 +115,22 @@ def probe(device: str, screen: str, out: Path, wait: float) -> bool:
         readings.append(cpu(pid))
     print("CPU every 5 s:", " ".join(readings), flush=True)
 
+    if mode == "loop":
+        stream.terminate()
+        log_file.close()
+        alive = cpu(pid) != "gone"
+        print("The app", "still runs" if alive else "stopped", flush=True)
+        lines = [line for line in log_path.read_text(errors="replace").splitlines()
+                 if re.search(r"(?i)feedback|layout ?loop|exception|setNeedsLayout|Terminating", line)]
+        print(f"UIKit on the layout loop ({len(lines)} lines):")
+        for line in lines[:150]:
+            print("  ", line[:400])
+        crash_report(started)
+        run("xcrun", "simctl", "terminate", device, BUNDLE)
+        return True
+
     sample_path = out / f"sample-{screen}.txt"
-    run("sudo", "-n", "sample", str(pid), "3", "-mayDie", "-file", str(sample_path))
+    run("sudo", "-n", "sample", str(pid), "2", "-mayDie", "-file", str(sample_path))
     stream.terminate()
     log_file.close()
 
