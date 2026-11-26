@@ -47,7 +47,9 @@ def cpu(pid: int) -> str:
 def main_thread(sample: str) -> list[tuple[int, int, str]]:
     """The main thread's call graph from `sample`: (depth, samples, frame) per line."""
     lines = sample.splitlines()
-    start = next((i for i, line in enumerate(lines) if "com.apple.main-thread" in line), None)
+    # `sample` names it "DispatchQueue_1: com.apple.main-thread" or "Main Thread" (Xcode 27).
+    start = next((i for i, line in enumerate(lines)
+                  if "com.apple.main-thread" in line or ": Main Thread" in line), None)
     if start is None:
         return []
     frames = []
@@ -120,6 +122,8 @@ def probe(device: str, screen: str, out: Path, wait: float) -> bool:
         log_file.close()
         alive = cpu(pid) != "gone"
         print("The app", "still runs" if alive else "stopped", flush=True)
+        if not alive:
+            print(f"::error title=Hang probe::{screen}: the app stopped (a layout feedback loop?)")
         lines = [line for line in log_path.read_text(errors="replace").splitlines()
                  if re.search(r"(?i)feedback|layout ?loop|exception|setNeedsLayout|Terminating", line)]
         print(f"UIKit on the layout loop ({len(lines)} lines):")
@@ -127,7 +131,7 @@ def probe(device: str, screen: str, out: Path, wait: float) -> bool:
             print("  ", line[:400])
         crash_report(started)
         run("xcrun", "simctl", "terminate", device, BUNDLE)
-        return True
+        return alive
 
     sample_path = out / f"sample-{screen}.txt"
     run("sudo", "-n", "sample", str(pid), "2", "-mayDie", "-file", str(sample_path))
@@ -144,6 +148,8 @@ def probe(device: str, screen: str, out: Path, wait: float) -> bool:
             hung = share < 0.5
             print(f"Main thread: {total} samples, waiting in its run loop {share:.0%}"
                   f" -> {'HUNG' if hung else 'answers'}")
+            if hung:
+                print(f"::error title=Hang probe::{screen}: the main thread waits {share:.0%} of the time")
             if hung:
                 heavy = [(depth, count, frame) for depth, count, frame in frames if count >= total * 0.3]
                 own = list(dict.fromkeys(frame.split("  (in ")[0] for _, _, frame in heavy
