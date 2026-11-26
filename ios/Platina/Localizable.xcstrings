@@ -5120,13 +5120,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Will upload when you’re online"
+            "value": "Waiting to upload: it goes once you’re online"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отправится, когда появится сеть"
+            "value": "Ожидает отправки — уйдёт, когда появится сеть"
           }
         }
       }
