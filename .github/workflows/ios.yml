@@ -136,6 +136,32 @@ jobs:
             -resultBundlePath "$RUNNER_TEMP/PackageTests.xcresult" \
             -quiet
 
+      # The ways into a game's screen in the demo (PlatinaUITests/NavigationTests): a screen that
+      # hangs the app fails here, not on a phone. A hung test stops after its time allowance.
+      - name: UI tests (open a game from the Path and the library)
+        working-directory: ios
+        timeout-minutes: 25
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ids = [d["udid"] for runtime, items in sorted(devices.items(), reverse=True)
+                 if ".iOS-" in runtime for d in items if d["name"].startswith("iPhone")]
+          print(ids[0])
+          ')
+          set -o pipefail
+          xcodebuild test \
+            -project Platina.xcodeproj \
+            -scheme Platina \
+            -destination "id=$DEVICE_ID" \
+            -only-testing:PlatinaUITests/NavigationTests \
+            -parallel-testing-enabled NO \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 180 \
+            -derivedDataPath build \
+            -resultBundlePath "$RUNNER_TEMP/UITests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | grep -aE "Test [Cc]ase .* (passed|failed)|error:|\*\* TEST (SUCCEEDED|FAILED)" | head -40
+
       - name: Build log on failure
         if: failure()
         run: |
@@ -145,8 +171,8 @@ jobs:
       - name: Test failures
         if: failure()
         run: |
-          RESULT="$RUNNER_TEMP/PackageTests.xcresult"
-          [ -d "$RESULT" ] || { echo "No test results"; exit 0; }
+          for RESULT in "$RUNNER_TEMP/PackageTests.xcresult" "$RUNNER_TEMP/UITests.xcresult"; do
+          [ -d "$RESULT" ] || { echo "No test results in $RESULT"; continue; }
           xcrun xcresulttool get test-results summary --path "$RESULT" --format json | python3 -c '
           import json, sys
           summary = json.load(sys.stdin)
@@ -154,3 +180,4 @@ jobs:
               print("✘", failure.get("targetName", ""), failure.get("testName", ""))
               print("  ", failure.get("failureText", "").replace("\n", "\n   "))
           ' || true
+          done
