@@ -1,11 +1,12 @@
 ---
-status: in-progress
+status: blocked
 type: bug
 priority: 1
 size: m
 created: 2026-11-26
 updated: 2026-11-26
 branch: claude/admiring-cori-hx6vu7
+needs-owner: "на сборке 1.1 (33) открыть игру, сессию и трофей с «Пути» в первый раз и сказать, зависает ли"
 ---
 # Зависание: игра, сессия или трофей, открытые с «Пути»
 
